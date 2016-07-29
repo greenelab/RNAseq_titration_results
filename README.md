@@ -16,8 +16,10 @@ use run_experiments.R.
 
 The Cancer Genome Atlas BRCA data used for these analyses
 is [available at zenodo](https://zenodo.org/record/58862).
-You can run brca_data_download.sh to pull down the data into the data 
-folder.
+```
+# To download data, run in top directory:
+sh brca_data_download.sh
+```
 
 # Requirements
 
