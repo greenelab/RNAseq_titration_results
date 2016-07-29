@@ -9,7 +9,7 @@ library(data.table)
 
 plot.dir <- "plots/"
 res.dir <- "results/"
-lf <- list.files(res.dir)
+lf <- list.files(res.dir, full.names = TRUE)
 array.files <- lf[grepl("BRCA_train_3_models_array_kappa_", lf)]
 seq.files <- lf[grepl("BRCA_train_3_models_seq_kappa_", lf)]
 
