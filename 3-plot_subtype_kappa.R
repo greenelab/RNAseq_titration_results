@@ -8,7 +8,8 @@ library(ggplot2)
 library(data.table)
 
 plot.dir <- "plots/"
-lf <- list.files()
+res.dir <- "results/"
+lf <- list.files(res.dir)
 array.files <- lf[grepl("BRCA_train_3_models_array_kappa_", lf)]
 seq.files <- lf[grepl("BRCA_train_3_models_seq_kappa_", lf)]
 
@@ -32,8 +33,10 @@ DataSummary <- function(x) {
 array.list <- list()  # initialize list that will hold all array tables
 seq.list <- list()  # initialize list that will hold all the RNA-seq tables 
 for (i in 1:length(array.files)) {
-  array.list[[i]] <- fread(array.files[i], data.table = F)
-  seq.list[[i]] <- fread(seq.files[i], data.table = F)
+  array.list[[i]] <- fread(paste0(res.dir, array.files[i]), 
+                           data.table = F)
+  seq.list[[i]] <- fread(paste0(res.dir, seq.files[i]), 
+                         data.table = F)
 }
 # combine all tables from each platform into a data.frame
 array.df <- rbind.fill(array.list)

@@ -15,6 +15,7 @@ set.seed(kInitialSeed)
 
 norm.data.dir <- "normalized_data/"
 mdl.dir <- "models/"
+res.dir <- "results/"
 norm.test.object <-
    paste0("BRCA_array_seq_test_data_normalized_list_", filename.seed, ".RDS")
 norm.train.object <- 
@@ -23,11 +24,11 @@ norm.train.object <-
 trained.models.object <- 
   paste0("BRCA_train_3_models_", filename.seed, ".RDS")
 train.kappa.file <- 
-  paste0("BRCA_train_3_models_training_set_total_kappa_", 
+  paste0(res.dir, "BRCA_train_3_models_training_set_total_kappa_", 
          filename.seed, ".tsv")
 array.kappa.file <-
-   paste0("BRCA_train_3_models_array_kappa_", filename.seed, ".tsv")
-seq.kappa.file <- paste0("BRCA_train_3_models_seq_kappa_", 
+   paste0(res.dir, "BRCA_train_3_models_array_kappa_", filename.seed, ".tsv")
+seq.kappa.file <- paste0(res.dir, "BRCA_train_3_models_seq_kappa_", 
                          filename.seed, ".tsv")
 
 train.test.labels <- 
