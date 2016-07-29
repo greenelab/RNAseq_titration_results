@@ -196,19 +196,19 @@ RestructureTrainedList <- function(train.list){
   #   norm.list: a list of predictive models that is reorganized as stated above
   # 
   norm.list <- list()
-  for (i in 1:ncol(train.list)) { # for each normalization method
+  for (norm in 1:ncol(train.list)) { # for each normalization method
     new.list <- list() 
     for (meth in c("glmnet", "rf", "svm", "seeds")) { # for each model type
       # and also include seeds
       meth.list <- list()
-      for (j in 1:length(train.list[, i])) { # get the models of model type
+      for (seq.indx in 1:length(train.list[, norm])) { # get the models of model type
         # meth in order of % seq (0 - 100)
-        meth.list[[names(train.list[, i][j])]] <- 
-          train.list[, i][[j]][[meth]]
+        meth.list[[names(train.list[, norm][seq.indx])]] <- 
+          train.list[, norm][[seq.indx]][[meth]]
       }
       new.list[[meth]] <- meth.list
     }
-    norm.list[[colnames(train.list)[i]]] <- as.matrix(new.list)
+    norm.list[[colnames(train.list)[norm]]] <- as.matrix(new.list)
   }
   
   return(norm.list)
@@ -235,8 +235,8 @@ PredictArrayDataWrapper <- function(norm.array.list, train.list, sample.df){
   # 
   
   # parallel backend 
-  cl <- makeCluster(2)
-  registerDoParallel(cl)
+  cl <- parallel::makeCluster(2)
+  doParallel::registerDoParallel(cl)
   
   pred.list <- foreach(n = 1:length(train.list)) %do% { # for each norm method
     
@@ -286,7 +286,7 @@ PredictArrayDataWrapper <- function(norm.array.list, train.list, sample.df){
   }
   
   # stop parallel back end
-  stopCluster(cl)
+  parallel::stopCluster(cl)
   
   return(pred.list)
   
@@ -312,8 +312,8 @@ PredictSeqDataWrapper <- function(norm.seq.list, train.list, sample.df){
   # 
   
   # parallel backend 
-  cl <- makeCluster(2)
-  registerDoParallel(cl)
+  cl <- parallel::makeCluster(2)
+  doParallel::registerDoParallel(cl)
   
   pred.list <- foreach(n = 1:length(train.list)) %do% {
     
@@ -364,7 +364,7 @@ PredictSeqDataWrapper <- function(norm.seq.list, train.list, sample.df){
     }
   }
   
-  stopCluster(cl)
+  parallel::stopCluster(cl)
   
   return(pred.list)
   
@@ -393,32 +393,26 @@ GetTrainingSetKappa <- function(model.list, train.data.list, subtype.list){
   }
   
   train.kappa.list <- list() # initialize list to hold all Kappa results
-  for (i in 1:length(train.data.list)) { # norm methods
+  for (norm.indx in 1:length(train.data.list)) { # norm methods
     norm.list <- list() # initialize lost to hold all results from the
                         # current normalization method 
-    for (j in 1:3) {  # exclude the seeds element of list (#4)
+    for (mdl.indx in 1:3) {  # exclude the seeds element of list (#4)
       classif.list <- list() # initialize list to hold all results from the 
                              # current model type
-      model.type <- rownames(model.list[[i]])[j]
-      for (k in 1:length(train.data.list[[i]])) { # for each seq level
-        dt <- train.data.list[[i]][[k]]
+      model.type <- rownames(model.list[[norm.indx]])[mdl.indx]
+      for (seq.indx in 1:length(train.data.list[[norm.indx]])) { # for each %seq
+        dt <- train.data.list[[norm.indx]][[seq.indx]]
         dt.mat <- t(dt[, 2:ncol(dt), with=F])
-        perc.seq <- names(train.data.list[[i]])[k]
-        if (model.type == "glmnet") {
-          classif.list[[perc.seq]] <-
-            GetKappaGlmnet(model = model.list[[i]][[j]][[k]],
-                              dt.mat = dt.mat,
-                              subtype = subtype.list[[perc.seq]])
-        } else {
-          classif.list[[perc.seq]] <-
-            GetKappa(model = model.list[[i]][[j]][[k]],
-                        dt.mat = dt.mat,
-                        subtype = subtype.list[[perc.seq]])
-        } 
+        perc.seq <- names(train.data.list[[norm.indx]])[seq.indx]
+        classif.list[[perc.seq]] <-
+          GetKappa(model = model.list[[norm.indx]][[mdl.indx]][[seq.indx]],
+                   dt.mat = dt.mat,
+                   subtype = subtype.list[[perc.seq]],
+                   model.type = model.type)
       }  
       norm.list[[model.type]] <- classif.list
     }
-    train.kappa.list[[names(train.data.list)[i]]] <- norm.list
+    train.kappa.list[[names(train.data.list)[norm.indx]]] <- norm.list
   }
   
   train.kappa.mlt <- melt(train.kappa.list)
