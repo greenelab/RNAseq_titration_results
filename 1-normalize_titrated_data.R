@@ -85,24 +85,27 @@ titrate.mix.dt.list <- lapply(titrate.sample.list,
 # initialize in the list to hold normalized data
 norm.titrate.list <- list()
 # single platform array normalization
+suppressMessages(
 norm.titrate.list[["0"]] <- SinglePlatformNormalizationWrapper(
   titrate.mix.dt.list[[1]]$array, platform = "array") 
+)
 
 # parallel backend
-cl <- makeCluster(detectCores() - 1)
-registerDoParallel(cl)
+cl <- parallel::makeCluster(detectCores() - 1)
+doParallel::registerDoParallel(cl)
 # 'mixed' both platform normalization
 norm.titrate.list[2:10] <- 
   foreach(n = 2:10) %dopar% {
     NormalizationWrapper(titrate.mix.dt.list[[n]]$array,
                        titrate.mix.dt.list[[n]]$seq)
   }
-stopCluster(cl)
+parallel::stopCluster(cl)
 names(norm.titrate.list)[2:10] <- names(titrate.mix.dt.list)[2:10]
 # single platform seq normalization
+suppressMessages(
 norm.titrate.list[["100"]] <- SinglePlatformNormalizationWrapper(
   titrate.mix.dt.list[[11]]$seq, platform = "seq")
-
+)
 # save train data
 saveRDS(norm.titrate.list, file=paste0(norm.data.dir, norm.train.object))
 
@@ -115,35 +118,39 @@ seq.test <-
   data.table(seq.data[, c(1, which(colnames(seq.data) %in% test.sample.names))])
 
 # array normalization
+suppressMessages(
 array.test.norm.list <- SinglePlatformNormalizationWrapper(
   array.test, platform = "array") 
-
+)
 # seq normalization
 seq.test.norm.list <- list()
+suppressMessages(seq.test.norm.list[["log"]] <- LOGSeqOnly(seq.test))
+suppressMessages(seq.test.norm.list[["npn"]] <- NPNSingleDT(seq.test))
 
-seq.test.norm.list[["log"]] <- LOGSeqOnly(seq.test)
-seq.test.norm.list[["npn"]] <- NPNSingleDT(seq.test)
-
-cl <- makeCluster(detectCores() - 1)
-registerDoParallel(cl)
+cl <- parallel::makeCluster(detectCores() - 1)
+doParallel::registerDoParallel(cl)
 seq.qn.list <- list()
+suppressMessages(
 seq.qn.list[["0"]] <- QNSingleWithRef(ref.dt = norm.titrate.list$`0`$log,
                                       targ.dt = seq.test)
+)
 seq.qn.list[2:10] <- foreach(i=2:10) %dopar% {
   QNSingleWithRef(ref.dt=norm.titrate.list[[i]]$raw.array,
                   targ.dt = seq.test)
 }  
 names(seq.qn.list)[2:10] <- names(norm.titrate.list)[2:10]
-seq.qn.list[["100"]] <- QNSingleDT(seq.test)
+suppressMessages(seq.qn.list[["100"]] <- QNSingleDT(seq.test))
 seq.test.norm.list[["qn"]] <- seq.qn.list
 rm(seq.qn.list)
-stopCluster(cl)
+parallel::stopCluster(cl)
 
-cl <- makeCluster(detectCores() - 1)
-registerDoParallel(cl)
+cl <- parallel::makeCluster(detectCores() - 1)
+doParallel::registerDoParallel(cl)
 seq.tdm.list <- list()
-seq.tdm.list[["0"]] <- TDMSingleWithRef(ref.dt = norm.titrate.list$`0`$log,
-                                     targ.dt = seq.test)
+
+suppressMessages(seq.tdm.list[["0"]] <- 
+                   TDMSingleWithRef(ref.dt = norm.titrate.list$`0`$log,
+                                     targ.dt = seq.test))
 seq.tdm.list[2:10] <- foreach(i=2:10) %dopar% {
   TDMSingleWithRef(ref.dt=norm.titrate.list[[i]]$raw.array,
                    targ.dt = seq.test)
@@ -152,9 +159,9 @@ names(seq.tdm.list)[2:10] <- names(norm.titrate.list)[2:10]
 seq.tdm.list["100"] <- list(NULL)
 seq.test.norm.list[["tdm"]] <- seq.tdm.list
 rm(seq.tdm.list)
-stopCluster(cl)
+parallel::stopCluster(cl)
 
-seq.test.norm.list[["z"]] <- ZScoreSingleDT(seq.test)
+suppressMessages(seq.test.norm.list[["z"]] <- ZScoreSingleDT(seq.test))
 
 test.norm.list <- list(array=array.test.norm.list,
                        seq=seq.test.norm.list)
