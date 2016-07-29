@@ -33,8 +33,7 @@ seq.clinical <- fread(paste0(data.dir, seq.clin.filename), data.table = F)
 array.clinical <- fread(paste0(data.dir, array.clin.filename), data.table = F)
 
 # change first column name to "gene"
-colnames(array.data)[1] <- "gene"
-colnames(seq.data)[1] <- "gene"
+colnames(array.data)[1] <- colnames(seq.data)[1] <- "gene"
 
 # remove tumor-adjacent samples from the array data set
 array.tumor.smpls <- array.clinical$Sample[which(array.clinical$Type == 
@@ -55,11 +54,10 @@ sample.overlap <- intersect(colnames(array.data), colnames(seq.data))
 gene.overlap <- intersect(array.data$gene, seq.data$gene)
 
 # filter the expression data for matched samples and overlapping genes
-array.matched <- array.data[which(array.data$gene %in% gene.overlap), 
-                            which(colnames(array.data) %in% sample.overlap)]
-
+array.matched <- array.data[which(seq.data$gene %in% gene.overlap), 
+                            sample.overlap]
 seq.matched <- seq.data[which(seq.data$gene %in% gene.overlap),
-                        which(colnames(seq.data) %in% sample.overlap)]
+                        sample.overlap]
 
 # reorder genes on both platforms
 array.matched <- array.matched[order(array.matched$gene), ]
@@ -79,7 +77,7 @@ array.tumor.smpls <- array.tumor.smpls[-which(!(array.tumor.smpls %in%
                                             colnames(array.matched)))]
 
 # remove "unmatched" / "raw" expression data  
-rm(list=c("array.data", "seq.data"))
+rm(array.data, seq.data)
 
 # write matched only samples to pcl files
 array.output.nm <- sub(".pcl", "_matchedOnly_ordered.pcl", array.exprs.filename)
