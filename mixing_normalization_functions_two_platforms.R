@@ -57,7 +57,7 @@ ZScoreProcessing <- function(array.dt, seq.dt){
                       chartr(".", "-", colnames(seq.mat)))
   # z.dt <- NAToZero(z.dt)
   cat("\tZero to one transformation...\n")
-  zto.z.dt <- zero_to_one_transform(z.dt)
+  zto.z.dt <- TDM::zero_to_one_transform(z.dt)
   return(zto.z.dt)
 }
 
@@ -94,17 +94,17 @@ QNProcessing <- function(array.dt, seq.dt){
   ref.values <- data.frame(array.dt[, 2:ncol(array.dt), with = F])
   target.values <- data.frame(seq.dt[, 2:ncol(seq.dt), with = F])
   cat("Quantile normalization...\n")
-  qn.targ <- normalize.quantiles.determine.target(
+  qn.targ <- preprocessCore::normalize.quantiles.determine.target(
     data.matrix(ref.values), target.length = nrow(ref.values))
-  qn.seq <- normalize.quantiles.use.target(data.matrix(target.values), qn.targ,
-                                           copy = F)
+  qn.seq <- preprocessCore::normalize.quantiles.use.target(
+    data.matrix(target.values), qn.targ, copy = F)
   qn.seq <- data.table(cbind(seq.dt[[1]], qn.seq))
   colnames(qn.seq) <- chartr(".", "-", colnames(seq.dt))
   # array.dt <- NAToZero(array.dt)
   # qn.seq <- NAToZero(qn.seq)
   cat("\tZero to one transformation...\n")
-  zto.array.dt <- zero_to_one_transform(array.dt)
-  zto.qn.seq <- zero_to_one_transform(qn.seq)
+  zto.array.dt <- TDM::zero_to_one_transform(array.dt)
+  zto.qn.seq <- TDM::zero_to_one_transform(qn.seq)
   cat("\tConcatenation...\n")
   zto.qn.cat <- data.table(cbind(zto.array.dt, zto.qn.seq[, 2:ncol(zto.qn.seq),
                                                           with=F]))
@@ -125,8 +125,9 @@ NPNProcessing <- function(array.dt, seq.dt){
   #             rows are gene measurements
   # 
   # Returns:
-  #   npn.cat: NPN normalized, zero to one transformed data.table that contains both
-  #            array and RNA-seq samples
+  #   npn.cat: NPN normalized, zero to one transformed data.table that contains 
+  #             both array and RNA-seq samples
+  #             
   require(huge)
   require(TDM)
   require(data.table)
@@ -143,11 +144,11 @@ NPNProcessing <- function(array.dt, seq.dt){
   ref.values <- data.frame(array.dt[, 2:ncol(array.dt), with = F])
   target.values <- data.frame(seq.dt[, 2:ncol(seq.dt), with = F])
   npn.ref <- data.matrix(ref.values)
-  npn.array <- huge.npn(t(npn.ref), npn.func = "shrinkage", npn.thresh = NULL, 
-                        verbose = TRUE)
+  npn.array <- huge::huge.npn(t(npn.ref), npn.func = "shrinkage", 
+                              npn.thresh = NULL, verbose = TRUE)
   npn.targ <- data.matrix(target.values)
-  npn.seq <- huge.npn(t(npn.targ), npn.func = "shrinkage", npn.thresh = NULL, 
-                      verbose = TRUE)
+  npn.seq <- huge::huge.npn(t(npn.targ), npn.func = "shrinkage", 
+                            npn.thresh = NULL, verbose = TRUE)
   cat("\tConcatenation...\n")
   npn.cat <- data.table(cbind(array.dt[[1]], t(npn.array), t(npn.seq)))
   colnames(npn.cat) <- c("gene",
@@ -156,7 +157,7 @@ NPNProcessing <- function(array.dt, seq.dt){
   
   # npn.cat <- NAToZero(npn.cat)
   cat("\tZero to one transformation...\n")
-  zto.npn.cat <- zero_to_one_transform(npn.cat)
+  zto.npn.cat <- TDM::zero_to_one_transform(npn.cat)
   return(zto.npn.cat)
 }
 
@@ -190,17 +191,17 @@ TDMProcessing <- function(array.dt, seq.dt){
     stop("Gene identifiers in data.tables must match")
   }
   cat("TDM transformation...\n")
-  tdm.seq <- tdm_transform(target_data = seq.dt, 
-                           ref_data = array.dt, 
-                           negative = FALSE, 
-                           filter_p = FALSE, 
-                           inv_reference = TRUE, 
-                           log_target=TRUE)
+  tdm.seq <- TDM::tdm_transform(target_data = seq.dt, 
+                                ref_data = array.dt, 
+                                negative = FALSE, 
+                                filter_p = FALSE, 
+                                inv_reference = TRUE, 
+                                log_target=TRUE)
   # array.dt <- NAToZero(array.dt)
   # tdm.seq <- NAToZero(tdm.seq)
   cat("\tZero to one transformation...\n")
-  zto.array <- zero_to_one_transform(array.dt)
-  zto.tdm.seq <- zero_to_one_transform(tdm.seq)
+  zto.array <- TDM::zero_to_one_transform(array.dt)
+  zto.tdm.seq <- TDM::zero_to_one_transform(tdm.seq)
   cat("\tConcatenation...\n")
   tdm.cat <- data.table(cbind(zto.array, zto.tdm.seq[, 2:ncol(zto.tdm.seq), 
                                                      with = F]))
@@ -236,12 +237,12 @@ LOGProcessing <- function(array.dt, seq.dt){
     stop("Gene identifiers in data.tables must match")
   }
   cat("Log transformation seq data...\n")
-  log.seq <- log_transform_p1(seq.dt)
+  log.seq <- TDM::log_transform_p1(seq.dt)
   # array.dt <- NAToZero(array.dt)
   # log.seq <- NAToZero(log.seq)
   cat("\tZero to one transformation...\n")
-  zto.array <- zero_to_one_transform(array.dt)
-  zto.log.seq <- zero_to_one_transform(log.seq)
+  zto.array <- TDM::zero_to_one_transform(array.dt)
+  zto.log.seq <- TDM::zero_to_one_transform(log.seq)
   cat("\tConcatenation...\n")
   log.cat <- data.table(cbind(zto.array, zto.log.seq[, 2:ncol(zto.log.seq), 
                                                      with = F]))
@@ -272,8 +273,8 @@ NormalizationWrapper <- function(array.dt, seq.dt){
                                                    with=F])) < 0)
   if (any.negative) {
     cat("\nLog transformation array data...\n")
-    array.dt <- inv_log_transform(array.dt)
-    array.dt <- log_transform_p1(array.dt)
+    array.dt <- TDM::inv_log_transform(array.dt)
+    array.dt <- TDM::log_transform_p1(array.dt)
   }
   # convert NA to zero
   array.dt <- NAToZero(array.dt)  
@@ -291,10 +292,10 @@ NormalizationWrapper <- function(array.dt, seq.dt){
 
 GetDataTablesForMixing <- function(array.data, seq.data,
                                    titrate.sample.names){
-  # This function takes two full data.tables that contain array and RNA-seq data,
-  # matched samples and a vector of sample names. It returns a list that contains 
-  # an array data.table (samples not in the sample names) and an RNA-seq data.table
-  # (samples in the sample names).
+  # This function takes two full data.tables that contain array and RNA-seq 
+  # data,matched samples and a vector of sample names. It returns a list that 
+  # contains an array data.table (samples not in the sample names) and an 
+  # RNA-seq data.table (samples in the sample names).
   #
   # Args:
   #   array.data: data.table of array data where the first column contains 

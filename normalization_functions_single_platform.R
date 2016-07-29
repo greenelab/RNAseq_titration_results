@@ -23,13 +23,13 @@ LOGArrayOnly <- function(array.dt){
                                                    with=F])) < 0)
   if (any.negative) {
     cat("Log transformation array data...\n")
-    array.dt <- inv_log_transform(array.dt)
-    array.dt <- log_transform_p1(array.dt)
+    array.dt <- TDM::inv_log_transform(array.dt)
+    array.dt <- TDM::log_transform_p1(array.dt)
   }
   # convert NA to zero
   array.dt <- NAToZero(array.dt)
   cat("\tZero to one transformation...\n")
-  zto.array.dt <- zero_to_one_transform(array.dt)
+  zto.array.dt <- TDM::zero_to_one_transform(array.dt)
   return(zto.array.dt)
 }
 
@@ -51,10 +51,10 @@ LOGSeqOnly <- function(seq.dt){
     stop("\nInput must be a data.table")
   }
   cat("Log transformation seq data...\n")
-  log.dt <- log_transform_p1(seq.dt)
+  log.dt <- TDM::log_transform_p1(seq.dt)
   # log.dt <- NAToZero(log.dt)
   cat("\tZero to one transformation...\n")
-  zto.log.dt <- zero_to_one_transform(log.dt)
+  zto.log.dt <- TDM::zero_to_one_transform(log.dt)
   return(zto.log.dt)
 }
 
@@ -77,12 +77,12 @@ QNSingleDT <- function(dt){
   }
   val <- data.frame(dt[, 2:ncol(dt), with = F])
   cat("Quantile normalization...\n")
-  qn <- normalize.quantiles(data.matrix(val), copy = F)
+  qn <- preprocessCore::normalize.quantiles(data.matrix(val), copy = F)
   qn.dt <- data.table(cbind(as.character(dt[[1]]), qn))
   colnames(qn.dt) <- chartr(".", "-", colnames(dt))
   # qn.dt <- NAToZero(qn.dt)
   cat("\tZero to one transformation...\n")
-  zto.qn.dt <- zero_to_one_transform(qn.dt)
+  zto.qn.dt <- TDM::zero_to_one_transform(qn.dt)
   return(zto.qn.dt)
 }
 
@@ -177,18 +177,21 @@ QNSingleWithRef <- function(ref.dt, targ.dt){
   target.values <- data.frame(targ.dt[, 2:ncol(targ.dt), with = F])
   cat("Quantile normalization...\n")
   # get target object "reference" for the quantile normalization
-  qn.ref <- normalize.quantiles.determine.target(
-    data.matrix(ref.values), 
-    target.length = nrow(ref.values))
+  qn.ref <- 
+    preprocessCore::normalize.quantiles.determine.target(
+                        data.matrix(ref.values), 
+                        target.length = nrow(ref.values))
   
   # quantile normalize the data, against reference (array) distribution, using
   # replacement, not averaging
-  qn.targ <- normalize.quantiles.use.target(data.matrix(target.values), qn.ref,
-                                           copy = F)
+  qn.targ <- 
+    preprocessCore::normalize.quantiles.use.target(data.matrix(target.values), 
+                                                   qn.ref,
+                                                   copy = F)
   qn.targ <- data.table(cbind(as.character(targ.dt[[1]]), qn.targ))
   colnames(qn.targ) <- chartr(".", "-", colnames(qn.targ))  
   cat("\tZero to one transformation...\n")
-  zto.qn.targ <- zero_to_one_transform(qn.targ)
+  zto.qn.targ <- TDM::zero_to_one_transform(qn.targ)
   return(zto.qn.targ) 
 }
 
@@ -221,14 +224,14 @@ TDMSingleWithRef <- function(ref.dt, targ.dt){
   require(TDM)
   require(data.table)
   cat("TDM transformation...\n")
-  tdm.targ <- tdm_transform(target_data = targ.dt, 
-                           ref_data = ref.dt, 
-                           negative = FALSE, 
-                           filter_p = FALSE, 
-                           inv_reference = TRUE, 
-                           log_target=TRUE)
+  tdm.targ <- TDM::tdm_transform(target_data = targ.dt, 
+                                 ref_data = ref.dt, 
+                                 negative = FALSE, 
+                                 filter_p = FALSE, 
+                                 inv_reference = TRUE, 
+                                 log_target=TRUE)
   cat("\tZero to one transformation...\n")
-  zto.tdm.targ <- zero_to_one_transform(tdm.targ)
+  zto.tdm.targ <- TDM::zero_to_one_transform(tdm.targ)
   return(zto.tdm.targ)
 }
 
