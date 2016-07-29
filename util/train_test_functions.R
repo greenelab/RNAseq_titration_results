@@ -105,7 +105,6 @@ TrainThreeModels <- function(dt, subtype, seed, folds.list){
   
   if (!(is.null(dt))) {
     
-    
     set.seed(seed)
     # need a seed list for parallel processing purposes?
     seed.list <- vector(mode = "list", length = 6)

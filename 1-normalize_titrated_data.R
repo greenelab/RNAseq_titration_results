@@ -6,7 +6,7 @@
 # It should be run from the command line through the run_experiments.R script
 
 suppressMessages(source("load_packages.R"))
-source("normalization_functions.R")
+source("util/normalization_functions.R")
 
 args <- commandArgs(trailingOnly = TRUE)
 filename.seed <- as.integer(args[1])
