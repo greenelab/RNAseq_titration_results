@@ -11,7 +11,6 @@ LOGArrayOnly <- function(array.dt){
   # 
   # Returns:
   #   zto.array.dt: log, zero to one transformed data.table
-  require(TDM)
   require(data.table)
   # check to make sure object passed is a data.table
   array.is.dt <- "data.table" %in% class(array.dt)
@@ -44,7 +43,6 @@ LOGSeqOnly <- function(seq.dt){
   # 
   # Returns:
   #   zto.log.dt: log, zero to one transformed data.table
-  require(TDM)
   require(data.table)
   # check to make sure object passed is a data.table
   seq.is.dt <- "data.table" %in% class(seq.dt)
@@ -69,8 +67,6 @@ QNSingleDT <- function(dt){
   # 
   # Returns:
   #   zto.qn.dt: quantile normalized, zero to one transformed data.table
-  require(TDM)
-  require(preprocessCore)
   require(data.table)
   dt.is.dt <- "data.table" %in% class(dt)
   if (!(dt.is.dt)) {
@@ -98,8 +94,6 @@ NPNSingleDT <- function(dt){
   # 
   # Returns:
   #   zto.npn: nonparanormal normalized, zero to one transformed data.table
-  require(huge)
-  require(TDM)
   require(data.table)
   dt.is.dt <- "data.table" %in% class(dt)
   if (!(dt.is.dt)) {
@@ -128,7 +122,6 @@ ZScoreSingleDT <- function(dt){
   # 
   # Returns:
   #   zto.z.dt: z-scored, zero to one transformed data.table
-  require(TDM)
   require(data.table)
   dt.is.dt <- "data.table" %in% class(dt)
   if (!(dt.is.dt)) {
@@ -160,7 +153,7 @@ QNSingleWithRef <- function(ref.dt, targ.dt){
   #   zto.qn.targ: quantile normalized (quantiles from array data), zero to one 
   #                transformed data.table
   # 
-    
+  require(data.table)  
   # Error-handling
   ref.is.dt <- "data.table" %in% class(ref.dt)
   targ.is.dt <- "data.table" %in% class(targ.dt)
@@ -171,9 +164,6 @@ QNSingleWithRef <- function(ref.dt, targ.dt){
   if (!(all(ref.dt[[1]] %in% targ.dt[[1]]))) {
     stop("Gene identifiers in data.tables must match")
   }
-  require(preprocessCore)
-  require(TDM)
-  require(data.table)
   ref.values <- data.frame(ref.dt[, 2:ncol(ref.dt), with = F])
   target.values <- data.frame(targ.dt[, 2:ncol(targ.dt), with = F])
   cat("Quantile normalization...\n")
@@ -210,7 +200,7 @@ TDMSingleWithRef <- function(ref.dt, targ.dt){
   # Returns:
   #   zto.tdm.targ: TDM normalized (array data as reference), zero to one 
   #                transformed data.table
-
+  require(data.table)
   # Error-handling
   ref.is.dt <- "data.table" %in% class(ref.dt)
   targ.is.dt <- "data.table" %in% class(targ.dt)
@@ -221,9 +211,6 @@ TDMSingleWithRef <- function(ref.dt, targ.dt){
   if (!(all(ref.dt[[1]] %in% targ.dt[[1]]))) {
     stop("Gene identifiers in data.tables must match")
   }
-  
-  require(TDM)
-  require(data.table)
   cat("TDM transformation...\n")
   tdm.targ <- TDM::tdm_transform(target_data = targ.dt, 
                                  ref_data = ref.dt, 
@@ -302,7 +289,6 @@ ZScoreProcessing <- function(array.dt, seq.dt){
   # Returns:
   #   zto.z.dt: z-scored, zero to one transformed data.table that contains both
   #             array and RNA-seq samples
-  require(TDM)
   require(data.table)
   # Error-handling
   array.is.dt <- "data.table" %in% class(array.dt)
@@ -347,8 +333,6 @@ QNProcessing <- function(array.dt, seq.dt){
   # Returns:
   #   zto.qn.cat:  quantile normalized, zero to one transformed data.table 
   #                that contains both array and RNA-seq samples
-  require(preprocessCore)
-  require(TDM)
   require(data.table)
   # Error-handling
   array.is.dt <- "data.table" %in% class(array.dt)
@@ -397,8 +381,6 @@ NPNProcessing <- function(array.dt, seq.dt){
   #   npn.cat: NPN normalized, zero to one transformed data.table that contains 
   #             both array and RNA-seq samples
   #             
-  require(huge)
-  require(TDM)
   require(data.table)
   # Error-handling
   array.is.dt <- "data.table" %in% class(array.dt)
@@ -447,7 +429,6 @@ TDMProcessing <- function(array.dt, seq.dt){
   # Returns:
   #   tdm.cat: TDM normalized, zero to one transformed data.table 
   #                that contains both array and RNA-seq samples
-  require(TDM)
   require(data.table)
   # Error-handling
   array.is.dt <- "data.table" %in% class(array.dt)
@@ -493,7 +474,6 @@ LOGProcessing <- function(array.dt, seq.dt){
   # Returns:
   #   log.cat:  log transformed, zero to one transformed data.table 
   #             that contains both array and RNA-seq samples
-  require(TDM)
   require(data.table)
   # Error-handling
   array.is.dt <- "data.table" %in% class(array.dt)
@@ -535,7 +515,6 @@ NormalizationWrapper <- function(array.dt, seq.dt){
   #              transformation, nonparanormal normalized, quantile normalized, 
   #              TDM normalized, z-scored)
   require(data.table)
-  require(TDM)
   # if any negative values are found, then inverse log transform and relog 
   # transform using x+1
   any.negative <- any(as.vector(as.matrix(array.dt[, 2:ncol(array.dt),
