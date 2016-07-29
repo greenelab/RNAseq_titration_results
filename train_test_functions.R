@@ -1,4 +1,4 @@
-GetKappa <- function(model, dt.mat, subtype){
+GetKappa <- function(model, dt.mat, subtype, model.type = NULL){
   # This function takes a model, a normalized gene expression matrix,
   # and performs prediction and returns the Kappa statistic based on the 
   # observed subtype labels supplied
@@ -8,33 +8,19 @@ GetKappa <- function(model, dt.mat, subtype){
   #   caret package)
   #   dt.mat: a matrix where genes are columns and rows are samples
   #   subtype: a vector of the true subtype labels
+  #   model.type: what kind of predictive model will be used?
   #
   # Returns:
   #   Kappa: the Kappa statistic associated with the prediction
   #
-  prd <- predict(model, dt.mat)
-  tbl <- table(prd, subtype)
-  cm <- confusionMatrix(tbl)
-  kap <- cm$overall["Kappa"]
-  return(kap)
-}
-
-GetKappaGlmnet <- function(model, dt.mat, subtype){
-  # This function takes a model, a normalized gene expression matrix,
-  # and performs prediction and returns the Kappa statistic based on the 
-  # observed subtype labels supplied
-  #
-  # Args:
-  #   model: a predictive model of the class cv.glmnet (output of cv.glmnet() 
-  #   in the glmnet package)
-  #   dt.mat: a matrix where genes are columns and rows are samples
-  #   subtype: a vector of the true subtype labels
-  #
-  # Returns:
-  #   Kappa: the Kappa statistic associated with the prediction
-  #
-  prd <- predict(model, dt.mat, s=model$lambda.1se, type="class")
-  cm <- confusionMatrix(as.factor(as.vector(prd)), subtype)
+  if (model.type == "glmnet") {
+    prd <- predict(model, dt.mat, s=model$lambda.1se, type="class")
+    cm <- confusionMatrix(as.factor(as.vector(prd)), subtype)
+  } else {
+    prd <- predict(model, dt.mat)
+    tbl <- table(prd, subtype)
+    cm <- confusionMatrix(tbl)
+  }
   kap <- as.numeric(cm$overall["Kappa"])
   return(kap)
 }
@@ -64,54 +50,10 @@ PredictKappa <- function(model, dt, sample.df, model.type=NULL){
    
   subtype <- GetOrderedSubtypeLabels(dt, sample.df)
   dt.mat <- t(dt[, 2:ncol(dt), with = F])
-  
-  if (model.type == "glmnet") {
-    pred.kappa <- GetKappaGlmnet(model, dt.mat, subtype)
-  } else {
-    pred.kappa <- GetKappa(model, dt.mat, subtype)
-  }
+  pred.kappa <- GetKappa(model, dt.mat, subtype, model.type)
   return(pred.kappa)
 }
 
-GetAccuracy <- function(model, dt.mat, subtype){
-  # This function takes a model, a normalized gene expression matrix,
-  # and performs prediction and returns the total accuracy based on the 
-  # observed subtype labels supplied
-  #
-  # Args:
-  #   model: a predictive model of the class train (output of caret::train())
-  #   dt.mat: a matrix where genes are columns and rows are samples
-  #   subtype: a vector of the true subtype labels
-  #
-  # Returns:
-  #   accuracy: the total accuracy of the prediction
-  #
-  prd <- predict(model, dt.mat)
-  tbl <- table(prd, subtype)
-  cm <- confusionMatrix(tbl)
-  acc <- cm$overall["Accuracy"]
-  return(acc)
-}
-
-GetAccuracyGlmnet <- function(model, dt.mat, subtype){
-  # This function takes a model, a normalized gene expression matrix,
-  # and performs prediction and returns the total accuracy based on the 
-  # observed subtype labels supplied
-  #
-  # Args:
-  #   model: a predictive model of the class train (output of train() in the
-  #   caret package)
-  #   dt.mat: a matrix where genes are columns and rows are samples
-  #   subtype: a vector of the true subtype labels
-  #
-  # Returns:
-  #   accuracy: the total accuracy of the prediction
-  #
-  prd <- predict(model, dt.mat, s=model$lambda.1se, type="class")
-  cm <- confusionMatrix(as.factor(as.vector(prd)), subtype)
-  acc <- cm$overall["Accuracy"]
-  return(acc)
-}
 
 GetOrderedSubtypeLabels <- function(exp.dt, sample.df){
   # This function takes a data.table of gene expression and a data.frame that
