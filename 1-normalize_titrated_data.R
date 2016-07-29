@@ -26,7 +26,7 @@ train.test.labels <-
   paste0("BRCA_matchedSamples_PAM50Array_training_testing_split_labels_", 
          filename.seed, ".tsv")
 
-#### functions -----------------------------------------------------------------
+#### read in data --------------------------------------------------------------
 seq.data <- fread(paste0(data.dir, seq.file), data.table = F)
 array.data <- fread(paste0(data.dir, array.file), data.table = F)
 sample.train.test <- read.delim(train.test.labels)
