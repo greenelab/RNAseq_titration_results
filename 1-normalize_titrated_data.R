@@ -38,21 +38,14 @@ train.sample.names <- as.character(sample.train.test$sample[
 test.sample.names <- as.character(sample.train.test$sample[
   which(sample.train.test$split == "test")]) 
 # get samples for 'titration' 
-p.list <- list()
-i <- 1
-for (p in seq(0, 1, by = 0.1)) {
-  p.list[i] <- p
-  i <- i + 1
-}
-
 titration.seed <- sample(1:10000, 1)
 message(paste("Random seed for titration:", 
               titration.seed), appendLF=TRUE)
 
 set.seed(titration.seed)
-titrate.sample.list <- lapply(p.list, 
-                          function(x) GetTitratedSampleNames(train.sample.names,
-                                                             x))
+titrate.sample.list <- lapply(seq(0, 1, by = 0.1), 
+                          function(x) GetTitratedSampleNames(train.sample.names, 
+                                                           x))
 names(titrate.sample.list) <- as.character(seq(0, 100, by=10))
 # these samples will be the RNA-seq samples in any given 'titration' experiment
 # remove rows that are equal to all ones -- for any combination + test data
