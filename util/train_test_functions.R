@@ -201,7 +201,8 @@ RestructureTrainedList <- function(train.list){
     for (meth in c("glmnet", "rf", "svm", "seeds")) { # for each model type
       # and also include seeds
       meth.list <- list()
-      for (seq.indx in 1:length(train.list[, norm])) { # get the models of model type
+      for (seq.indx in 1:length(train.list[, norm])) { # get the models of model 
+        # type
         # meth in order of % seq (0 - 100)
         meth.list[[names(train.list[, norm][seq.indx])]] <- 
           train.list[, norm][[seq.indx]][[meth]]
