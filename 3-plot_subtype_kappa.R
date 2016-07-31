@@ -33,9 +33,9 @@ DataSummary <- function(x) {
 array.list <- list()  # initialize list that will hold all array tables
 seq.list <- list()  # initialize list that will hold all the RNA-seq tables 
 for (i in 1:length(array.files)) {
-  array.list[[i]] <- fread(paste0(res.dir, array.files[i]), 
+  array.list[[i]] <- fread(array.files[i], 
                            data.table = F)
-  seq.list[[i]] <- fread(paste0(res.dir, seq.files[i]), 
+  seq.list[[i]] <- fread(seq.files[i], 
                          data.table = F)
 }
 # combine all tables from each platform into a data.frame
