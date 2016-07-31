@@ -55,14 +55,14 @@ sample.overlap <- intersect(colnames(array.data), colnames(seq.data))
 gene.overlap <- intersect(array.data$gene, seq.data$gene)
 
 # filter the expression data for matched samples and overlapping genes
-array.matched <- array.data[which(seq.data$gene %in% gene.overlap), 
+array.matched <- array.data[which(array.data$gene %in% gene.overlap), 
                             sample.overlap]
 seq.matched <- seq.data[which(seq.data$gene %in% gene.overlap),
                         sample.overlap]
 
 # reorder genes on both platforms
 array.matched <- array.matched[order(array.matched$gene), ]
-seq.matched <- seq.matched[(order(seq.matched$gene)), ]
+seq.matched <- seq.matched[order(seq.matched$gene), ]
 
 # reorder samples on both platforms
 array.matched <- array.matched[, c(1, (order(colnames(array.matched)
