@@ -31,8 +31,10 @@ array.kappa.file <-
 seq.kappa.file <- paste0(res.dir, "BRCA_train_3_models_seq_kappa_", 
                          filename.seed, ".tsv")
 
+res.dir <- "results/"
 train.test.labels <- 
-  paste0("BRCA_matchedSamples_PAM50Array_training_testing_split_labels_", 
+  paste0(res.dir,
+         "BRCA_matchedSamples_PAM50Array_training_testing_split_labels_", 
          filename.seed, ".tsv")
 
 #### load data -----------------------------------------------------------------

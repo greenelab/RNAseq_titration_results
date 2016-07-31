@@ -20,6 +20,7 @@ plot.dir <- "plots/"
 subtype.distribtion.plot <- 
   paste0("BRCA_PAM50_subtypes_dist_split_stacked_bar_", kInitialSeed, ".pdf")
 
+res.dir <- "results/"
 train.test.labels <- 
   paste0("BRCA_matchedSamples_PAM50Array_training_testing_split_labels_", 
          kInitialSeed, ".tsv")
@@ -129,5 +130,6 @@ lbl.df <- cbind(colnames(array.matched)[2:ncol(array.matched)],
                 lbl, as.character(array.subtypes))
 colnames(lbl.df) <- c("sample", "split", "subtype")
 
-write.table(lbl.df, file = train.test.labels, quote = F, sep = "\t",
-            row.names = F)
+write.table(lbl.df, 
+            file = paste0(res.dir, train.test.labels), 
+            quote = F, sep = "\t", row.names = F)
