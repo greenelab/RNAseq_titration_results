@@ -103,7 +103,7 @@ NPNSingleDT <- function(dt){
   val.mat <- data.matrix(val)
   npn.mat <- huge.npn(t(val.mat), npn.func = "shrinkage", 
                              npn.thresh = NULL, 
-                             verbose = TRUE)
+                             verbose = FALSE)
   npn.dt <- data.table(cbind(as.character(dt[[1]]), t(npn.mat)))
   colnames(npn.dt) <- chartr(".", "-", colnames(dt))
   # npn.dt <- NAToZero(npn.dt)
@@ -396,10 +396,10 @@ NPNProcessing <- function(array.dt, seq.dt){
   target.values <- data.frame(seq.dt[, 2:ncol(seq.dt), with = F])
   npn.ref <- data.matrix(ref.values)
   npn.array <- huge::huge.npn(t(npn.ref), npn.func = "shrinkage", 
-                              npn.thresh = NULL, verbose = TRUE)
+                              npn.thresh = NULL, verbose = FALSE)
   npn.targ <- data.matrix(target.values)
   npn.seq <- huge::huge.npn(t(npn.targ), npn.func = "shrinkage", 
-                            npn.thresh = NULL, verbose = TRUE)
+                            npn.thresh = NULL, verbose = FALSE)
   #  message("\tConcatenation...\n")
   npn.cat <- data.table(cbind(array.dt[[1]], t(npn.array), t(npn.seq)))
   colnames(npn.cat) <- c("gene",
