@@ -249,7 +249,6 @@ PredictArrayDataWrapper <- function(norm.array.list, train.list, sample.df){
         foreach(o = 1:length(train.list[[n]][[m]]),
                 .export=c("PredictKappa",
                           "GetKappa",
-                          "GetKappaGlmnet",
                           "GetOrderedSubtypeLabels")) %dopar% {
                             PredictKappa(model = train.list[[n]][[m]][[o]],
                                          dt = norm.array.list[["log"]],
@@ -263,7 +262,6 @@ PredictArrayDataWrapper <- function(norm.array.list, train.list, sample.df){
         foreach(o = 1:length(train.list[[n]][[m]]), # for each %seq level
                 .export=c("PredictKappa",
                           "GetKappa",
-                          "GetKappaGlmnet",
                           "GetOrderedSubtypeLabels")) %dopar% {
                             PredictKappa(model = train.list[[n]][[m]][[o]],
                                          dt = norm.array.list[[mthd]],
@@ -327,7 +325,6 @@ PredictSeqDataWrapper <- function(norm.seq.list, train.list, sample.df){
         foreach(o = 1:length(train.list[[n]][[m]]),
                 .export=c("PredictKappa",
                           "GetKappa",
-                          "GetKappaGlmnet",
                           "GetOrderedSubtypeLabels")) %dopar% {
                             PredictKappa(model = train.list[[n]][[m]][[o]],
                                          dt = norm.seq.list[[mthd]][[o]],
@@ -342,7 +339,6 @@ PredictSeqDataWrapper <- function(norm.seq.list, train.list, sample.df){
         foreach(o = 1:length(train.list[[n]][[m]]),
                 .export=c("PredictKappa",
                           "GetKappa",
-                          "GetKappaGlmnet",
                           "GetOrderedSubtypeLabels")) %dopar% {
                             PredictKappa(model = train.list[[n]][[m]][[o]],
                                          dt = norm.seq.list[[mthd]],
