@@ -19,7 +19,9 @@ LOGArrayOnly <- function(array.dt){
   }
   # if any negative values are found, then inverse log transform and relog 
   # transform using x+1
-  if (sum(array.dt < 0) > 0) {
+  any.negative <- any(as.vector(as.matrix(array.dt[, 2:ncol(array.dt),
+                                                   with=F])) < 0)
+  if (any.negative) {
     #  message("Log transformation array data...\n")
     array.dt <- TDM::inv_log_transform(array.dt)
     array.dt <- TDM::log_transform_p1(array.dt)
@@ -515,7 +517,9 @@ NormalizationWrapper <- function(array.dt, seq.dt){
   require(data.table)
   # if any negative values are found, then inverse log transform and relog 
   # transform using x+1
-  if (sum(array.dt < 0) > 0) {
+  any.negative <- any(as.vector(as.matrix(array.dt[, 2:ncol(array.dt),
+                                                   with=F])) < 0)
+  if (any.negative) {
     #  message("\nLog transformation array data...\n")
     array.dt <- TDM::inv_log_transform(array.dt)
     array.dt <- TDM::log_transform_p1(array.dt)
