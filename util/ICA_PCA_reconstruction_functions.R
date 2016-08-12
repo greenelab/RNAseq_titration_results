@@ -28,11 +28,11 @@ GetMASE <- function(true.mat, recon.mat){
     # number of observations
     n <- length(y)
     # difference in gene expression and reconstructed gene expression
-    errors <- y - y.pred
+    abs.errors <- abs(y - y.pred)
     # mean of true expression values
     y.bar <- mean(y)
     # calculate absolute scaled error
-    scaled.errors <- errors/(sum(abs(y - y.bar)) / n)
+    scaled.errors <- abs.errors/(sum(abs(y - y.bar)) / n)
     # calculate mean absolute scaled error
     mase <- mean(scaled.errors)
     return(mase)
