@@ -12,8 +12,8 @@ GetMASE <- function(true.mat, recon.mat){
   #              genes are columns
   # 
   # Returns:
-  #   MASE: mean(MASE) before and after reconstruction, per gene basis,
-  #         a numeric value
+  #   MASE: MASE before and after reconstruction, per gene basis,
+  #         a vector
   # 
   
   # Error-handling  
@@ -47,7 +47,7 @@ GetMASE <- function(true.mat, recon.mat){
                                y.pred = recon.mat[, col])
   }
   
-  # return the mean of the genes' mean absolute scaled errors
-  return(mean(mase))
+  # return a vector of mean absolute scaled errors
+  return(mase)
 
 }
