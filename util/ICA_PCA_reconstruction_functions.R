@@ -128,14 +128,12 @@ EvaluatePCARecon <- function(train.dt, test.dt, no.comp = 50){
   # transpose mat for test data, to be used as "true.mat"
   test.dm.t <- ExpressionDataTableToMatrixT(test.dt)
   
-  
   # quantification: how well did we do at reconstruction?
   mase <- GetMASE(true.mat = test.dm.t, recon.mat = recon.test)
   names(mase) <- colnames(test.dm.t)
   
   # return reconstruction error and PCA output
   return(list("MASE" = mase, "PC" = pc))
-  
   
 }
 
