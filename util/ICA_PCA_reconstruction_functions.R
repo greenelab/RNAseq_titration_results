@@ -117,7 +117,7 @@ EvaluatePCARecon <- function(train.dt, test.dt, no.comp = 50){
     # get new data (dataTable) into correct form (matrix, transposed)
     mat.t <- ExpressionDataTableToMatrixT(dataTable)
     proj.test <- scale(mat.t, pc$center, pc$scale) %*% pc$rotation[, 1:no.comp] 
-    recon.test <- proj %*% t(pc$rotation[, 1:no.comp])
+    recon.test <- proj.test %*% t(pc$rotation[, 1:no.comp])
     return(recon.test)
   }
   
