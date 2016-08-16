@@ -54,69 +54,46 @@ for (seed in filename.seeds) {
   train.data <- RestructureNormList(train.data)
   
   # initialize list for all PCA & ICA objects
+  # and error data.frames
   comp.list <- list()
+  error.df.list <- list()
   
-  # for array data, get rid of TDM at 0 & 100% seq levels
-  train.data$tdm$`0` <- NULL
-  train.data$tdm$`100` <- NULL
+  platforms <- c("array", "seq")
+  recon.methods <- c("PCA", "ICA")
   
-  #### PCA array test set ####
-  message("\tArray PCA reconstruction")
-  pca.array.recon <- CompAnalysisEvalWrapper(train.list = train.data, 
-                                             test.list = test.data$array,
-                                             no.comp = n.comp,
-                                             method = "PCA",
-                                             platform = "array")
-
-  # save prcomp objects into a list
-  comp.list$array$PCA <- pca.array.recon$COMP
-
-  #### ICA array test set ####
-  message("\tArray ICA reconstruction")
-  ica.array.recon <- CompAnalysisEvalWrapper(train.list = train.data, 
-                                             test.list = test.data$array,
-                                             no.comp = n.comp,
-                                             method = "ICA",
-                                             platform = "array")
-
-  # save fastICA objects into a list
-  comp.list$array$ICA <- ica.array.recon$COMP
-
-  # At the 0% RNA-seq level, TDM RNA-seq test data is transformed using the
-  # log-transformed 100% array data on the reference. So, use log-transformed
-  # 100% array data as the training set for evaluating the TDM method at 0% 
-  # RNA-seq level. 
-  train.data$tdm$`0` <- train.data$log$`0`
-  train.data$tdm <- train.data$tdm[c(10, 1:9)]
-  
-  #### PCA seq test set ####
-  message("\tRNA-seq PCA reconstruction")
-  pca.seq.recon <- CompAnalysisEvalWrapper(train.list = train.data, 
-                                           test.list = test.data$seq,
-                                           no.comp = n.comp,
-                                           method = "PCA",
-                                           platform = "seq")
-  
-  # save prcomp objects into a list
-  comp.list$seq$PCA <- pca.seq.recon$COMP
-
-  #### ICA seq test set ####
-  message("\tRNA-seq ICA reconstruction")
-  ica.seq.recon <- CompAnalysisEvalWrapper(train.list = train.data, 
-                                           test.list = test.data$seq,
-                                           no.comp = n.comp,
-                                           method = "ICA",
-                                           platform = "seq")
- 
-  # save fastICA objects into a list
-  comp.list$seq$ICA <- ica.array.recon$COMP
+  indx <- 1
+  # loop through platform-recon method pairs
+  for (plt in platforms) {
+    # deal with TDM normalization in training data
+    if (plt == "seq" & is.null(train.data$tdm$`0`)){
+      # At the 0% RNA-seq level, TDM RNA-seq test data is transformed using the
+      # log-transformed 100% array data on the reference. So, use 
+      # log-transformed 100% array data as the training set for evaluating the 
+      # TDM method at 0% RNA-seq level. 
+      train.data$tdm$`0` <- train.data$log$`0`
+      train.data$tdm <- train.data$tdm[c(10, 1:9)]
+    } else if (plt == "array") {
+      # for array data, get rid of TDM at 0 & 100% seq levels
+      train.data$tdm$`0` <- NULL
+      train.data$tdm$`100` <- NULL
+    }
+    # evaluate platform test set PCA and ICA
+    for (rcn in recon.methods) {
+      message(paste("\t", plt, rcn, "reconstruction"))
+      results <- 
+        CompAnalysisEvalWrapper(train.list = train.data, 
+                                test.list = test.data[[plt]],
+                                no.comp = n.comp,
+                                method = rcn,
+                                platform = plt)
+      comp.list[[plt]][[rcn]] <- results$COMP
+      error.df.list[[indx]] <- results$MASE
+    }  
+    indx <- indx + 1
+  }
   
   #### combine all results ####
-  master.df <- rbind(pca.array.recon$MASE, 
-                     ica.array.recon$MASE, 
-                     pca.seq.recon$MASE, 
-                     ica.seq.recon$MASE)
-  
+  master.df <- rbind.fill(error.df.list)  
   mstr.filename <- paste0(res.dir, df.file.lead, seed, ".tsv")
   write.table(master.df, file = mstr.filename, sep="\t", row.names = F,
               quote = F)
