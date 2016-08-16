@@ -280,22 +280,20 @@ CompAnalysisEvalWrapper <- function(train.list,
                             "GetMASE"))
 
   comp.list <- foreach(norm.iter = 1:length(train.list)) %do% {
-    norm.mthd <- names(train.list)[norm.iter]  
+    norm.mthd <- names(train.list)[norm.iter]      
+    if (platform == "array" & norm.mthd == "tdm"){
     # log-transformed array data is used as the 
     # reference for TDM, so we use log-transformed
     # array data as the array test set when evaluating 
     # TDM normalization
-    if (platform == "array" & norm.mthd == "tdm"){
-      DoParallelEvaluation(norm.train.list = train.list[[norm.mthd]],
-                           norm.test.list = test.list[["log"]],
-                           no.comp = no.comp,
-                           method = method)
+      input.test.list <- test.list[["log"]]
     } else {
-      DoParallelEvaluation(norm.train.list = train.list[[norm.mthd]],
-                           norm.test.list = test.list[[norm.mthd]],
-                           no.comp = no.comp,
-                           method = method)
+	  input.test.list <- test.list[[norm.mthd]]
     } 
+    DoParallelEvaluation(norm.train.list = train.list[[norm.mthd]],
+                         norm.test.list = input.test.list,
+                         no.comp = no.comp,
+                         method = method)
   }
   
   # stop parallel backend
