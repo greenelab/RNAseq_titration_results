@@ -133,7 +133,7 @@ EvaluatePCARecon <- function(train.dt, test.dt, no.comp = 50){
   names(mase) <- colnames(test.dm.t)
   
   # return reconstruction error and PCA output
-  return(list("MASE" = mase, "PC" = pc))
+  return(list("MASE" = mase, "COMP" = pc))
   
 }
 
@@ -201,6 +201,6 @@ EvaluateICARecon <- function(train.dt, test.dt, no.comp = 50){
   mase <- GetMASE(true.mat = test.dm.t, recon.mat = recon.test)
   
   # return reconstruction error and ICA output
-  return(list("MASE" = mase, "IC" = ic))
+  return(list("MASE" = mase, "COMP" = ic))
   
 }
