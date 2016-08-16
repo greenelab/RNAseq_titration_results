@@ -288,6 +288,10 @@ CompAnalysisEvalWrapper <- function(train.list,
                             "ExpressionDataTableToMatrixT",
                             "GetMASE")) %dopar% {
                               train.dt <- train.list[[norm.iter]][[seq.iter]]
+                              # log-transformed array data is used as the 
+                              # reference for TDM, so we use log-transformed
+                              # array data as the array test set when evaluating 
+                              # TDM normalization
                               test.dt <- test.list[["log"]]
                               if (method == "PCA") {
                                 EvaluatePCARecon(train.dt, 

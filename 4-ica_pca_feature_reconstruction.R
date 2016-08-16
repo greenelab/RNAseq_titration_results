@@ -82,9 +82,13 @@ for (seed in filename.seeds) {
   # save fastICA objects into a list
   comp.list$array$ICA <- ica.array.recon$COMP
 
-  # for seq reconstruction
+  # At the 0% RNA-seq level, TDM RNA-seq test data is transformed using the
+  # log-transformed 100% array data on the reference. So, use log-transformed
+  # 100% array data as the training set for evaluating the TDM method at 0% 
+  # RNA-seq level. 
   train.data$tdm$`0` <- train.data$log$`0`
   train.data$tdm <- train.data$tdm[c(10, 1:9)]
+  
   #### PCA seq test set ####
   message("\tRNA-seq PCA reconstruction")
   pca.seq.recon <- CompAnalysisEvalWrapper(train.list = train.data, 
