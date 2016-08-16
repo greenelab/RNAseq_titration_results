@@ -5,7 +5,7 @@
 # and back out ('reconstruction') and to then calculate the 'reconstruction 
 # error' (MASE).
 # It should be run from the command line.
-# USAGE: Rscript 4-ica_pca_feature_reconstruction.R <n.comp>
+# USAGE: Rscript 4-ica_pca_feature_reconstruction.R <n.comp> <initial.seed>
 # n.comp refers to the number of components (PC/IC) that should be used
 # for reconstruction.
 # 
@@ -16,9 +16,15 @@ source("util/ICA_PCA_reconstruction_functions.R")
 
 args <- commandArgs(trailingOnly = TRUE)
 n.comp <- as.integer(args[1])
+initial.seed <- as.integer(args[2])
+if (is.na(initial.seed)) {
+  message("\nInitial seed set to default: 346")
+  initial.seed <- 346
+} else {
+  message(paste("\nInitial seed set to:", n.repeats))
+}
 
-kInitialSeed <- 346
-set.seed(kInitialSeed)
+set.seed(initial.seed)
 
 res.dir <- "results/"
 norm.dir <- "normalized_data/"
