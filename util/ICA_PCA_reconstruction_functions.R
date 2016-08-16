@@ -258,15 +258,11 @@ CompAnalysisEvalWrapper <- function(train.list,
         } else {
           test.dt <- norm.test.list
         }
-        
+        # which reconstruction method
         if (method == "PCA") {
-          EvaluatePCARecon(train.dt, 
-                           test.dt,
-                           no.comp)
+          EvaluatePCARecon(train.dt, test.dt, no.comp)
         } else {
-          EvaluateICARecon(train.dt, 
-                           test.dt,
-                           no.comp)
+          EvaluateICARecon(train.dt, test.dt, no.comp)
         }
       
       }
