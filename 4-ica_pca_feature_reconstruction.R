@@ -21,7 +21,7 @@ if (is.na(initial.seed)) {
   message("\nInitial seed set to default: 346")
   initial.seed <- 346
 } else {
-  message(paste("\nInitial seed set to:", n.repeats))
+  message(paste("\nInitial seed set to:", initial.seed))
 }
 
 set.seed(initial.seed)
