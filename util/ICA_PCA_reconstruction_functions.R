@@ -226,107 +226,83 @@ CompAnalysisEvalWrapper <- function(train.list,
   #               suitable for use with ggplot2
   #         COMP: a list of the training fastICA or prcomp objects to be saved
   #          
-
+  
   # Error-handling
   check.method <- any(c(method == "PCA", method == "ICA"))
   if (!check.method){
     stop("method must be 'PCA' or 'ICA'")
   }
   
-  suppressMessages(require(reshape))
-  cl <- parallel::makeCluster(detectCores() - 1)
-  doParallel::registerDoParallel(cl)
+  check.platform <- any(c(method == "array", method == "seq"))
+  if (!check.method){
+    stop("method must be 'array' or 'seq'")
+  }
+
+  suppressMessages(require(reshape2))
   
-  if (platform == "seq"){
-    comp.list <- foreach(norm.iter = 1:length(train.list)) %do% {
-      mthd <- names(train.list)[norm.iter]
-      if (mthd == "qn" | mthd == "tdm"){
-        foreach(seq.iter = 1:length(train.list[[norm.iter]]),
-                .export = c("EvaluatePCARecon",
-                            "EvaluateICARecon",
-                            "ExpressionDataTableToMatrixT",
-                            "GetMASE")) %dopar% {
-                              train.dt <- train.list[[norm.iter]][[seq.iter]]
-                              test.dt <- test.list[[mthd]][[seq.iter]]
-                              if (method == "PCA") {
-                                EvaluatePCARecon(train.dt, 
-                                                 test.dt,
-                                                 no.comp)
-                              } else {
-                                EvaluateICARecon(train.dt, 
-                                                 test.dt,
-                                                 no.comp)
-                              }
-                            }
-      } else {
-        foreach(seq.iter = 1:length(train.list[[norm.iter]]),
-                .export = c("EvaluatePCARecon",
-                            "EvaluateICARecon",
-                            "ExpressionDataTableToMatrixT",
-                            "GetMASE")) %dopar% {
-                              train.dt <- train.list[[norm.iter]][[seq.iter]]                              
-                              test.dt <- test.list[[mthd]]
-                              if (method == "PCA") {
-                                EvaluatePCARecon(train.dt, 
-                                                 test.dt,
-                                                 no.comp)
-                              } else {
-                                EvaluateICARecon(train.dt, 
-                                                 test.dt,
-                                                 no.comp)
-                              }
-                            }
+  
+  DoParallelEvaluation <- function(norm.train.list,
+                                   norm.test.list,
+                                   no.comp,
+                                   method) {
+    return.list <- 
+      foreach(seq.iter = 1:length(norm.train.list)) %dopar% {
+        train.dt <- norm.train.list[[seq.iter]]
+        # if the test.list data has seq levels, i.e., is a 
+        # list, loop through it. This will happen in the case 
+        # of RNA-seq test data for TDM and QN norm methods.
+        # Otherwise, the 'test.list' argument is a data.table, 
+        # make it 'test.dt'
+        if (class(norm.test.list) == "list"){
+          test.dt <- norm.test.list[[seq.iter]]
+        } else {
+          test.dt <- norm.test.list
+        }
+        
+        if (method == "PCA") {
+          EvaluatePCARecon(train.dt, 
+                           test.dt,
+                           no.comp)
+        } else {
+          EvaluateICARecon(train.dt, 
+                           test.dt,
+                           no.comp)
+        }
+      
       }
-    }
-  } else if (platform == "array") {
-    comp.list <- foreach(norm.iter = 1:length(train.list)) %do% {
-      mthd <- names(train.list)[norm.iter]
-      if (mthd == "tdm") {  
-        foreach(seq.iter = 1:length(train.list[[norm.iter]]),
-                .export = c("EvaluatePCARecon",
-                            "EvaluateICARecon",
-                            "ExpressionDataTableToMatrixT",
-                            "GetMASE")) %dopar% {
-                              train.dt <- train.list[[norm.iter]][[seq.iter]]
-                              # log-transformed array data is used as the 
-                              # reference for TDM, so we use log-transformed
-                              # array data as the array test set when evaluating 
-                              # TDM normalization
-                              test.dt <- test.list[["log"]]
-                              if (method == "PCA") {
-                                EvaluatePCARecon(train.dt, 
-                                                 test.dt,
-                                                 no.comp)
-                              } else {
-                                EvaluateICARecon(train.dt, 
-                                                 test.dt,
-                                                 no.comp)
-                              }
-                            }
-      } else {
-        foreach(seq.iter = 1:length(train.list[[norm.iter]]),
-                .export = c("EvaluatePCARecon",
-                            "EvaluateICARecon",
-                            "ExpressionDataTableToMatrixT",
-                            "GetMASE")) %dopar% {
-                              train.dt <- train.list[[norm.iter]][[seq.iter]]
-                              test.dt <- test.list[[mthd]]
-                              if (method == "PCA") {
-                                EvaluatePCARecon(train.dt, 
-                                                 test.dt,
-                                                 no.comp)
-                              } else {
-                                EvaluateICARecon(train.dt, 
-                                                 test.dt,
-                                                 no.comp)
-                              }
-                            }
-      }
-    }
-  } else {
-    stop("platform must be 'array' or 'seq'")
+    
+    return(return.list)
   }
   
+  # parallel backend
+  cl <- parallel::makeCluster(detectCores() - 1)
+  doParallel::registerDoParallel(cl)
+  parallel::clusterExport(cl,
+                          c("EvaluatePCARecon",
+                            "EvaluateICARecon",
+                            "ExpressionDataTableToMatrixT",
+                            "GetMASE"))
+
+  comp.list <- foreach(norm.iter = 1:length(train.list)) %do% {
+    norm.mthd <- names(train.list)[norm.iter]  
+    # log-transformed array data is used as the 
+    # reference for TDM, so we use log-transformed
+    # array data as the array test set when evaluating 
+    # TDM normalization
+    if (platform == "array" & norm.mthd == "tdm"){
+      DoParallelEvaluation(norm.train.list = train.list[[norm.mthd]],
+                           norm.test.list = test.list[["log"]],
+                           no.comp = no.comp,
+                           method = method)
+    } else {
+      DoParallelEvaluation(norm.train.list = train.list[[norm.mthd]],
+                           norm.test.list = test.list[[norm.mthd]],
+                           no.comp = no.comp,
+                           method = method)
+    } 
+  }
+  
+  # stop parallel backend
   parallel::stopCluster(cl)
   
   # sort out names
@@ -347,18 +323,17 @@ CompAnalysisEvalWrapper <- function(train.list,
   gene.ids <- names(comp.list[[1]][[1]][[1]])
   n.reps <- nrow(error.df) / length(gene.ids)
   error.df <- cbind(rep(gene.ids, n.reps),
-                           error.df, 
-                           rep(platform, nrow(error.df)),
-                           rep(method, nrow(error.df)))
+                    error.df, 
+                    rep(platform, nrow(error.df)),
+                    rep(method, nrow(error.df)))
   colnames(error.df) <- c("gene", "MASE", "perc.seq", "normalization", 
-                                 "platform", "method")
+                          "platform", "method")
   return.list$MASE <- error.df
   
   # save prcomp objects into a list
   return.list$COMP <- lapply(comp.list, 
-                                function(x) lapply(x, 
-                                                   function(y) y$COMP))
+                             function(x) lapply(x, 
+                                                function(y) y$COMP))
   
   return(return.list)
-  
 }
