@@ -133,7 +133,7 @@ EvaluatePCARecon <- function(train.dt, test.dt, no.comp = 50){
   names(mase) <- colnames(test.dm.t)
   
   # return reconstruction error and PCA output
-  return(list("MASE" = mase, "PC" = pc))
+  return(list("MASE" = mase, "COMP" = pc))
   
 }
 
@@ -201,6 +201,133 @@ EvaluateICARecon <- function(train.dt, test.dt, no.comp = 50){
   mase <- GetMASE(true.mat = test.dm.t, recon.mat = recon.test)
   
   # return reconstruction error and ICA output
-  return(list("MASE" = mase, "IC" = ic))
+  return(list("MASE" = mase, "COMP" = ic))
   
+}
+
+CompAnalysisEvalWrapper <- function(train.list, 
+                                    test.list,
+                                    no.comp = 50,
+                                    platform = "array",
+                                    method = "PCA"){
+  # This is a wrapper function for ICA/PCA reconstruction error
+  # 
+  # Args:
+  #   train.list: list of training data.tables - output of 
+  #               1-normalize_titrated_data.R + ReconstructedNormList
+  #   test.list: list of test data.tables - output of 
+  #              1-normalize_titrated_data.R
+  #   no.comp: number of independent or principal components for reconstruction
+  #   platform: is the test data 'array' or 'seq' data? character
+  #   method: perform 'ICA' or 'PCA'? character
+  # 
+  # Return: list of results for either EvaluatePCARecon or EvaluateICARecon
+  #         MASE: a 'melted' data.frame of reconstruction error results
+  #               suitable for use with ggplot2
+  #         COMP: a list of the training fastICA or prcomp objects to be saved
+  #          
+  
+  # Error-handling
+  check.method <- any(c(method == "PCA", method == "ICA"))
+  if (!check.method){
+    stop("method must be 'PCA' or 'ICA'")
+  }
+  
+  check.platform <- any(c(method == "array", method == "seq"))
+  if (!check.method){
+    stop("method must be 'array' or 'seq'")
+  }
+
+  suppressMessages(require(reshape2))
+  
+  
+  DoParallelEvaluation <- function(norm.train.list,
+                                   norm.test.list,
+                                   no.comp,
+                                   method) {
+    return.list <- 
+      foreach(seq.iter = 1:length(norm.train.list)) %dopar% {
+        train.dt <- norm.train.list[[seq.iter]]
+        # if the test.list data has seq levels, i.e., is a 
+        # list, loop through it. This will happen in the case 
+        # of RNA-seq test data for TDM and QN norm methods.
+        # Otherwise, the 'test.list' argument is a data.table, 
+        # make it 'test.dt'
+        if (class(norm.test.list) == "list"){
+          test.dt <- norm.test.list[[seq.iter]]
+        } else {
+          test.dt <- norm.test.list
+        }
+        # which reconstruction method
+        if (method == "PCA") {
+          EvaluatePCARecon(train.dt, test.dt, no.comp)
+        } else {
+          EvaluateICARecon(train.dt, test.dt, no.comp)
+        }
+      
+      }
+    
+    return(return.list)
+  }
+  
+  # parallel backend
+  cl <- parallel::makeCluster(detectCores() - 1)
+  doParallel::registerDoParallel(cl)
+  parallel::clusterExport(cl,
+                          c("EvaluatePCARecon",
+                            "EvaluateICARecon",
+                            "ExpressionDataTableToMatrixT",
+                            "GetMASE"))
+
+  comp.list <- foreach(norm.iter = 1:length(train.list)) %do% {
+    norm.mthd <- names(train.list)[norm.iter]      
+    if (platform == "array" & norm.mthd == "tdm"){
+    # log-transformed array data is used as the 
+    # reference for TDM, so we use log-transformed
+    # array data as the array test set when evaluating 
+    # TDM normalization
+      input.test.list <- test.list[["log"]]
+    } else {
+	  input.test.list <- test.list[[norm.mthd]]
+    } 
+    DoParallelEvaluation(norm.train.list = train.list[[norm.mthd]],
+                         norm.test.list = input.test.list,
+                         no.comp = no.comp,
+                         method = method)
+  }
+  
+  # stop parallel backend
+  parallel::stopCluster(cl)
+  
+  # sort out names
+  names(comp.list) <- names(train.list)
+  for (nrm.iter in 1:length(train.list)){
+    names(comp.list[[nrm.iter]]) <- names(train.list[[nrm.iter]])
+  }
+  
+  # initialize list that will be returned
+  return.list <- list()
+  
+  # save MASE into a data.frame
+  error.df <- 
+    reshape2::melt(lapply(comp.list,
+                          function(x) lapply(x, 
+                                             function(y) y$MASE)))
+  # include gene identifiers
+  gene.ids <- names(comp.list[[1]][[1]][[1]])
+  n.reps <- nrow(error.df) / length(gene.ids)
+  error.df <- cbind(rep(gene.ids, n.reps),
+                    error.df, 
+                    rep(platform, nrow(error.df)),
+                    rep(method, nrow(error.df)))
+  colnames(error.df) <- c("gene", "MASE", "perc.seq", "normalization", 
+                          "platform", "method")
+  return.list$MASE <- error.df
+  
+  # save prcomp objects into a list
+  return.list$COMP <- lapply(comp.list, 
+                             function(x) lapply(x, 
+                                                function(y) y$COMP))
+  
+  return(return.list)
 }
