@@ -233,9 +233,9 @@ CompAnalysisEvalWrapper <- function(train.list,
     stop("method must be 'PCA' or 'ICA'")
   }
   
-  check.platform <- any(c(method == "array", method == "seq"))
-  if (!check.method){
-    stop("method must be 'array' or 'seq'")
+  check.platform <- any(c(platform == "array", platform == "seq"))
+  if (!check.platform){
+    stop("platform must be 'array' or 'seq'")
   }
 
   suppressMessages(require(reshape2))
