@@ -27,42 +27,45 @@ if (is.na(initial.seed)) {
 set.seed(initial.seed)
 
 res.dir <- "results/"
-norm.dir <- "normalized_data/"
+norm.dir <- "normalized_data"
 mdl.dir <- "models/"
+rcn.dir <- "normalized_data/reconstructed_data/"
+rcn.res.dir <- paste0(res.dir, "/reconstructed_data/")
 lf <- list.files(norm.dir, full.names = TRUE)
 train.files <- lf[grepl("BRCA_array_seq_train_titrate_normalized_list_", lf)]
 test.files <- lf[grepl("BRCA_array_seq_test_data_normalized_list_", lf)]
 filename.seeds <- substr(train.files,
                          (nchar(train.files)-7),
                          (nchar(train.files)-4))
-df.file.lead <- paste0("BRCA_array_seq_ICA_PCA_reconstruction_error_", n.comp,
+df.file.lead <- paste0("BRCA_reconstruction_error_", n.comp,
                        "_components_")
-mdl.file.lead <- paste0("BRCA_array_seq_train_ICA_PCA_objects_", n.comp,
+mdl.file.lead <- paste0("BRCA_array_seq_train_", n.comp,
+                        "_components_object_")
+rcn.file.lead <- paste0("BRCA_reconstructed_data_", n.comp,
                         "_components_")
 
 #### main ----------------------------------------------------------------------
-rep.count <- 1
+ platforms <- c("array", "seq")
+ recon.methods <- c("ICA", "PCA")
+
 for (seed in filename.seeds) {
+  rep.count <- grep(seed, filename.seeds)
   message(paste("\n\n#### RECONSTRUCTION ROUND", 
                 rep.count, "of", length(filename.seeds), "####\n\n"))
   
   #### read in data ####
+  message("Reading in data...")
   train.rds <- train.files[grepl(seed, train.files)]
   test.rds <- test.files[grepl(seed, test.files)]
   train.data <- readRDS(train.rds)
   test.data <- readRDS(test.rds)
   train.data <- RestructureNormList(train.data)
   
-  # initialize list for all PCA & ICA objects
-  # and error data.frames
-  comp.list <- list()
-  error.df.list <- list()
-  
-  platforms <- c("array", "seq")
-  recon.methods <- c("PCA", "ICA")
-  
-  indx <- 1
-  # loop through platform-recon method pairs
+  # for array data (first to be analyzed)
+  # get rid of TDM at 0 & 100% seq levels
+  train.data$tdm$`0` <- NULL
+  train.data$tdm$`100` <- NULL
+
   for (plt in platforms) {
     # deal with TDM normalization in training data
     if (plt == "seq" & is.null(train.data$tdm$`0`)){
@@ -72,11 +75,7 @@ for (seed in filename.seeds) {
       # TDM method at 0% RNA-seq level. 
       train.data$tdm$`0` <- train.data$log$`0`
       train.data$tdm <- train.data$tdm[c(10, 1:9)]
-    } else if (plt == "array") {
-      # for array data, get rid of TDM at 0 & 100% seq levels
-      train.data$tdm$`0` <- NULL
-      train.data$tdm$`100` <- NULL
-    }
+    } 
     # evaluate platform test set PCA and ICA
     for (rcn in recon.methods) {
       message(paste("\t", plt, rcn, "reconstruction"))
@@ -86,22 +85,33 @@ for (seed in filename.seeds) {
                                 no.comp = n.comp,
                                 method = rcn,
                                 platform = plt)
-      comp.list[[plt]][[rcn]] <- results$COMP
-      error.df.list[[indx]] <- results$MASE
+      # add error data.frame to list that holds all error data.frames
+      # for this round of reconstruction
+      message("\t\t writing error data.frame to file...")
+      df.file.name <- 
+      	paste0(rcn.res.dir, df.file.lead, "_", plt, "_", rcn, "_", seed, 
+      		   ".tsv")
+      write.table(results$error.df, file = df.file.name, quote = F,
+      			  row.names = F, sep = "\t")
+      # save prcomp or fastICA objects to model directory
+      message("\t\t saving prcomp/fastICA objects RDS...")
+      comp.rds.name <- paste0(mdl.dir, mdl.file.lead, plt, "_", rcn, "_", 
+                              seed, ".RDS")
+      saveRDS(results$COMP, file = comp.rds.name)
+      # save reconstructed data to reconstructed data directory
+      message("\t\t saving reconstructed data RDS...")
+      recon.rds.name <- paste0(rcn.dir, rcn.file.lead, plt, "_", rcn, "_", 
+                               seed, ".RDS")
+      saveRDS(results$RECON, file = recon.rds.name)
+    
+      rm(results)	
+      gc()
+	   
     }  
-    indx <- indx + 1
+    
   }
   
-  #### combine all results ####
-  master.df <- rbind.fill(error.df.list)  
-  mstr.filename <- paste0(res.dir, df.file.lead, seed, ".tsv")
-  write.table(master.df, file = mstr.filename, sep="\t", row.names = F,
-              quote = F)
-  
-  # save prcomp and fastICA objects to model directory
-  comp.rds.name <- paste0(mdl.dir, mdl.file.lead, seed, ".RDS")
-  saveRDS(comp.list, file = comp.rds.name)
-  
-  rep.count <- rep.count + 1  
+  rm(train.data, test.data)
+  gc()
 
 }
