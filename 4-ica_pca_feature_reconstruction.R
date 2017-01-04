@@ -26,11 +26,11 @@ if (is.na(initial.seed)) {
 
 set.seed(initial.seed)
 
-res.dir <- "results/"
+res.dir <- "results"
 norm.dir <- "normalized_data"
-mdl.dir <- "models/"
-rcn.dir <- "normalized_data/reconstructed_data/"
-rcn.res.dir <- paste0(res.dir, "/reconstructed_data/")
+mdl.dir <- "models"
+rcn.dir <- file.path("normalized_data", "reconstructed_data")
+rcn.res.dir <- file.path(res.dir, "reconstructed_data")
 lf <- list.files(norm.dir, full.names = TRUE)
 train.files <- lf[grepl("BRCA_array_seq_train_titrate_normalized_list_", lf)]
 test.files <- lf[grepl("BRCA_array_seq_test_data_normalized_list_", lf)]
@@ -88,21 +88,21 @@ for (seed in filename.seeds) {
       # add error data.frame to list that holds all error data.frames
       # for this round of reconstruction
       message("\t\t writing error data.frame to file...")
-      df.file.name <- 
-      	paste0(rcn.res.dir, df.file.lead, "_", plt, "_", rcn, "_", seed, 
+      df.file.name <- paste0(df.file.lead, "_", plt, "_", rcn, "_", seed, 
       		   ".tsv")
-      write.table(results$error.df, file = df.file.name, quote = F,
-      			  row.names = F, sep = "\t")
+      write.table(results$error.df, 
+                  file = file.path(rcn.res.dir, df.file.name), quote = F,
+      			      row.names = F, sep = "\t")
       # save prcomp or fastICA objects to model directory
       message("\t\t saving prcomp/fastICA objects RDS...")
-      comp.rds.name <- paste0(mdl.dir, mdl.file.lead, plt, "_", rcn, "_", 
+      comp.rds.name <- paste0(mdl.file.lead, plt, "_", rcn, "_", 
                               seed, ".RDS")
-      saveRDS(results$COMP, file = comp.rds.name)
+      saveRDS(results$COMP, file = file.path(mdl.dir, comp.rds.name))
       # save reconstructed data to reconstructed data directory
       message("\t\t saving reconstructed data RDS...")
-      recon.rds.name <- paste0(rcn.dir, rcn.file.lead, plt, "_", rcn, "_", 
+      recon.rds.name <- paste0(rcn.file.lead, plt, "_", rcn, "_", 
                                seed, ".RDS")
-      saveRDS(results$RECON, file = recon.rds.name)
+      saveRDS(results$RECON, file = file.path(rcn.dir, recon.rds.name))
     
       rm(results)	
       gc()
