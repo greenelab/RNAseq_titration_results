@@ -11,8 +11,8 @@
 # 
 
 suppressMessages(source("load_packages.R"))
-source("util/train_test_functions.R")
-source("util/ICA_PCA_reconstruction_functions.R")
+source(file.path("util", "train_test_functions.R"))
+source(file.path("util", "ICA_PCA_reconstruction_functions.R"))
 
 args <- commandArgs(trailingOnly = TRUE)
 n.comp <- as.integer(args[1])
