@@ -1,4 +1,5 @@
-GetKappa <- function(model, dt.mat, subtype, model.type = NULL){
+GetCM <- function(model, dt.mat, subtype, 
+                  model.type = NULL, return.kappa = TRUE){
   # This function takes a model, a normalized gene expression matrix,
   # and performs prediction and returns the Kappa statistic based on the 
   # observed subtype labels supplied
@@ -9,9 +10,15 @@ GetKappa <- function(model, dt.mat, subtype, model.type = NULL){
   #   dt.mat: a matrix where genes are columns and rows are samples
   #   subtype: a vector of the true subtype labels
   #   model.type: what kind of predictive model will be used?
+  #   return.kappa: logical, should the Kappa statistic associated with
+  #                 the prediction be returned (TRUE) or should the entire 
+  #                 confusionMatrix be returned (FALSE)?
   #
   # Returns:
-  #   Kappa: the Kappa statistic associated with the prediction
+  #   if return.kappa = TRUE
+  #     kap: the Kappa statistic associated with the prediction
+  #   if return.kappa != TRUE
+  #     cm: the confusionMatrix (caret) associated with the prediction
   #
   if (model.type == "glmnet") {
     prd <- predict(model, dt.mat, s=model$lambda.1se, type="class")
@@ -21,11 +28,19 @@ GetKappa <- function(model, dt.mat, subtype, model.type = NULL){
     tbl <- table(prd, subtype)
     cm <- confusionMatrix(tbl)
   }
-  kap <- as.numeric(cm$overall["Kappa"])
-  return(kap)
+  
+  # should we return the Kappa statistic (return.kappa = TRUE), or the
+  # full confusionMatrix for the prediction?
+  if (return.kappa) {
+    kap <- as.numeric(cm$overall["Kappa"])
+    return(kap)
+  } else {
+    return(cm)
+  }
 }
 
-PredictKappa <- function(model, dt, sample.df, model.type=NULL){
+PredictCM <- function(model, dt, sample.df, 
+                      model.type = NULL, return.kappa = TRUE){
   # This function takes a model, a normalized gene expression matrix,
   # and performs prediction and returns the total accuracy based on the 
   # observed subtype labels supplied
@@ -38,22 +53,33 @@ PredictKappa <- function(model, dt, sample.df, model.type=NULL){
   #              output of 0-expression_data_overlap_and_split.R
   #   model.type: is the model from glmnet (class: cv.glmnet) or from caret 
   #               class 
-  #
+  #   return.kappa: logical, should the Kappa statistic associated with
+  #                 the prediction be returned (TRUE) or should the entire 
+  #                 confusionMatrix be returned (FALSE)?
+  #                 
   # Returns:
-  #   Kappa: the Kappa statistic of the prediction
+  #   if return.kappa = TRUE
+  #     kap: the Kappa statistic associated with the prediction
+  #   if return.kappa != TRUE
+  #     cm: the confusionMatrix (caret) associated with the prediction
   #
   require(caret)
   require(glmnet)
   require(ranger)
   require(kernlab)
   require(data.table)
-   
+  
   subtype <- GetOrderedSubtypeLabels(dt, sample.df)
   dt.mat <- t(dt[, 2:ncol(dt), with = F])
-  pred.kappa <- GetKappa(model, dt.mat, subtype, model.type)
-  return(pred.kappa)
+  
+  # check if dt.mat is character -- if so, make numeric
+  if (any(apply(dt.mat, 1, is.character))) {
+    dt.mat <- apply(dt.mat, 2, as.numeric)
+  }
+  
+  pred.cm <- GetCM(model, dt.mat, subtype, model.type, return.kappa)
+  return(pred.cm)
 }
-
 
 GetOrderedSubtypeLabels <- function(exp.dt, sample.df){
   # This function takes a data.table of gene expression and a data.frame that
@@ -247,26 +273,28 @@ PredictArrayDataWrapper <- function(norm.array.list, train.list, sample.df){
                           # data test set
       foreach(m = 1:3) %do% {  # exclude the seeds element of list (#4)
         foreach(o = 1:length(train.list[[n]][[m]]),
-                .export=c("PredictKappa",
-                          "GetKappa",
+                .export=c("PredictCM",
+                          "GetCM",
                           "GetOrderedSubtypeLabels")) %dopar% {
-                            PredictKappa(model = train.list[[n]][[m]][[o]],
+                            PredictCM(model = train.list[[n]][[m]][[o]],
                                          dt = norm.array.list[["log"]],
                                          sample.df = sample.df,
-                                       model.type = rownames(train.list[[n]])[m]
+                                      model.type = rownames(train.list[[n]])[m],
+                                         return.kappa = TRUE
                             )
                           }
       }
     } else {  # all other norm methods can use the corresponding array data 
       foreach(m = 1:3) %do% { # exclude the seeds element of list (#4)
         foreach(o = 1:length(train.list[[n]][[m]]), # for each %seq level
-                .export=c("PredictKappa",
-                          "GetKappa",
+                .export=c("PredictCM",
+                          "GetCM",
                           "GetOrderedSubtypeLabels")) %dopar% {
-                            PredictKappa(model = train.list[[n]][[m]][[o]],
-                                         dt = norm.array.list[[mthd]],
-                                         sample.df = sample.df,
-                                       model.type = rownames(train.list[[n]])[m]
+                            PredictCM(model = train.list[[n]][[m]][[o]],
+                                      dt = norm.array.list[[mthd]],
+                                      sample.df = sample.df,
+                                      model.type = rownames(train.list[[n]])[m],
+                                      return.kappa = TRUE
                             )
                           }
       }
@@ -323,13 +351,15 @@ PredictSeqDataWrapper <- function(norm.seq.list, train.list, sample.df){
     if (mthd == "tdm" | mthd == "qn") {
       foreach(m = 1:3) %do% {  # exclude the seeds element of list (#4)
         foreach(o = 1:length(train.list[[n]][[m]]),
-                .export=c("PredictKappa",
-                          "GetKappa",
+                .export=c("PredictCM",
+                          "GetCM",
                           "GetOrderedSubtypeLabels")) %dopar% {
-                            PredictKappa(model = train.list[[n]][[m]][[o]],
-                                         dt = norm.seq.list[[mthd]][[o]],
-                                         sample.df = sample.df,
-                                       model.type = rownames(train.list[[n]])[m]
+                            PredictCM(model = train.list[[n]][[m]][[o]],
+                                      dt = norm.seq.list[[mthd]][[o]],
+                                      sample.df = sample.df,
+                                      model.type = rownames(train.list[[n]])[m],
+                                      return.kappa = TRUE
+                                         
                             )
                           }
       }
@@ -337,13 +367,14 @@ PredictSeqDataWrapper <- function(norm.seq.list, train.list, sample.df){
              # data.table
       foreach(m = 1:3) %do% {  # exclude the seeds element of list (#4)
         foreach(o = 1:length(train.list[[n]][[m]]),
-                .export=c("PredictKappa",
-                          "GetKappa",
+                .export=c("PredictCM",
+                          "GetCM",
                           "GetOrderedSubtypeLabels")) %dopar% {
-                            PredictKappa(model = train.list[[n]][[m]][[o]],
+                            PredictCM(model = train.list[[n]][[m]][[o]],
                                          dt = norm.seq.list[[mthd]],
                                          sample.df = sample.df,
-                                       model.type = rownames(train.list[[n]])[m]
+                                      model.type = rownames(train.list[[n]])[m],
+                                         return.kappa = TRUE
                             )
                           }
       }
@@ -402,10 +433,11 @@ GetTrainingSetKappa <- function(model.list, train.data.list, subtype.list){
         dt.mat <- t(dt[, 2:ncol(dt), with=F])
         perc.seq <- names(train.data.list[[norm.indx]])[seq.indx]
         classif.list[[perc.seq]] <-
-          GetKappa(model = model.list[[norm.indx]][[mdl.indx]][[seq.indx]],
+          GetCM(model = model.list[[norm.indx]][[mdl.indx]][[seq.indx]],
                    dt.mat = dt.mat,
                    subtype = subtype.list[[perc.seq]],
-                   model.type = model.type)
+                   model.type = model.type,
+                   return.kappa = TRUE)
       }  
       norm.list[[model.type]] <- classif.list
     }
