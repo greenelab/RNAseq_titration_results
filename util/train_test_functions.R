@@ -450,3 +450,55 @@ GetTrainingSetKappa <- function(model.list, train.data.list, subtype.list){
   return(train.kappa.mlt)
 
 }
+
+PredictReconDataWrapper <- function(recon.list, train.list, sample.df){
+  # This function is a wrapper for performing subtype prediction on 
+  # reconstructed test/hold-out data, using the models trained on training data
+  # in the supervised analysis (train.list from 2-train_test_brca_subtype.R).
+  # 
+  # Args:
+  #   recon.list: a list of reconstructed data
+  #   train.list: a list of predictive models (LASSO, linear SVM, random forest) 
+  #   sample.df: the data frame that maps sample name/header to subtype and
+  #              train/test set labels 
+  #              output of 0-expression_data_overlap_and_split.R
+  # 
+  # Returns:
+  #   pred.list: a list of confusionMatrix objects (caret) from predictions on
+  #              the reconstructed data
+  #   
+  
+  pred.list <- list()  # initialize list for all predictions
+  for (mthd.iter in seq_along(train.list)) {  # for each normalization method
+    norm.list <- list()  # initialize list to hold all CM from all models
+    # and level of sequencing data
+    norm.mthd <- names(train.list)[mthd.iter] # name of normalization method
+    for (mdl.iter in 1:3) {  # for each model: glmnet, svm, rf
+      # excluding seeds element of list #4
+      mdl.list <- list()  #
+      mdl.name <- rownames(train.list[[norm.mthd]])[mdl.iter]  # name of model
+      for (seq.iter in 
+           seq_along(train.list[[mthd.iter]][[mdl.iter]])) {  # for each
+        # amount/level of sequencing data
+        seq.level <- names(train.list[[mthd.iter]][[mdl.iter]])[seq.iter]
+        # some methods (e.g., TDM) do not have data for each amount of
+        # sequencing, so check
+        if (!is.null(recon.list[[norm.mthd]][[seq.level]])) {
+          mdl <- train.list[[norm.mthd]][[mdl.iter]][[seq.level]]
+          recon.dt <- recon.list[[norm.mthd]][[seq.level]]
+          # get confusionMatrix
+          mdl.list[[seq.level]] <- PredictCM(model = mdl,
+                                             dt = recon.dt,
+                                             sample.df = sample.df,
+                                             model.type = mdl.name,
+                                             return.kappa = FALSE)
+        }
+      }
+      norm.list[[mdl.name]] <- mdl.list
+    }
+    pred.list[[norm.mthd]] <- norm.list
+  }
+  
+  return(pred.list)
+  
+}
