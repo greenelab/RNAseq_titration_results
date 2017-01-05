@@ -34,7 +34,7 @@ kap.file.lead <- sub("confusionMatrices", "kappa", cm.file.lead)
 #### main ----------------------------------------------------------------------
 
 platforms <- c("array", "seq")
-recon.methods <- c("ICA","PCA")
+recon.methods <- c("ICA", "PCA")
 
 for (seed in filename.seeds) {
   
@@ -63,11 +63,13 @@ for (seed in filename.seeds) {
               seed, ".tsv"))
   sample.df <- data.table::fread(sample.df.file, data.table = F)
   
-  # initialize list to hold confusionMatrices
+  # initialize list to hold confusionMatrices & kappa statistics
+  kappa.list <- list()
   cm.list <- list()
   
   for (plt in platforms) {
     plt.list <- list()
+    plt.kap.list <- list()
     for (rcn in recon.methods) {
       
       # read in reconstructed data from current platform and reconstruction 
@@ -76,33 +78,29 @@ for (seed in filename.seeds) {
       recon.rds <- recon.files[grep(file.identifier, recon.files)]
       recon.list <- readRDS(recon.rds)
       
+      # get confusionMatrix objects
       plt.list[[rcn]] <- PredictReconDataWrapper(train.list = train.list,
                                                  recon.list = recon.list,
                                                  sample.df = sample.df)
+      # get just Kappa statistic
+      plt.kap.list[[rcn]] <- PredictReconDataWrapper(train.list = train.list,
+                                                     recon.list = recon.list,
+                                                     sample.df = sample.df,
+                                                     return.kap = TRUE)
       
     }
+    
     cm.list[[plt]] <- plt.list
+    kappa.list[[plt]] <- plt.kap.list
+
   }
   
   # save confusion matrices
   cm.file.name <- file.path(rcn.res.dir, paste0(cm.file.lead, seed, ".RDS"))
   saveRDS(cm.list, file = cm.file.name)
   
-  # get kappa stats into data.frame from nested list of confusionMatrix and save
-  # as data.frame
-  kappa.df <- 
-    reshape2::melt(lapply(cm.list, 
-                          function(a) 
-                            lapply(a, 
-                                   function(b) 
-                                     lapply(b, 
-                                            function(c) 
-                                              lapply(c, 
-                                                     function(d) 
-                                                       lapply(d, 
-                                                              function(e) 
-                                                              e$overall["Kappa"] 
-                                                       ))))))
+  # get kappa stats into data.frame from nested list and save as data.frame
+  kappa.df <- reshape2::melt(kappa.list)
   colnames(kappa.df) <- c("Kappa", "Perc.seq", "Classifier", "Normalization",
                           "Reconstruction", "Platform")
   kap.file.name <- file.path(rcn.res.dir, paste0(kap.file.lead, seed, ".tsv")) 
