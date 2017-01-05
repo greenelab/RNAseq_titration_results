@@ -451,7 +451,8 @@ GetTrainingSetKappa <- function(model.list, train.data.list, subtype.list){
 
 }
 
-PredictReconDataWrapper <- function(recon.list, train.list, sample.df){
+PredictReconDataWrapper <- function(recon.list, train.list, sample.df,
+                                    return.kap = FALSE){
   # This function is a wrapper for performing subtype prediction on 
   # reconstructed test/hold-out data, using the models trained on training data
   # in the supervised analysis (train.list from 2-train_test_brca_subtype.R).
@@ -462,9 +463,12 @@ PredictReconDataWrapper <- function(recon.list, train.list, sample.df){
   #   sample.df: the data frame that maps sample name/header to subtype and
   #              train/test set labels 
   #              output of 0-expression_data_overlap_and_split.R
+  #   return.kap: logical; should the entire confusionMatrix (FALSE) or just
+  #               the Kappa statistic associated with the prediction?
   # 
   # Returns:
-  #   pred.list: a list of confusionMatrix objects (caret) from predictions on
+  #   pred.list: a list of confusionMatrix objects (if return.kap = FALSE) 
+  #              or Kappa statistics (if return.kap = TRUE) from predictions on
   #              the reconstructed data
   #   
   
@@ -491,7 +495,7 @@ PredictReconDataWrapper <- function(recon.list, train.list, sample.df){
                                              dt = recon.dt,
                                              sample.df = sample.df,
                                              model.type = mdl.name,
-                                             return.kappa = FALSE)
+                                             return.kappa = return.kap)
         }
       }
       norm.list[[mdl.name]] <- mdl.list
