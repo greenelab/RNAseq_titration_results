@@ -29,7 +29,7 @@ DataSummary <- function(x) {
   conf <- boxplot.stats(x)$conf
   ymin <- min(conf)
   ymax <- max(conf)
-  return(c(y=m,ymin=ymin,ymax=ymax))
+  return(c(y = m, ymin = ymin, ymax = ymax))
 }
 
 # color-blind friendly palette
@@ -53,12 +53,11 @@ kappa.master.df$Perc.seq <- factor(kappa.master.df$Perc.seq,
                                    levels = seq(0, 100, 10))
 
 # rename classifiers
-kappa.master.df$Classifier[which(kappa.master.df$Classifier == "glmnet")] <- 
-  "LASSO"
-kappa.master.df$Classifier[which(kappa.master.df$Classifier == "rf")] <- 
-  "Random Forest"
-kappa.master.df$Classifier[which(kappa.master.df$Classifier == "svm")] <- 
-  "Linear SVM"
+
+cls.recode.str <- 
+  "'glmnet' = 'LASSO'; 'rf' = 'Random Forest'; 'svm' = 'Linear SVM'"
+kappa.master.df$Classifier <- car::recode(kappa.master.df$Classifier,
+                                          recodes = cls.recode.str)
 kappa.master.df$Classifier <- as.factor(kappa.master.df$Classifier)
 
 # get norm and reconstruction methods as factors 
@@ -66,9 +65,10 @@ kappa.master.df$Normalization <- as.factor(kappa.master.df$Normalization)
 kappa.master.df$Reconstruction <- as.factor(kappa.master.df$Reconstruction)
 
 # rename platforms
-kappa.master.df$Platform[which(kappa.master.df$Platform == "array")] <-
-  "Microarray"
-kappa.master.df$Platform[which(kappa.master.df$Platform == "seq")] <- "RNA-seq"
+plt.recode.str <- 
+  "'array' = 'Microarray'; 'seq' = 'RNA-seq'"
+kappa.master.df$Platform <- car::recode(kappa.master.df$Platform,
+                                        recodes = plt.recode.str)
 kappa.master.df$Platform <- as.factor(kappa.master.df$Platform)
 
 # for each normalization method, plot kappa stats 
@@ -79,7 +79,7 @@ for (norm in norm.methods) {
   ggplot(kappa.master.df[which(kappa.master.df$Normalization == norm), ], 
          aes(x = Perc.seq, y = Kappa, color = Platform,
              shape = Platform)) + 
-    facet_wrap(Reconstruction ~ Classifier, ncol=3) +
+    facet_wrap(Reconstruction ~ Classifier, ncol = 3) +
     stat_summary(fun.y = median, geom = "line", aes(group = Platform),
                  position = position_dodge(0.2)) +
     stat_summary(fun.data = DataSummary, aes(group = Platform),
@@ -111,10 +111,9 @@ error.master.df$perc.seq <- factor(error.master.df$perc.seq,
 error.master.df$normalization <- as.factor(error.master.df$normalization)
 error.master.df$error.measure <- as.factor(error.master.df$error.measure)
 
-# rename platforms
-error.master.df$platform[which(error.master.df$platform == "array")] <-
-  "Microarray"
-error.master.df$platform[which(error.master.df$platform == "seq")] <- "RNA-seq"
+# rename platforms -- same as above for kappa data.frame
+error.master.df$platform <- car::recode(error.master.df$platform,
+                                        recodes = plt.recode.str)  
 error.master.df$platform <- as.factor(error.master.df$platform)
 
 # reconstruction method as factor
@@ -147,7 +146,7 @@ for (norm in norm.methods) {
     stat_summary(fun.y = median, geom = "point", aes(group = Platform),
                  position = position_dodge(0.8)) +
     xlab("% RNA-seq") +
-    ylab("Mean Value (per gene)")
+    ylab("Mean Value (per gene)") +
     ggtitle(toupper(norm))
   ggsave(plot.nm, plot = last_plot(), height = 8.5, width = 8.5)
 }
