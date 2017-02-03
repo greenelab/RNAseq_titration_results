@@ -156,6 +156,38 @@ ZScoreSingleDT <- function(dt, zero.to.one = TRUE){
   return(z.dt)
 }
 
+QNZSingleDT <- function(dt, zero.to.one = TRUE){
+  # This function takes gene expression data in the form of a data.table 
+  # and returns a quantile normalized and then z-scored,  zero to one 
+  # transformed (if zero.to.one = TRUE) data.table
+  # 
+  # Args:
+  #   dt: data.table where the first column contains gene identifiers,
+  #             the columns are samples, rows are gene measurements
+  #	  zero.to.one: logical - should the data be zero to one transformed?
+  # 
+  # Returns:
+  #   qn.dt: quantile normalized, z-scored
+  #          zero to one transformed if zero.to.one = TRUE, data
+  require(data.table)
+  dt.is.dt <- "data.table" %in% class(dt)
+  if (!(dt.is.dt)) {
+    stop("\nInput must be a data.table")
+  }
+  val <- data.frame(dt[, 2:ncol(dt), with = F])
+  #  message("Quantile normalization...\n")
+  qn <- preprocessCore::normalize.quantiles(data.matrix(val), copy = F)
+  z.qn <- t(apply(qn, 1, function(x) scale(as.numeric(x))))
+  z.dt <- data.table(cbind(as.character(dt[[1]]), z.qn))  
+  colnames(z.dt) <- chartr(".", "-", colnames(dt))
+  # z.dt <- NAToZero(z.dt)
+  #  message("\tZero to one transformation...\n")
+  if (zero.to.one) {
+    z.dt <- zero_to_one_transform(z.dt)
+  }
+  return(z.dt)
+}
+
 QNSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
   # This function takes array gene expression data.table as a reference and
   # an RNA-seq expression data.table ('target') and returns the quantile
@@ -251,7 +283,8 @@ TDMSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
 
 SinglePlatformNormalizationWrapper <- function(dt, platform = "array", 
                                                zto = TRUE, 
-                                               add.untransformed = FALSE){
+                                               add.untransformed = FALSE,
+                                               add.qn.z = FALSE){
   # This function is a wrapper for processing expression data.tables that
   # contain only one RNA assay platform (array or seq). It returns a list of 
   # normalized data.tables.
@@ -264,6 +297,8 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
   #	  zto: logical - should data be zero to one transformed?
   #	  add.untransformed: logical - should untransformed (counts/RSEM) RNA-seq
   #	                     be added to the list?
+  #	  add.qn.z: logical - should quantile normalized data that is then z-scored
+  #	            be added to the list?
   #   
   # Returns:
   #   norm.list: a list of normalized, 
@@ -283,11 +318,19 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
     norm.list[["npn"]] <- NPNSingleDT(norm.list$log, zto)
     norm.list[["qn"]] <- QNSingleDT(norm.list$log, zto)
     norm.list[["z"]] <- ZScoreSingleDT(norm.list$log, zto)
+    # should quantile normalized data followed by z-transformation be added?
+    if (add.qn.z) {
+      norm.list[["qn-z"]] <- QNZSingleDT(norm.list$log, zto)
+    }
   } else if (platform == "seq") {
     norm.list[["log"]] <- LOGSeqOnly(dt, zto)
     norm.list[["npn"]] <- NPNSingleDT(dt, zto)
     norm.list[["qn"]] <- QNSingleDT(dt, zto)
     norm.list[["z"]] <- ZScoreSingleDT(dt, zto)
+    # should quantile normalized data followed by z-transformation be added?
+    if (add.qn.z) {
+      norm.list[["qn-z"]] <- QNZSingleDT(dt, zto)
+    }
     # should untransformed RNA-seq data be added?
     if (add.untransformed){
       # by design, untransformed data should not be zero to one transformed,
@@ -300,7 +343,6 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
   }
   return(norm.list)
 }
-
 
 #### cross-platform functions --------------------------------------------------
 
@@ -415,6 +457,60 @@ QNProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   #  message("\tConcatenation...\n")
   qn.cat <- data.table(cbind(array.dt, qn.seq[, 2:ncol(qn.seq), with = F]))
   return(qn.cat)
+}
+
+QNZProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
+  # This function takes array and RNA-seq data in the form of data.table 
+  # to be 'mixed' (concatenated) and returns one quantile normalized, z-scored
+  # zero to one transformed (if zero.to.one = TRUE) data.table. The array data 
+  # is used as the target distribution.
+  # 
+  # Args:
+  #   array.dt: data.table of array data where the first column contains 
+  #             gene identifiers, the columns are samples, 
+  #             rows are gene measurements
+  #   seq.dt:   data.table of RNA-seq data where the first column contains 
+  #             gene identifiers, the columns are samples, 
+  #             rows are gene measurements
+  #   zero.to.one: logical - should data be zero to one transformed?
+  # 
+  # Returns:
+  #   z.cat:  quantile normalized, z-scored, zero to one transformed if
+  #	           zero.to one = TRUE, data.table that contains both array and 
+  #            RNA-seq samples
+  require(data.table)
+  # Error-handling
+  array.is.dt <- "data.table" %in% class(array.dt)
+  seq.is.dt <- "data.table" %in% class(seq.dt)
+  any.not.dt <- !(any(c(array.is.dt, seq.is.dt)))
+  if (any.not.dt) {
+    stop("array.dt and seq.dt must both be data.tables")
+  }
+  if (!(all(array.dt[[1]] %in% seq.dt[[1]]))) {
+    stop("Gene identifiers in data.tables must match")
+  }
+  ref.values <- data.frame(array.dt[, 2:ncol(array.dt), with = F])
+  target.values <- data.frame(seq.dt[, 2:ncol(seq.dt), with = F])
+  #  message("Quantile normalization...\n")
+  qn.targ <- preprocessCore::normalize.quantiles.determine.target(
+    data.matrix(ref.values), target.length = nrow(ref.values))
+  qn.seq <- preprocessCore::normalize.quantiles.use.target(
+    data.matrix(target.values), qn.targ, copy = F)
+  # z-score the array values (ref.values) and the quantile normalized seq values
+  z.array <- t(apply(ref.values, 1, function(x) scale(as.numeric(x))))
+  z.seq <- t(apply(qn.seq, 1, function(x) scale(as.numeric(x))))
+  #  message("\tConcatenation...\n")
+  z.dt <- data.table(cbind(array.dt[[1]], z.array, z.seq))
+  colnames(z.dt) <- c("gene", 
+                      chartr(".", "-", colnames(ref.values)),
+                      chartr(".", "-", colnames(target.values)))
+  
+  # z.dt <- NAToZero(z.dt)
+  #  message("\tZero to one transformation...\n")
+  if (zero.to.one) {
+    z.dt <- TDM::zero_to_one_transform(z.dt)
+  }
+  return(z.dt)
 }
 
 NPNProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
@@ -585,7 +681,8 @@ UnNoZTOProcessing <- function(array.dt, seq.dt) {
 
 NormalizationWrapper <- function(array.dt, seq.dt, 
                                  zto = TRUE,
-                                 add.untransformed = FALSE){
+                                 add.untransformed = FALSE,
+                                 add.qn.z = FALSE){
   # This function takes array and RNA-seq data in the form of data.table 
   # to be 'mixed' (concatenated) and returns a list of normalized data.tables
   #
@@ -599,11 +696,14 @@ NormalizationWrapper <- function(array.dt, seq.dt,
   #	  zto: logical - should data be zero to one transformed?
   #	  add.untransformed: logical - should untransformed (counts/RSEM) RNA-seq 
   #	                     be concatenated to array data and added to the list?
+  #	  add.qn.z: logical - should quantile normalized data that is then z-scored
+  #	            be added to the list?
   #
   # Returns:
   #	  norm.list: a list of normalized, zero to one 'mixed' data.tables 
   #              if zto = TRUE (log transformation, nonparanormal normalized, 
-  #              quantile normalized, TDM normalized, z-scored, untransformed
+  #              quantile normalized, TDM normalized, z-scored, quantile 
+  #              normalized + z-transformed [if add.qn.z = TRUE], untransformed
   #              [if add.untransformed = TRUE])
   #
   require(data.table)
@@ -637,6 +737,10 @@ NormalizationWrapper <- function(array.dt, seq.dt,
   norm.list[["qn"]] <- QNProcessing(array.dt, seq.dt, zto)
   norm.list[["tdm"]] <- TDMProcessing(array.dt, seq.dt, zto)
   norm.list[["z"]] <- ZScoreProcessing(array.dt, seq.dt, zto)
+  # should quantile normalized data that then z-transformed be added?
+  if (add.qn.z) {
+    norm.list[["qn-z"]] <- QNZProcessing(array.dt, seq.dt, zto)
+  }
   # should untransformed data be added?
   if (add.untransformed) {
     norm.list[["un"]] <- UnNoZTOProcessing(array.dt, seq.dt)
