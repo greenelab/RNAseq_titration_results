@@ -250,7 +250,8 @@ TDMSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
 }
 
 SinglePlatformNormalizationWrapper <- function(dt, platform = "array", 
-                                               zto = TRUE){
+                                               zto = TRUE, 
+                                               add.untransformed = FALSE){
   # This function is a wrapper for processing expression data.tables that
   # contain only one RNA assay platform (array or seq). It returns a list of 
   # normalized data.tables.
@@ -261,11 +262,20 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
   #       platform
   #   platform: character, array or sequencing data?
   #	  zto: logical - should data be zero to one transformed?
+  #	  add.untransformed: logical - should untransformed (counts/RSEM) RNA-seq
+  #	                     be added to the list?
   #   
   # Returns:
   #   norm.list: a list of normalized, 
   #              if zero.to.one = TRUE zero to one transformed, data.tables
   # 
+  
+  # error-handling
+  if (platform == "array" & add.untransformed) {
+    warning("If add.transformed = TRUE, must be RNA-seq data (platform = seq).\n
+             Setting add.untransformed to FALSE...")
+    add.untransformed <- FALSE
+  }
   
   norm.list <- list()
   if (platform == "array") {
@@ -278,6 +288,13 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
     norm.list[["npn"]] <- NPNSingleDT(dt, zto)
     norm.list[["qn"]] <- QNSingleDT(dt, zto)
     norm.list[["z"]] <- ZScoreSingleDT(dt, zto)
+    # should untransformed RNA-seq data be added?
+    if (add.untransformed){
+      # by design, untransformed data should not be zero to one transformed,
+      # so just add the data.table (dt) that contains RNA-seq data (RSEM)
+      # to the list
+      norm.list[["un"]] <- dt
+    }
   } else {
     stop("platform parameter should be set to 'array' or 'seq'")
   }
@@ -543,8 +560,32 @@ LOGProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   return(log.cat)
 }
 
+UnNoZTOProcessing <- function(array.dt, seq.dt) {
+  # This function takes array data and RNA-seq count data and combines them
+  # with no transformation to the RNA-seq data ("untransformed") and no
+  # zero to one transformation. It should be regarded as a negative control.
+  #
+  # Args:
+  #   array.dt: data.table of array data where the first column contains 
+  #             gene identifiers, the columns are samples, 
+  #             rows are gene measurements
+  #   seq.dt:   data.table of RNA-seq data where the first column contains 
+  #             gene identifiers, the columns are samples, 
+  #             rows are gene measurements
+  # 
+  # Returns:
+  #   dt.cat: data.table that contains concatenated array data and untransformed
+  #           RNA-seq data, zero to one transformation is not applied
+  #           
+  dt.cat <- data.table(cbind(array.dt, seq.dt[, 2:ncol(seq.dt),
+                                              with=F]))
+  return(dt.cat)
+  
+}
+
 NormalizationWrapper <- function(array.dt, seq.dt, 
-                                 zto = TRUE){
+                                 zto = TRUE,
+                                 add.untransformed = FALSE){
   # This function takes array and RNA-seq data in the form of data.table 
   # to be 'mixed' (concatenated) and returns a list of normalized data.tables
   #
@@ -556,13 +597,25 @@ NormalizationWrapper <- function(array.dt, seq.dt,
   #             gene identifiers, the columns are samples, 
   #             rows are gene measurements
   #	  zto: logical - should data be zero to one transformed?
+  #	  add.untransformed: logical - should untransformed (counts/RSEM) RNA-seq 
+  #	                     be concatenated to array data and added to the list?
   #
   # Returns:
   #	  norm.list: a list of normalized, zero to one 'mixed' data.tables 
   #              if zto = TRUE (log transformation, nonparanormal normalized, 
-  #              quantile normalized, TDM normalized, z-scored)
+  #              quantile normalized, TDM normalized, z-scored, untransformed
+  #              [if add.untransformed = TRUE])
   #
   require(data.table)
+  
+  # if zero to one transformation is to be performed AND untransformed RNA-seq
+  # data is to be added, warn the user that there is no zero to one 
+  # transformation in the untransformed step
+  if (zto & add.untransformed) {
+    warning("Zero to one transformation will be performed for most normalization
+            methods. Untransformed RNA-seq data step does not include zero to
+            one transformation.")
+  }
   
   # if any negative values are found, then inverse log transform and relog 
   # transform using x+1
@@ -584,7 +637,10 @@ NormalizationWrapper <- function(array.dt, seq.dt,
   norm.list[["qn"]] <- QNProcessing(array.dt, seq.dt, zto)
   norm.list[["tdm"]] <- TDMProcessing(array.dt, seq.dt, zto)
   norm.list[["z"]] <- ZScoreProcessing(array.dt, seq.dt, zto)
- 
+  # should untransformed data be added?
+  if (add.untransformed) {
+    norm.list[["un"]] <- UnNoZTOProcessing(array.dt, seq.dt)
+  }
   return(norm.list) 
 }
 
