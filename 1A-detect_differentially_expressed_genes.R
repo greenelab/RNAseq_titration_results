@@ -135,8 +135,9 @@ saveRDS(fit.results.list, file = basal.rds)
 
 #### Her2 v. LumA --------------------------------------------------------------
 # remove all samples that are not Her2 or LumA 
-samples.to.keep <- sample.df$sample[which(sample.df$subtype == "LumA" |
-                                            sample.df$subtype == "Her2")]
+samples.to.keep <- 
+  sample.df$sample[which(sample.df$subtype %in% c("LumA", "Her2"))]
+
 pruned.norm.list <- 
   lapply(norm.titrate.list, 
          function(x) lapply(x, 
