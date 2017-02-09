@@ -59,7 +59,8 @@ titrate.sample.list <-
   lapply(seq(0, 1, by = 0.1), 
          function(x) GetTitratedSampleNames(sample.names, x))
 
-# remove rows that are equal to all ones in sequencing data
+# remove rows that are equal to all ones in sequencing data -- these are 
+# essentially missing values and cause issues with z-transformation
 seq.dt.list <- 
   lapply(titrate.sample.list,
          function(x) seq.data[, c(1, which(colnames(seq.data) %in% x))])
