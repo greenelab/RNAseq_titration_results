@@ -82,15 +82,15 @@ PlotProportionDE <- function(fit.list, adjust.method = "BH", cutoff = 0.05) {
   
   # get topTables
   top.table.list <- 
-    lapply(fit.list, 
-           function(x) 
-             lapply(x, 
+    lapply(fit.list,  # for each level of % seq
+           function(x)   
+             lapply(x, # for each normalization method
                     function(y) GetAllGenesTopTable(y, adjust = adjust.method)))
   
   # how many genes are differentially expressed @ cutoff
   deg.count.count.list <- 
-    lapply(top.table.list, 
-           function(x) lapply(x, 
+    lapply(top.table.list,  # for each level of % seq
+           function(x) lapply(x,  # for each normalization method  
                               function(y) sum(y$adj.P.Val < cutoff)))
   # get DEG counts as data.frame
   deg.count.df <- reshape2::melt(deg.count.count.list)
