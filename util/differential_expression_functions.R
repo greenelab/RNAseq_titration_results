@@ -411,26 +411,29 @@ GetSmallNSilverStandardJaccard <- function(top.table.list, cutoff = 0.05){
   # for each n (number of samples)
   for (smpl.no.iter in seq_along(top.table.list)) {
     
-    array.top <- top.table.list[[smpl.no.iter]]$log
+    current.smpl.tt <- top.table.list[[smpl.no.iter]]
+    current.n <- names(top.table.list)[smpl.no.iter]
+    
+    array.top <- current.smpl.tt$log
     array.standard <- rownames(array.top)[which(array.top$adj.P.Val < cutoff)]
-    seq.top <- top.table.list[[smpl.no.iter]]$un
+    seq.top <- current.smpl.tt$un
     seq.standard <- rownames(seq.top)[which(seq.top$adj.P.Val < cutoff)]
     
-    jacc.list[[names(top.table.list)[smpl.no.iter]]]$qn$array <-
+    jacc.list[[current.n]]$qn$array <-
       GetGeneSetJaccard(array.standard, 
-                        top.table = top.table.list[[smpl.no.iter]]$qn,
+                        top.table = current.smpl.tt$qn,
                         cutoff)
-    jacc.list[[names(top.table.list)[smpl.no.iter]]]$qn$seq <-
+    jacc.list[[current.n]]$qn$seq <-
       GetGeneSetJaccard(seq.standard, 
-                        top.table = top.table.list[[smpl.no.iter]]$qn,
+                        top.table = current.smpl.tt$qn,
                         cutoff)
-    jacc.list[[names(top.table.list)[smpl.no.iter]]]$z$array <-
+    jacc.list[[current.n]]$z$array <-
       GetGeneSetJaccard(array.standard, 
-                        top.table = top.table.list[[smpl.no.iter]]$z,
+                        top.table = current.smpl.tt$z,
                         cutoff)
-    jacc.list[[names(top.table.list)[smpl.no.iter]]]$z$seq <-
+    jacc.list[[current.n]]$z$seq <-
       GetGeneSetJaccard(seq.standard, 
-                        top.table = top.table.list[[smpl.no.iter]]$z,
+                        top.table = current.smpl.tt$z,
                         cutoff)
     
   }
@@ -446,7 +449,7 @@ GetSmallNSilverStandardJaccard <- function(top.table.list, cutoff = 0.05){
   
   # order % seq so plot displays 0-100
   jacc.df$no.samples <- factor(jacc.df$no.samples, 
-                               levels = c(3, 4, 5, 6, 8, 10, 15, 25, 50))
+                               levels = sort(unique(jacc.df$no.samples)))
   
   # capitalize normalization methods for display
   jacc.df$normalization <- as.factor(toupper(jacc.df$normalization))
