@@ -366,3 +366,250 @@ PlotSilverStandardJaccard <- function(top.table.list, title,
   
 }
 
+#### small n functions ---------------------------------------------------------
+
+GetSmallNSilverStandardJaccard <- function(top.table.list, cutoff = 0.05){
+  # This function takes a list of limma::topTable output, derives "silver
+  # standards" from 100% array and 100% seq data, and finds the Jaccard 
+  # similarity between the standards and 50-50 experiment differential 
+  # expression results (quantile norm and z-score)
+  # 
+  # Args:
+  #   top.table.list: a list of limma::topTable output with all genes -
+  #                   output of GetAllGenesTopTable
+  #   cutoff: FDR cutoff, defaults to FDR < 5%
+  #   
+  # Returns:
+  #   jacc.df: a data.frame of the Jaccard results with columns corresponding to
+  #            the Jaccard value, the silver standard used for the
+  #            comparison ("platform"), the normalization method, and the
+  #            n used (number of samples; "no.samples")
+  #
+  
+  # initialize list to hold Jaccard similarity
+  jacc.list <- list()
+  
+  # for each n (number of samples)
+  for (smpl.no.iter in seq_along(top.table.list)) {
+    
+    array.top <- top.table.list[[smpl.no.iter]]$log
+    array.standard <- rownames(array.top)[which(array.top$adj.P.Val < cutoff)]
+    seq.top <- top.table.list[[smpl.no.iter]]$un
+    seq.standard <- rownames(seq.top)[which(seq.top$adj.P.Val < cutoff)]
+    
+    jacc.list[[names(top.table.list)[smpl.no.iter]]]$qn$array <-
+      GetGeneSetJaccard(array.standard, 
+                        top.table = top.table.list[[smpl.no.iter]]$qn,
+                        cutoff)
+    jacc.list[[names(top.table.list)[smpl.no.iter]]]$qn$seq <-
+      GetGeneSetJaccard(seq.standard, 
+                        top.table = top.table.list[[smpl.no.iter]]$qn,
+                        cutoff)
+    jacc.list[[names(top.table.list)[smpl.no.iter]]]$z$array <-
+      GetGeneSetJaccard(array.standard, 
+                        top.table = top.table.list[[smpl.no.iter]]$z,
+                        cutoff)
+    jacc.list[[names(top.table.list)[smpl.no.iter]]]$z$seq <-
+      GetGeneSetJaccard(seq.standard, 
+                        top.table = top.table.list[[smpl.no.iter]]$z,
+                        cutoff)
+    
+  }
+  
+  jacc.df <- reshape2::melt(jacc.list)
+  colnames(jacc.df) <-c("jaccard", "platform", "normalization", "no.samples")
+  
+  # rename platforms
+  plt.recode.str <- 
+    "'array' = 'Microarray'; 'seq' = 'RNA-seq'"
+  jacc.df$platform <- car::recode(jacc.df$platform,
+                                  recodes = plt.recode.str)
+  
+  # order % seq so plot displays 0-100
+  jacc.df$no.samples <- factor(jacc.df$no.samples, 
+                               levels = c(3, 4, 5, 6, 8, 10, 15, 25, 50))
+  
+  # capitalize normalization methods for display
+  jacc.df$normalization <- as.factor(toupper(jacc.df$normalization))
+  
+  return(jacc.df)
+  
+}
+
+SmallNDEGWrapper <- function(norm.list, sample.df, subtype = "Basal") {
+  # Perform differential expression analysis for the small n experiments
+  # from a list of normalized data from SmallNNormWrapper
+  # 
+  # Args:
+  #   norm.list: a list of normalized expression data from SmallNNormWrapper
+  #   sample.df: a data.frame mapping sample names to subtype labels
+  #   subtype: which subtype should be compared to all others? default is Basal
+  #   
+  # Returns:
+  #    fit.list: a list of differential expression results for all 4 elements
+  #              of norm.list (fits from limma)
+  # 
+  # error-handling
+  if (!("sample" %in% colnames(sample.df) 
+        & "subtype" %in% colnames(sample.df))) {
+    stop("sample.df must have columns named sample and subtype")
+  }
+  
+  GetDesignMat <- function(norm.dt, sample.df, subtype) {
+    # get a factor vector of labels, ordered to match the columns of
+    # norm.dt
+    group.factor <- 
+      as.character(GetOrderedSubtypeLabels(norm.dt,
+                                           sample.df))
+    group.factor[which(group.factor != subtype)] <- "Other"
+    group.factor <- as.factor(group.factor)
+    
+    # build design matrix
+    design.mat <- model.matrix(~0 + group.factor)
+    colnames(design.mat) <- levels(group.factor)
+    rownames(design.mat) <- 
+      colnames(norm.dt)[2:ncol(norm.dt)]
+
+    return(design.mat)
+  }
+  
+  full.design.mat <- GetDesignMat(norm.list$log, sample.df, subtype)
+  half.design.mat <- GetDesignMat(norm.list$qn, sample.df, subtype)
+  
+  # initialize list to hold fits
+  fit.list <- list()
+  
+  # 100% array data control
+  fit.list[["log"]] <- GetFiteBayes(norm.list$log, full.design.mat)
+  
+  # 100% seq untransformed (RSEM) data (control) requires limma::voom 
+  exprs <- norm.list$un
+  exprs <- as.data.frame(exprs[, 2:ncol(exprs), with = FALSE])
+  rownames(exprs) <- norm.list$un$gene
+  voom.counts <- limma::voom(counts = exprs)
+  fit.list[["un"]] <- GetFiteBayes(voom.counts, full.design.mat)
+  
+  # 50-50 split data experiment - quantile normalization and z-transformation
+  fit.list[["qn"]] <- GetFiteBayes(norm.list$qn, half.design.mat)
+  fit.list[["z"]] <- GetFiteBayes(norm.list$z, half.design.mat)
+  
+  return(fit.list)
+  
+}
+
+GetSamplesforMixingSmallN <- function(n, sample.df, subtype = "Basal") {
+  # This function is designed to identify sample names to be used in the "small
+  # n" differential expression experiment 
+  # 
+  # Arg:
+  #   n: number of samples (for each subtype - no. of replicates)
+  #   sample.df: a data.frame mapping sample names to subtype labels
+  #   subtype: which subtype should be compared to all others? defaults to Basal
+  # 
+  # Returns:
+  #   A list comprised of the following:
+  #     all: names of all samples to be used for the experiment (100% of
+  #          a single platform)
+  #     array: names of samples to be used for array half of experiment
+  #     seq: names of samples to be used for sequencing half of experiment
+  #   
+  
+  # get samples from the subtype of interest
+  subtype.samples <-  
+    as.character(
+      sample.df$sample[sample(which(sample.df$subtype == subtype), n)]
+    )
+  
+  # get comparator group samples 
+  other.samples <- 
+    as.character(
+      sample.df$sample[sample(which(sample.df$subtype != subtype), n)]
+    )  
+  
+  # all samples
+  all.samples <- c(subtype.samples, other.samples)
+  # array half
+  array.samples <- c(sample(subtype.samples, floor(n * .5)),
+                     sample(other.samples, ceiling(n * .5)))
+  # seq half
+  seq.samples <- all.samples[!(all.samples %in% array.samples)]
+  
+  return(list("all" = all.samples, "array" = array.samples, 
+              "seq" = seq.samples))
+  
+}  
+
+SmallNNormWrapper <- function(array.dt, seq.dt, mix.list, zto = FALSE) {
+  # This function is a wrapper for normalizing data for the "small n" 
+  # differential expression experiment -- it will return a list of normalized
+  # data that includes two controls (100% log-transformed array data and 
+  # and 100% untransformed RNA-seq count data (RSEM)) and two experimental 
+  # datasets (50-50 array and seq data either quantile normalized or 
+  # z-transformed)
+  # 
+  # Args:
+  #   array.dt: a data.table of all microarray data, first column contains gene
+  #             identifiers, rows are genes, samples are columns
+  #   seq.dt: a data.table of all seq data, first column contains gene
+  #             identifiers, rows are genes, samples are columns  
+  #   mix.list: a list with elements "all", "array", and "seq" - the output 
+  #             of GetSamplesforMixingSmallN
+  #   zto: logical - should data be zero to one transformed? default is FALSE
+  #   
+  # Returns:
+  #   norm.list: a normalized list of data with log (100% array data),
+  #              un (100% untransformed RNA-seq data), qn (quantile normalized 
+  #              data that is 50-50 array/seq data [the array data is used as 
+  #              the reference]), and z (z-transformed data that is 50-50 
+  #              array/seq data [z-scores within platform + concatenation])
+  #              
+  
+  # error-handling 
+  if (!(all(names(mix.list) == c("all", "array", "seq")))) {
+    stop("mix.list should have all, array, and seq elements (output of 
+         GetSamplesForMixingSmallN)")
+  }
+  
+  # array and seq data.tables to be used as controls
+  array.full.dt <- array.dt[, c(1, which(colnames(array.dt) %in% 
+                                           mix.list$all)), with = FALSE] 
+  seq.full.dt  <- seq.dt[, c(1, which(colnames(seq.dt) %in% 
+                                        mix.list$all)), with = FALSE] 
+  
+  # array and seq data.tables to be used in the 50-50 experiment     
+  array.half.dt <- array.dt[, c(1, which(colnames(array.dt) %in% 
+                                           mix.list$array)), with = FALSE]
+  seq.half.dt <- seq.dt[, c(1, which(colnames(seq.dt) %in% 
+                                       mix.list$seq)), with = FALSE]
+  
+  # remove any rows (genes) that all have count = 1, will cause issues with
+  # z-score
+  GetAllOnesRowIndex <- function(x){
+    vals <- x[, 2:ncol(x), with = FALSE]
+    indx <- which(apply(vals, 1, function(x) all(x == 1)))
+    return(indx)
+  }
+  
+  all1.indx <- unique(c(GetAllOnesRowIndex(seq.full.dt), 
+                        GetAllOnesRowIndex(seq.half.dt)))
+  
+  array.full.dt <- array.full.dt[-all1.indx, ]
+  seq.full.dt <- seq.full.dt[-all1.indx, ]
+  array.half.dt <- array.half.dt[-all1.indx, ]
+  seq.half.dt <- seq.half.dt[-all1.indx, ]
+  
+  # initialize list to hold normalized data
+  norm.list <- list()
+  # control conditions 100% log-transformed array data & 100% RSEM seq data
+  norm.list[["log"]] <- LOGArrayOnly(array.full.dt, zto)
+  norm.list[["un"]] <- seq.full.dt
+  # 50-50 experiments
+  norm.list[["qn"]] <- QNProcessing(array.dt = array.half.dt,
+                                    seq.dt = seq.half.dt,
+                                    zero.to.one = zto)
+  norm.list[["z"]] <- ZScoreProcessing(array.dt = array.half.dt,
+                                       seq.dt = seq.half.dt, 
+                                       zero.to.one = zto)
+  return(norm.list)
+  
+}
