@@ -1,6 +1,45 @@
 source(file.path("util", "train_test_functions.R"))
 
-GetDesignMatrices <- function(norm.list, sample.df, subtype = "Basal") {
+GetDesignMat <- function(norm.dt, sample.df, subtype) {
+  # This function takes a data.table of expression data (1st column is gene ids; 
+  # rows are genes, columns are samples), a data.frame mapping sample names to
+  # subtype labels, and returns a design matrix specifying for use with limma
+  # comparing the user-specified subtype to all other samples
+  # 
+  # Args:
+  #   norm.dt: a data.table of normalized expression data, 1st column is
+  #            gene identifiers. rows are genes; samples are columns
+  #   sample.df: a data.frame that maps the sample names to the subtype labels;
+  #              'sample' and 'subtype' columns respectively
+  #   subtype: which subtype should be compared to all others?
+  #   
+  # Returns:
+  #   design.mat: a design matrix (2-group comparison) for use with limma
+  #
+  
+  # error-handling
+  if (!("sample" %in% colnames(sample.df) 
+        & "subtype" %in% colnames(sample.df))) {
+    stop("sample.df must have columns named sample and subtype")
+  }
+  
+  # get a factor vector of labels, ordered to match the columns of
+  # norm.dt
+  group.factor <- 
+    as.character(GetOrderedSubtypeLabels(norm.dt,
+                                         sample.df))
+  group.factor[which(group.factor != subtype)] <- "Other"
+  group.factor <- as.factor(group.factor)
+  
+  # build design matrix
+  design.mat <- model.matrix(~0 + group.factor)
+  colnames(design.mat) <- levels(group.factor)
+  rownames(design.mat) <- colnames(norm.dt)[2:ncol(norm.dt)]
+  
+  return(design.mat)
+}
+
+GetDesignMatrixList <- function(norm.list, sample.df, subtype = "Basal") {
   # This function takes a list of normalized expression data and returns
   # a list of design matrices to be used to detect differentially expressed 
   # genes between BRCA subtype (by default: Basal) and all other subtypes with
@@ -11,18 +50,13 @@ GetDesignMatrices <- function(norm.list, sample.df, subtype = "Basal") {
   #              the list corresponds to % seq included in the expression data
   #   sample.df: a data.frame that maps the sample names to the subtype labels;
   #              'sample' and 'subtype' columns respectively
+  #   subtype: which subtype should be compared to all others? default is Basal
   #             
   #   
   # Returns:
   #   design.list: a list of design matrices corresponding to each % seq in 
   #                norm.list
   #
-
-  # error-handling
-  if (!("sample" %in% colnames(sample.df) 
-        & "subtype" %in% colnames(sample.df))) {
-    stop("sample.df must have columns named sample and subtype")
-  }
   
   # initialize list to hold design matrices
   design.list <- list()
@@ -30,24 +64,9 @@ GetDesignMatrices <- function(norm.list, sample.df, subtype = "Basal") {
   # for each 'titration level' in the normalized data list (norm.list)
   seq.lvls <- names(norm.list)
   for (amt.seq in seq.lvls) {
-    
-    # get a factor vector of labels, ordered to match the columns of
-    # the amt.seq under consideration
-    group.factor <- 
-      as.character(GetOrderedSubtypeLabels(norm.list[[amt.seq]]$log,
-                                           sample.df))
-    group.factor[which(group.factor != subtype)] <- "Other"
-    group.factor <- as.factor(group.factor)
-    
-    # build design matrix
-    design.mat <- model.matrix(~0 + group.factor)
-    colnames(design.mat) <- levels(group.factor)
-    rownames(design.mat) <- 
-      colnames(norm.list[[amt.seq]]$log)[2:ncol(norm.list[[amt.seq]]$log)]
-  
-    # add to list
-    design.list[[amt.seq]] <- design.mat
-    
+    design.list[[amt.seq]] <- GetDesignMat(norm.dt = norm.list[[amt.seq]]$log,
+                                           sample.df = sample.df,
+                                           subtype = subtype)
   }
   
   return(design.list)
@@ -453,24 +472,6 @@ SmallNDEGWrapper <- function(norm.list, sample.df, subtype = "Basal") {
   if (!("sample" %in% colnames(sample.df) 
         & "subtype" %in% colnames(sample.df))) {
     stop("sample.df must have columns named sample and subtype")
-  }
-  
-  GetDesignMat <- function(norm.dt, sample.df, subtype) {
-    # get a factor vector of labels, ordered to match the columns of
-    # norm.dt
-    group.factor <- 
-      as.character(GetOrderedSubtypeLabels(norm.dt,
-                                           sample.df))
-    group.factor[which(group.factor != subtype)] <- "Other"
-    group.factor <- as.factor(group.factor)
-    
-    # build design matrix
-    design.mat <- model.matrix(~0 + group.factor)
-    colnames(design.mat) <- levels(group.factor)
-    rownames(design.mat) <- 
-      colnames(norm.dt)[2:ncol(norm.dt)]
-
-    return(design.mat)
   }
   
   full.design.mat <- GetDesignMat(norm.list$log, sample.df, subtype)
