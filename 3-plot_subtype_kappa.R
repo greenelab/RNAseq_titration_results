@@ -1,7 +1,8 @@
 # J. Taroni Jul 2016
-# The purpose of this script is to plot Kappa statistics from predictions on 
-# test data.It should be run from the command line through the 
-# classifier_repeat_wrapper.R script
+# The purpose of this script is to plot Kappa statistics from subtype
+# predictions on BRCA hold-out data. It should be run from the command line 
+# through the classifier_repeat_wrapper.R script or alternatively
+# USAGE: Rscript 3-plot_subtype_kappa.R
 
 source(file.path("util", "color_blind_friendly_palette.R"))
 

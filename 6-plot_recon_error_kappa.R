@@ -2,7 +2,7 @@
 # This script plots reconstruction errors (MASE and RMSE) from 
 # 4-ica_pca_feature_reconstruction.R and the Kappa statistics associated with
 # predictions on reconstructed data from 5-predict_subtype_reconstructed_data.R
-# as violin and line plots, respectively.
+# as violin plots, respectively.
 # USAGE: Rscript 6-plot_recon_error_kappa.R
 # 
 
