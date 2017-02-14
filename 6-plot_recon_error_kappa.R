@@ -4,6 +4,9 @@
 # predictions on reconstructed data from 5-predict_subtype_reconstructed_data.R
 # as violin and line plots, respectively.
 # USAGE: Rscript 6-plot_recon_error_kappa.R
+# 
+
+source(file.path("util", "color_blind_friendly_palette.R"))
 
 library(ggplot2)
 library(dplyr)
@@ -32,9 +35,6 @@ DataSummary <- function(x) {
   return(c(y = m, ymin = ymin, ymax = ymax))
 }
 
-# color-blind friendly palette
-cbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", 
-               "#0072B2", "#D55E00", "#CC79A7")
 #### plot kappa stats ----------------------------------------------------------
 
 # read in kappa data.frames from each replicate and bind -- line plot with 
