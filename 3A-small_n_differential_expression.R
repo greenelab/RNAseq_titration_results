@@ -74,11 +74,6 @@ sample.df <- sample.df[which(sample.df$sample %in% samples.to.keep), ]
 # different sizes of n to test
 no.samples <- c(3, 4, 5, 6, 8, 10, 15, 25, 50)
 
-trial.seed <- sample(1:10000, 1)
-message(paste("Random seed for trials:", 
-              trial.seed), appendLF=TRUE)
-set.seed(trial.seed)
-
 # initialize list to hold jaccard index data.frames from the 10 trials
 jacc.df.list <- list()
 
@@ -115,12 +110,15 @@ for (trial.iter in 1:10) {
   # how do the 50/50 array/seq differentially expressed genes compared to
   # the platform-specific standards?
   jacc.df.list[[trial.iter]] <- GetSmallNSilverStandardJaccard(top.table.list,
-                                                             cutoff = 0.1) 
+                                                               cutoff = 0.1) 
   
 }
 
 # combine jaccard similarity data.frames into one data.frame
-jacc.df <- plyr::rbind.fill(jacc.df.list)
+
+
+jacc.df <- data.table::rbindlist(jacc.df.list)
+
 write.table(jacc.df, 
             file = file.path("results", "differential_expression",
                              "small_n_Her2vLumA_50-50_jaccard_results.tsv"),
