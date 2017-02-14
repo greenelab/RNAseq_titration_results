@@ -126,7 +126,7 @@ saveRDS(norm.titrate.list, file = norm.rds)
 
 #### Basal v. Other  -----------------------------------------------------------
 # design matrices
-design.mat.list <- GetDesignMatrices(norm.titrate.list, sample.df, 
+design.mat.list <- GetDesignMatrixList(norm.titrate.list, sample.df, 
                                      subtype = "Basal")
 # differential expression
 fit.results.list <- GetFiteBayesList(norm.list = norm.titrate.list,
@@ -148,7 +148,7 @@ pruned.norm.list <-
                                          with = FALSE]))
 
 # get design matrices
-her2.design.list <- GetDesignMatrices(pruned.norm.list,
+her2.design.list <- GetDesignMatrixList(pruned.norm.list,
                                           sample.df, subtype = "Her2")
 # differential expression
 her2.fit.results.list <- GetFiteBayesList(norm.list = pruned.norm.list,
