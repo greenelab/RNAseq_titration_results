@@ -21,20 +21,6 @@ kappa.df.files <- list.files(rcn.res.dir, pattern = "kappa", full.names = TRUE)
 error.files <- list.files(rcn.res.dir, pattern = "BRCA_reconstruction_error",
                               full.names = TRUE)
 
-#### functions -----------------------------------------------------------------
-
-DataSummary <- function(x) {
-  # This function is supplied to ggplot2::stat_summary in order to plot the 
-  # median value of a vector as a point and the "confidence interval on the 
-  # median" used in notched boxplots as a vertical line. See boxplot.stats for
-  # more information.
-  m <- median(x)
-  conf <- boxplot.stats(x)$conf
-  ymin <- min(conf)
-  ymax <- max(conf)
-  return(c(y = m, ymin = ymin, ymax = ymax))
-}
-
 #### plot kappa stats ----------------------------------------------------------
 
 # read in kappa data.frames from each replicate and bind -- line plot with 
@@ -75,19 +61,23 @@ kappa.master.df$Platform <- as.factor(kappa.master.df$Platform)
 norm.methods <- levels(kappa.master.df$Normalization)
 for (norm in norm.methods) {
   plot.nm <- paste0(kap.plot.file.lead, norm, ".pdf")  # each norm method
-  # line plot is saved as a PDF
+  # violin plot is saved as a PDF
   ggplot(kappa.master.df[which(kappa.master.df$Normalization == norm), ], 
          aes(x = Perc.seq, y = Kappa, color = Platform,
-             shape = Platform)) + 
+             fill = Platform)) + 
     facet_wrap(Reconstruction ~ Classifier, ncol = 3) +
+    geom_violin(colour = "black", position = position_dodge(0.8),
+                alpha = 0.2) +
     stat_summary(fun.y = median, geom = "line", aes(group = Platform),
-                 position = position_dodge(0.2)) +
-    stat_summary(fun.data = DataSummary, aes(group = Platform),
-                 position = position_dodge(0.2), size = 0.4) +
+                 position = position_dodge(0.6)) +
+    stat_summary(fun.y = median, geom = "point", aes(group = Platform),
+                 position = position_dodge(0.7), size = 1) +
     ggtitle(toupper(norm)) + 
     xlab("% RNA-seq samples") +
     theme_bw() +
-    scale_colour_manual(values = cbPalette[c(2, 3)])
+    scale_colour_manual(values = cbPalette[c(2, 3)]) +
+    theme(text = element_text(size = 18)) +
+    theme(axis.text.x=element_text(angle = 45, vjust = 0.5)) 
   ggsave(plot.nm, plot = last_plot(), height = 8.5, width = 11)
 }
 rm(kappa.master.df)
@@ -142,7 +132,7 @@ for (norm in norm.methods) {
     geom_violin(colour = "black", position = position_dodge(0.8),
                 alpha = 0.2) +
     stat_summary(fun.y = median, geom = "line", aes(group = Platform),
-                 position=position_dodge(0.8)) +
+                 position = position_dodge(0.8)) +
     stat_summary(fun.y = median, geom = "point", aes(group = Platform),
                  position = position_dodge(0.8)) +
     xlab("% RNA-seq") +
