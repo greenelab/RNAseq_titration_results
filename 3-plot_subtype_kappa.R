@@ -3,8 +3,7 @@
 # test data.It should be run from the command line through the 
 # classifier_repeat_wrapper.R script
 
-source(file.path("util", "color_blind_friendly_palette.R"))
-
+suppressMessages(source("load_packages.R"))
 library(ggplot2)
 library(data.table)
 
@@ -45,6 +44,9 @@ seq.df <- rbind.fill(seq.list)
 rm(list=c("array.list", "seq.list"))
 
 #### plot test set results -----------------------------------------------------
+# color-blind friendly palette
+cbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", 
+               "#0072B2", "#D55E00", "#CC79A7")
 # bind all kappa stats together
 test.df <- cbind(rbind(array.df, seq.df),
                  c(rep("Microarray", nrow(array.df)), 

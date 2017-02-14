@@ -1,5 +1,4 @@
 source(file.path("util", "train_test_functions.R"))
-source(file.path("util", "color_blind_friendly_palette.R"))
 
 GetDesignMat <- function(norm.dt, sample.df, subtype) {
   # This function takes a data.table of expression data (1st column is gene ids; 
@@ -268,6 +267,10 @@ PlotProportionDE <- function(fit.list, adjust.method = "BH", cutoff = 0.05) {
   #        expressed
   #        
   
+  # colorblind friendly palette
+  cbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", 
+                 "#0072B2", "#D55E00", "#CC79A7")
+  
   # get topTables
   top.table.list <- 
     lapply(fit.list,  # for each level of % seq
@@ -320,6 +323,10 @@ PlotSilverStandardJaccard <- function(top.table.list, title,
   # Returns:
   #   p: Jaccard similarity line plot
   # 
+  
+  # colorblind friendly palette
+  cbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", 
+                 "#0072B2", "#D55E00", "#CC79A7")
   
   ### "silver standards" ###
   
