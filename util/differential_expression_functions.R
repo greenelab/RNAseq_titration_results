@@ -447,9 +447,10 @@ GetSmallNSilverStandardJaccard <- function(top.table.list, cutoff = 0.05){
   jacc.df$platform <- car::recode(jacc.df$platform,
                                   recodes = plt.recode.str)
   
-  # order % seq so plot displays 0-100
-  jacc.df$no.samples <- factor(jacc.df$no.samples, 
-                               levels = sort(unique(jacc.df$no.samples)))
+  # order no.samples so plot displays from smallest n to largest
+  jacc.df$no.samples <- 
+    factor(jacc.df$no.samples, 
+           levels = sort(unique(as.numeric(as.character(jacc.df$no.samples)))))
   
   # capitalize normalization methods for display
   jacc.df$normalization <- as.factor(toupper(jacc.df$normalization))
