@@ -9,6 +9,7 @@
 suppressMessages(source("load_packages.R"))
 source(file.path("util", "normalization_functions.R"))
 source(file.path("util", "differential_expression_functions.R"))
+source(file.path("util", "color_blind_friendly_palette.R"))
 
 args <- commandArgs(trailingOnly = TRUE)
 initial.seed <- as.integer(args[1])
@@ -43,10 +44,6 @@ DataSummary <- function(x) {
   ymax <- max(conf)
   return(c(y = m, ymin = ymin, ymax = ymax))
 }
-
-# color-blind friendly palette
-cbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", 
-               "#0072B2", "#D55E00", "#CC79A7")
 
 #### read in data --------------------------------------------------------------
 
