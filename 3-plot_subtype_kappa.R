@@ -62,7 +62,7 @@ for (cls in cls.methods) {
                        paste0(plot.file.lead, cls, "_VIOLIN_test.pdf"))
   ggplot(test.df[which(test.df$Classifier == cls), ], 
          aes(x = Perc.Seq, y = Kappa, color = Platform, fill = Platform)) + 
-    facet_wrap(~ Normalization, ncol=5) +
+    facet_wrap(~ Normalization, ncol = 5) +
     geom_violin(colour = "black", position = position_dodge(0.8),
                 alpha = 0.2) +
     stat_summary(fun.y = median, geom = "line", aes(group = Platform),
@@ -72,8 +72,8 @@ for (cls in cls.methods) {
     ggtitle(cls) + 
     xlab("% RNA-seq samples") +
     theme_bw() +
-    scale_colour_manual(values = cbPalette[c(2, 3)]) +
+    scale_colour_manual(values = cbPalette[2:3]) +
     theme(text = element_text(size = 18)) +
-    theme(axis.text.x=element_text(angle = 45, vjust = 0.5)) 
-  ggsave(plot.nm, plot=last_plot(), height = 3.5, width = 15)
+    theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) 
+  ggsave(plot.nm, plot = last_plot(), height = 3.5, width = 15)
 }
