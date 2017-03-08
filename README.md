@@ -12,7 +12,7 @@ standardizing scores (z-scoring; Z).
 
 A version of this project (`DATE`) is detailed in our pre-print 
 `TODO: LINK TO PREPRINT` 
-_We are actively making improvements to this codebase._
+_We are actively making improvements to this codebase; see [#12](https://github.com/greenelab/RNAseq_titration_results/issues/12), [#19](https://github.com/greenelab/RNAseq_titration_results/issues/19), and [#20](https://github.com/greenelab/RNAseq_titration_results/issues/20)._
  
 ## Data
 
@@ -91,4 +91,4 @@ One github package (`TDM`) is required. To install, run:
     library(devtools)
     devtools::install_github("greenelab/TDM")
 
-**This analysis is in the process of being moved to a Docker image.**
+**This analysis is [in the process](https://github.com/greenelab/RNAseq_titration_results/issues/18) of being moved to a Docker image.**
