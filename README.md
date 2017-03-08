@@ -1,66 +1,94 @@
-# Summary
+# Cross-platform normalization enables machine learning model training on microarray and RNA-seq data simultaneously
 
-The objective of this project is to identify the best practices for 
-normalizing of microarray and RNA-seq data for machine learning applications 
-when the training data consists of a mix of the two platforms.
+## Summary
 
-It builds on [Thompson et al.](https://peerj.com/preprints/1460/).
+We performed a series of supervised and unsupervised machine learning 
+evaluations, as well as differential expression analyses, to assess which 
+normalization methods are best suited for combining data from microarray and 
+RNA-seq platforms. We evaluated five normalization approaches for all methods: 
+log-transformation (LOG), non-paranormal transformation (NPN), 
+quantile normalization (QN), Training Distribution Matching (TDM), and 
+standardizing scores (z-scoring; Z).
 
-# Scripts
+A version of this project (`DATE`) is detailed in our pre-print 
+`TODO: LINK TO PREPRINT` 
+_We are actively making improvements to this codebase._
+ 
+## Data
 
-Running classifier_repeat_wrapper.R will regenerate the breast cancer (BRCA)
-subtype classifier results. To run one iteration of the BRCA subtype pipeline,
-use run_experiments.R.
-
-# Data
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.58862.svg)](https://doi.org/10.5281/zenodo.58862)
 
 The Cancer Genome Atlas BRCA data used for these analyses
 is [available at zenodo](https://zenodo.org/record/58862).
+
 ```
 # To download data, run in top directory:
 sh brca_data_download.sh
 ```
 
-# Requirements
+## Analysis
 
-This requires the following R & Bioconductor packages be installed (see 
-check_installs.R for confirmation of installation):
+### Machine Learning Pipeline
 
-* doParallel
-* parallel
-* ggplot2
-* reshape2
-* Hmisc
-* data.table
-* scales
-* sdcMicro
-* flexclust
-* fpc
-* corrplot
-* ape
-* cluster
-* plyr
-* dplyr
-* devtools
-* quantro
-* preprocessCore
-* gridExtra
-* huge
-* caret
-* limma
-* glmnet
-* e1071
-* stringr
-* gdata
-* binr
-* cowplot
-* kernlab
-* ranger
+Here's a schematic overview of our machine learning experiments:
 
-One github package (TDM) is required. To install, run:
+![alt text](https://github.com/jaclyn-taroni/RNAseq_titration/blob/master/diagrams/RNA-seq_titration_ML_overview.png)
+
+**Overview of supervised and unsupervised machine learning experiments.** (A) 
+520 TCGA Breast Cancer samples run on both microarray and RNA-seq were split 
+into a training (2/3) and hold-out set (1/3). (B) RNA-seq’d samples were 
+"titrated" into the training set, 10% at a time (0-100%) resulting in eleven 
+training sets for each normalization method. (C) _Machine learning 
+applications._ Three supervised multi-class (BRCA PAM50 subtype) classifiers 
+were trained on each training set and tested on the microarray and RNA-seq 
+hold-out sets. The hold-out sets were projected into and back out of the 
+training set space using two unsupervised techniques, Independent and Principal 
+Components Analysis, to obtain reconstructed hold-out sets. The classifiers used 
+in 4A were used to predict on the reconstructed hold-out sets. 
+
+```
+# To run the machine learning pipeline, run in top directory:
+sh run_machine_learning_experiments.sh
+
+# To run one repeat of the subtype classifier pipeline, use:
+Rscript run_experiments.R
+```
+
+### Differential Expression Pipeline
+
+Here's a schematic overview of our main differential expression experiment:
+
+![alt text](https://github.com/jaclyn-taroni/RNAseq_titration/blob/master/diagrams/RNA-seq_titration_diff_expression_overview.png)
+
+**Overview of differential expression experiment.** All matched TCGA breast 
+cancer samples (n = 520) were considered when building the platform-specific 
+“silver standards.” These standards are the genes that were differentially 
+expressed at a specified False Discovery Rate (FDR) using data sets comprised 
+entirely of one platform and processed in a standard way: log2-transformed 
+microarray data and “untransformed” RSEM count data (preprocessed using the 
+`limma::voom` function). RNA-seq’d samples were ‘titrated’ into the data set, 
+10% at a time (0-100%) resulting in eleven experimental sets for each n
+ormalization method. Differentially expressed genes (DEGs) were identified using 
+the `limma` package. We compared the Her2 and LumA subtypes as well as Basal
+v. all other samples. Lists of experimental DEGs were compared to standard gene 
+sets using Jaccard similarity. 
+
+```
+# Note: This requires the data to be processed to include matched samples only, 
+# and split into training and test sets (0-expression_data_overlap_and_split.R)
+
+# To run the differential expression pipeline, run in top directory:
+sh run_differential_expression_experiments.sh
+```
+
+## Requirements
+
+This analysis was performed in 	R. It requires R & Bioconductor packages 
+detailed in `check_installs.R` to be installed.
+
+One github package (`TDM`) is required. To install, run:
 
     library(devtools)
     devtools::install_github("greenelab/TDM")
 
-We have created an R script which will call 'require' on each of these packages
-to make sure they are installed: check_installs.R
+**This analysis is in the process of being moved to a Docker image.**
