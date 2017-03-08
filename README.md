@@ -5,10 +5,14 @@
 We performed a series of supervised and unsupervised machine learning 
 evaluations, as well as differential expression analyses, to assess which 
 normalization methods are best suited for combining data from microarray and 
-RNA-seq platforms. We evaluated five normalization approaches for all methods: 
-log-transformation (LOG), non-paranormal transformation (NPN), 
-quantile normalization (QN), Training Distribution Matching (TDM), and 
-standardizing scores (z-scoring; Z).
+RNA-seq platforms. 
+
+We evaluated five normalization approaches for all methods: 
+1. log-transformation (LOG) 
+2. [non-paranormal transformation](https://arxiv.org/abs/0903.0649) (NPN)
+3. [quantile normalization](http://bmbolstad.com/misc/normalize/bolstad_norm_paper.pdf) (QN)
+4. [Training Distribution Matching](https://peerj.com/articles/1621/) (TDM)
+5. standardizing scores (z-scoring; Z).
 
 A version of this project (`DATE`) is detailed in our pre-print 
 `TODO: LINK TO PREPRINT` 
