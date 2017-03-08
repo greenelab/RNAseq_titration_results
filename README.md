@@ -67,17 +67,21 @@ Here's a schematic overview of our main differential expression experiment:
 
 ![](https://github.com/greenelab/RNAseq_titration_results/blob/master/diagrams/RNA-seq_titration_diff_expression_overview.png?raw=true)
 
-**Overview of differential expression experiment.** All matched TCGA breast 
-cancer samples (n = 520) were considered when building the platform-specific 
+**Overview of differential expression experiment.** 
+
+1. All matched TCGA breast cancer samples (n = 520) were considered when building the platform-specific 
 “silver standards.” These standards are the genes that were differentially 
 expressed at a specified False Discovery Rate (FDR) using data sets comprised 
 entirely of one platform and processed in a standard way: log2-transformed 
 microarray data and “untransformed” RSEM count data (preprocessed using the 
-`limma::voom` function). RNA-seq’d samples were ‘titrated’ into the data set, 
+`limma::voom` function). 
+2. RNA-seq’d samples were ‘titrated’ into the data set, 
 10% at a time (0-100%) resulting in eleven experimental sets for each n
-ormalization method. Differentially expressed genes (DEGs) were identified using 
+ormalization method. 
+3. Differentially expressed genes (DEGs) were identified using 
 the `limma` package. We compared the Her2 and LumA subtypes as well as Basal
-v. all other samples. Lists of experimental DEGs were compared to standard gene 
+v. all other samples. 
+4. Lists of experimental DEGs were compared to standard gene 
 sets using Jaccard similarity. 
 
 ```
