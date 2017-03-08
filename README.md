@@ -39,15 +39,16 @@ Here's a schematic overview of our machine learning experiments:
 
 ![](https://github.com/greenelab/RNAseq_titration_results/blob/master/diagrams/RNA-seq_titration_ML_overview.png)
 
-**Overview of supervised and unsupervised machine learning experiments.** (A) 
-520 TCGA Breast Cancer samples run on both microarray and RNA-seq were split 
-into a training (2/3) and hold-out set (1/3). (B) RNA-seq’d samples were 
-"titrated" into the training set, 10% at a time (0-100%) resulting in eleven 
-training sets for each normalization method. (C) _Machine learning 
-applications._ Three supervised multi-class (BRCA PAM50 subtype) classifiers—
-LASSO, linear SVM, and Random Forest—were trained on each training set and tested 
-on the microarray and RNA-seq hold-out sets. The hold-out sets were projected into 
-and back out of the training set space using two unsupervised techniques, Independent 
+**Overview of supervised and unsupervised machine learning experiments.** 
+
+1. 520 TCGA Breast Cancer samples run on both microarray and RNA-seq were split 
+into a training (2/3) and hold-out set (1/3).
+2. RNA-seq’d samples were "titrated" into the training set, 10% at a time (0-100%) 
+resulting in eleven training sets for each normalization method. 
+3. _Machine learning applications._ Three supervised multi-class (BRCA PAM50 subtype) 
+classifiers—LASSO, linear SVM, and Random Forest—were trained on each training set 
+and tested on the microarray and RNA-seq hold-out sets. The hold-out sets were projected 
+into and back out of the training set space using two unsupervised techniques, Independent 
 and Principal Components Analysis, to obtain reconstructed hold-out sets. The 
 classifiers used in step 4A above were used to predict on the reconstructed hold-out 
 sets. 
