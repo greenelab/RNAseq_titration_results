@@ -8,6 +8,7 @@ normalization methods are best suited for combining data from microarray and
 RNA-seq platforms. 
 
 We evaluated five normalization approaches for all methods: 
+
 1. log-transformation (LOG) 
 2. [non-paranormal transformation](https://arxiv.org/abs/0903.0649) (NPN)
 3. [quantile normalization](http://bmbolstad.com/misc/normalize/bolstad_norm_paper.pdf) (QN)
