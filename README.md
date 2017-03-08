@@ -32,7 +32,7 @@ sh brca_data_download.sh
 
 Here's a schematic overview of our machine learning experiments:
 
-![alt text](https://github.com/jaclyn-taroni/RNAseq_titration/blob/master/diagrams/RNA-seq_titration_ML_overview.png)
+![alt text](https://github.com/greenelab/RNAseq_titration_results/blob/master/diagrams/RNA-seq_titration_ML_overview.png)
 
 **Overview of supervised and unsupervised machine learning experiments.** (A) 
 520 TCGA Breast Cancer samples run on both microarray and RNA-seq were split 
@@ -58,7 +58,7 @@ Rscript run_experiments.R
 
 Here's a schematic overview of our main differential expression experiment:
 
-![alt text](https://github.com/jaclyn-taroni/RNAseq_titration/blob/master/diagrams/RNA-seq_titration_diff_expression_overview.png)
+![alt text](https://github.com/greenelab/RNAseq_titration_results/blob/master/diagrams/RNA-seq_titration_diff_expression_overview.png?raw=true)
 
 **Overview of differential expression experiment.** All matched TCGA breast 
 cancer samples (n = 520) were considered when building the platform-specific 
