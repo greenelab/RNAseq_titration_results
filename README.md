@@ -94,7 +94,7 @@ sh run_differential_expression_experiments.sh
 
 ## Requirements
 
-This analysis was performed in 	R. It requires R & Bioconductor packages 
+This analysis was performed in R. It requires R & Bioconductor packages 
 detailed in `check_installs.R` to be installed.
 
 One github package (`TDM`) is required. To install, run:
