@@ -7,38 +7,42 @@
 suppressMessages(source("load_packages.R"))
 
 args <- commandArgs(trailingOnly = TRUE)
-kInitialSeed <- as.integer(args[1])
-set.seed(kInitialSeed)
+initial.seed <- as.integer(args[1])
+set.seed(initial.seed)
 
-data.dir <- "data/"
+data.dir <- "data"
 seq.exprs.filename <- "BRCARNASeq.pcl"
 array.exprs.filename <- "BRCAarray.pcl"
 seq.clin.filename <- "BRCARNASeqClin.tsv"
 array.clin.filename <- "BRCAClin.tsv"
 
-plot.dir <- "plots/"
+plot.dir <- "plots"
 subtype.distribtion.plot <- 
-  paste0("BRCA_PAM50_subtypes_dist_split_stacked_bar_", kInitialSeed, ".pdf")
+  paste0("BRCA_PAM50_subtypes_dist_split_stacked_bar_", initial.seed, ".pdf")
 
-res.dir <- "results/"
+res.dir <- "results"
 train.test.labels <- 
   paste0("BRCA_matchedSamples_PAM50Array_training_testing_split_labels_", 
-         kInitialSeed, ".tsv")
+         initial.seed, ".tsv")
 
 #### read in expression and clinical data --------------------------------------
 
 # read in expression data as data.frame
-seq.data <- fread(paste0(data.dir, seq.exprs.filename), data.table = F)
-array.data <- fread(paste0(data.dir, array.exprs.filename), data.table = F)
-seq.clinical <- fread(paste0(data.dir, seq.clin.filename), data.table = F)
-array.clinical <- fread(paste0(data.dir, array.clin.filename), data.table = F)
+seq.data <- fread(file.path(data.dir, seq.exprs.filename), 
+                  data.table = FALSE)
+array.data <- fread(file.path(data.dir, array.exprs.filename), 
+                    data.table = FALSE)
+seq.clinical <- fread(file.path(data.dir, seq.clin.filename), 
+                      data.table = FALSE)
+array.clinical <- fread(file.path(data.dir, array.clin.filename), 
+                        data.table = FALSE)
 
 # change first column name to "gene"
 colnames(array.data)[1] <- colnames(seq.data)[1] <- "gene"
 
 # remove tumor-adjacent samples from the array data set
-array.tumor.smpls <- array.clinical$Sample[which(array.clinical$Type == 
-                                                   "tumor")]
+array.tumor.smpls <- 
+  array.clinical$Sample[which(array.clinical$Type == "tumor")]
 array.tumor.smpls <- substr(array.tumor.smpls, 1, 15)
 
 array.subtypes <- array.clinical$PAM50[which(array.clinical$Type == "tumor")]
@@ -82,14 +86,14 @@ rm(array.data, seq.data)
 
 # write matched only samples to pcl files
 array.output.nm <- sub(".pcl", "_matchedOnly_ordered.pcl", array.exprs.filename)
-array.output.nm <- paste0(data.dir, array.output.nm)
-write.table(array.matched, file = array.output.nm, row.names = F, quote = F, 
-            sep = "\t")
+array.output.nm <- file.path(data.dir, array.output.nm)
+write.table(array.matched, file = array.output.nm, row.names = FALSE, 
+            quote = FALSE, sep = "\t")
 
 seq.output.nm <- sub(".pcl", "_matchedOnly_ordered.pcl", seq.exprs.filename)
-seq.output.nm <- paste0(data.dir, seq.output.nm)
-write.table(seq.matched, file = seq.output.nm, row.names = F, quote = F, 
-            sep = "\t")
+seq.output.nm <- file.path(data.dir, seq.output.nm)
+write.table(seq.matched, file = seq.output.nm, row.names = FALSE, 
+            quote = FALSE, sep = "\t")
 
 #### split data into balanced training and testing sets ------------------------
 
@@ -98,7 +102,7 @@ array.subtypes <- array.subtypes[order(array.tumor.smpls)]
 
 split.seed <- sample(1:10000, 1)
 message(paste("\nRandom seed for splitting into testing and training:", 
-              split.seed), appendLF=TRUE)
+              split.seed), appendLF = TRUE)
 
 set.seed(split.seed)
 train.index <- unlist(createDataPartition(array.subtypes, times = 1, p = (2/3)))
@@ -117,10 +121,10 @@ colnames(mstr.df) <- c("subtype", "split")
 cbPalette <- c("#000000", "#E69F00", "#56B4E9", 
               "#009E73", "#F0E442","#0072B2", "#D55E00", "#CC79A7")
 
-plot.nm <- paste0(plot.dir, subtype.distribtion.plot)
-ggplot(as.data.frame(mstr.df), aes(x=split, fill=subtype)) + geom_bar() +
-  theme_classic() + scale_fill_manual(values=cbPalette)
-ggsave(plot.nm, plot=last_plot(), height = 6, width = 6)
+plot.nm <- file.path(plot.dir, subtype.distribtion.plot)
+ggplot(as.data.frame(mstr.df), aes(x = split, fill = subtype)) + geom_bar() +
+  theme_classic() + scale_fill_manual(values = cbPalette)
+ggsave(plot.nm, plot = last_plot(), height = 6, width = 6)
 
 #### write training/test labels to file ----------------------------------------
 
@@ -131,5 +135,5 @@ lbl.df <- cbind(colnames(array.matched)[2:ncol(array.matched)],
 colnames(lbl.df) <- c("sample", "split", "subtype")
 
 write.table(lbl.df, 
-            file = paste0(res.dir, train.test.labels), 
-            quote = F, sep = "\t", row.names = F)
+            file = file.path(res.dir, train.test.labels), 
+            quote = FALSE, sep = "\t", row.names = FALSE)

@@ -8,8 +8,8 @@
 
 args <- commandArgs(trailingOnly = TRUE)
 
-kInitialSeed <- as.integer(args[1])
-set.seed(kInitialSeed)
+initial.seed <- as.integer(args[1])
+set.seed(initial.seed)
 seeds <- sample(1:10000, 3)
 
 message("Getting overlap and splitting into training and testing sets...")

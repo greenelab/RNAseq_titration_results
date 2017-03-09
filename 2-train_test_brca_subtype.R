@@ -6,16 +6,16 @@
 # It should be run from the command line through the run_experiments.R script
 
 suppressMessages(source("load_packages.R"))
-source("util/train_test_functions.R")
+source(file.path("util", "train_test_functions.R"))
 
 args <- commandArgs(trailingOnly = TRUE)
 filename.seed <- as.integer(args[1])
-kInitialSeed <- as.integer(args[2])
-set.seed(kInitialSeed)
+initial.seed <- as.integer(args[2])
+set.seed(initial.seed)
 
-norm.data.dir <- "normalized_data/"
-mdl.dir <- "models/"
-res.dir <- "results/"
+norm.data.dir <- "normalized_data"
+mdl.dir <- "models"
+res.dir <- "results"
 norm.test.object <-
    paste0("BRCA_array_seq_test_data_normalized_list_", filename.seed, ".RDS")
 norm.train.object <- 
@@ -24,23 +24,26 @@ norm.train.object <-
 trained.models.object <- 
   paste0("BRCA_train_3_models_", filename.seed, ".RDS")
 train.kappa.file <- 
-  paste0(res.dir, "BRCA_train_3_models_training_set_total_kappa_", 
-         filename.seed, ".tsv")
+  file.path(res.dir, 
+            paste0("BRCA_train_3_models_training_set_total_kappa_", 
+                   filename.seed, ".tsv"))
 array.kappa.file <-
-   paste0(res.dir, "BRCA_train_3_models_array_kappa_", filename.seed, ".tsv")
-seq.kappa.file <- paste0(res.dir, "BRCA_train_3_models_seq_kappa_", 
-                         filename.seed, ".tsv")
+  file.path(res.dir, paste0("BRCA_train_3_models_array_kappa_", filename.seed, 
+                            ".tsv"))
+seq.kappa.file <- file.path(res.dir, paste0("BRCA_train_3_models_seq_kappa_", 
+                                            filename.seed, ".tsv"))
 
-res.dir <- "results/"
 train.test.labels <- 
-  paste0(res.dir,
-         "BRCA_matchedSamples_PAM50Array_training_testing_split_labels_", 
-         filename.seed, ".tsv")
+  file.path(res.dir, 
+            paste0("BRCA_matchedSamples_PAM50Array_training_testing_split_labels_", 
+                  filename.seed, ".tsv"))
 
 #### load data -----------------------------------------------------------------
+
 sample.train.test <- fread(train.test.labels, data.table = FALSE)
-norm.titrate.list <- readRDS(paste0(norm.data.dir, norm.train.object))
-norm.test.list <- readRDS(paste0(norm.data.dir, norm.test.object))
+norm.titrate.list <- readRDS(file.path(norm.data.dir, norm.train.object))
+norm.test.list <- readRDS(file.path(norm.data.dir, norm.test.object))
+
 # subtype levels for each perc of seq data
 subtype.norm.list <- 
   lapply(norm.titrate.list, 
@@ -51,6 +54,7 @@ restr.train.list <- RestructureNormList(norm.titrate.list)
 rm(norm.titrate.list)
 
 #### training ------------------------------------------------------------------
+
 folds.seed <- sample(1:10000, 1)
 message(paste("Random seed for createFolds:", folds.seed), appendLF = TRUE)
 set.seed(folds.seed)
@@ -84,13 +88,13 @@ train.model.list <- mapply(function(x, y){
                               return(x)
                             }, x = train.model.list,
                             y = restr.train.list,
-                            SIMPLIFY = T)
+                            SIMPLIFY = TRUE)
 # restructure trained model list so from top to bottom: norm method -> model
 # type -> % seq level (0 - 100)
 train.model.list <- RestructureTrainedList(train.model.list)
 
 # save predictive models
-saveRDS(train.model.list, file=paste0(mdl.dir, trained.models.object))
+saveRDS(train.model.list, file = file.path(mdl.dir, trained.models.object))
 
 #### training kappa ---------------------------------------------------------
 # get rid of 0, 100 tdm list, they're NULL
@@ -101,8 +105,8 @@ restr.train.list$tdm$`100` <- NULL
 train.kappa.df <- GetTrainingSetKappa(model.list = train.model.list,
                                        train.data.list = restr.train.list,
                                        subtype.list = subtype.norm.list)
-write.table(train.kappa.df, file=train.kappa.file, sep="\t", 
-            row.names=F, quote=F)
+write.table(train.kappa.df, file = train.kappa.file, sep = "\t", 
+            row.names = FALSE, quote = FALSE)
 #### predictions - test data ---------------------------------------------------
 
 # get predictions on array test data as a data frame
@@ -112,7 +116,8 @@ array.test.list <-
                           sample.df = sample.train.test)
 mlt.array <- melt(array.test.list)
 colnames(mlt.array) <- c("kappa", "perc.seq", "classifier", "norm.method")
-write.table(mlt.array, file=array.kappa.file, sep="\t", row.names=F, quote=F)
+write.table(mlt.array, file = array.kappa.file, sep = "\t", row.names = FALSE, 
+            quote = FALSE)
 
 # for the 0 perc seq level of the titration, the model tested on log transformed
 # array data (100% array data) should be tested on the TDM transformed seq data
@@ -132,4 +137,5 @@ seq.test.list <-
                           sample.df = sample.train.test)
 mlt.seq <- melt(seq.test.list)
 colnames(mlt.seq) <- c("kappa", "perc.seq", "classifier", "norm.method")
-write.table(mlt.seq, file=seq.kappa.file, sep="\t", row.names=F, quote=F)
+write.table(mlt.seq, file = seq.kappa.file, sep = "\t", row.names = FALSE, 
+            quote = FALSE)
