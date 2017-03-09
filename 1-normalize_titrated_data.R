@@ -23,10 +23,10 @@ norm.train.object <-
   paste0("BRCA_array_seq_train_titrate_normalized_list_", filename.seed, ".RDS")
 
 res.dir <- "results"
-train.test.labels <- 
-  file.path(res.dir,
-            paste0("BRCA_matchedSamples_PAM50Array_training_testing_split_labels_", 
-                   filename.seed, ".tsv"))
+train.test.file <- 
+  paste0("BRCA_matchedSamples_PAM50Array_training_testing_split_labels_", 
+         filename.seed, ".tsv")
+train.test.labels <- file.path(res.dir, train.test.file)
 
 #### read in data --------------------------------------------------------------
 
