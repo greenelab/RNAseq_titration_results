@@ -13,8 +13,8 @@ if (is.na(n.repeats)) {
   message(paste("\nNumber of repeats set to", n.repeats))
 }
 
-kInitialSeed <- 12
-set.seed(kInitialSeed)
+initial.seed <- 12
+set.seed(initial.seed)
 
 seeds <- sample(1:10000, n.repeats)
 
