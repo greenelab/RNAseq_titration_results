@@ -48,7 +48,7 @@ resulting in eleven training sets for each normalization method.
 3. _Machine learning applications._ Three supervised multi-class (BRCA PAM50 subtype) 
 classifiers—LASSO, linear SVM, and Random Forest—were trained on each training set 
 and tested on the microarray and RNA-seq holdout sets. The holdout sets were projected 
-into and back out of the training set space using two unsupervised techniques, Independent 
+onto and back out of the training set space using two unsupervised techniques, Independent 
 and Principal Components Analysis, to obtain reconstructed holdout sets. The 
 classifiers used in step 4A above were used to predict on the reconstructed holdout 
 sets. 
