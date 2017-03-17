@@ -48,7 +48,7 @@ resulting in eleven training sets for each normalization method.
 3. _Machine learning applications._ Three supervised multi-class (BRCA PAM50 subtype) 
 classifiers—LASSO, linear SVM, and Random Forest—were trained on each training set 
 and tested on the microarray and RNA-seq holdout sets. The holdout sets were projected 
-into and back out of the training set space using two unsupervised techniques, Independent 
+onto and back out of the training set space using two unsupervised techniques, Independent 
 and Principal Components Analysis, to obtain reconstructed holdout sets. The 
 classifiers used in step 4A above were used to predict on the reconstructed holdout 
 sets. 
@@ -103,3 +103,8 @@ One github package (`TDM`) is required. To install, run:
     devtools::install_github("greenelab/TDM")
 
 **This analysis is [in the process](https://github.com/greenelab/RNAseq_titration_results/issues/18) of being moved to a Docker image.**
+
+## Funding
+
+This work was supported the Gordon and Betty Moore Foundation [GBMF 4552] and 
+the National Institutes of Health [T32-AR007442, U01-TR001263].
