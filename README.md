@@ -103,3 +103,8 @@ One github package (`TDM`) is required. To install, run:
     devtools::install_github("greenelab/TDM")
 
 **This analysis is [in the process](https://github.com/greenelab/RNAseq_titration_results/issues/18) of being moved to a Docker image.**
+
+## Funding
+
+This work was supported the Gordon and Betty Moore Foundation [GBMF 4552] and 
+the National Institutes of Health [T32-AR007442, U01-TR001263].
