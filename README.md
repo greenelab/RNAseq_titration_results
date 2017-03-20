@@ -15,7 +15,7 @@ We evaluated five normalization approaches for all methods:
 4. [Training Distribution Matching](https://peerj.com/articles/1621/) (TDM)
 5. standardizing scores (z-scoring; Z).
 
-A version of this project (`DATE`) is detailed in our pre-print
+A [version](https://github.com/greenelab/RNAseq_titration_results/tree/c44e06938f4dbc035cefa3aa0d07d89740f1bdd0) of this project is detailed in our pre-print
 [Cross-Platform Normalization Enables Machine Learning Model Training On Microarray And RNA-Seq Data Simultaneously](https://doi.org/10.1101/118349).
 
 _We are actively making improvements to this codebase; see [#12](https://github.com/greenelab/RNAseq_titration_results/issues/12), [#19](https://github.com/greenelab/RNAseq_titration_results/issues/19), and [#20](https://github.com/greenelab/RNAseq_titration_results/issues/20)._
