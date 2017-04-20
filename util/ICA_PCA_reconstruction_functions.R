@@ -454,10 +454,10 @@ ReconstructionWrapper <- function(train.list, test.list,
   names(recon.return.list) <- norm.methods
   
   # save MASE into a data.frame
-  mase.df <- 
-    reshape2::melt(lapply(recon.return.list,
+  mase.list <- lapply(recon.return.list,
                           function(x) parallel::mclapply(x, 
-                                                         function(y) y$mase)))
+                                                         function(y) y$mase))
+  mase.df <- reshape2::melt(mase.list)
   # add comp method used, using cbind as rep produces a character vector
   mase.df <- cbind(mase.df, rep(comp.mthd, nrow(mase.df)))
   
