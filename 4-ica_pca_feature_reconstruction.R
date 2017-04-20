@@ -4,6 +4,7 @@
 # and to transform test data into the training data reduced dimensional space,
 # and back out ('reconstruction') and to then calculate the 'reconstruction 
 # error' (MASE).
+#
 # It should be run from the command line.
 # USAGE: Rscript 4-ica_pca_feature_reconstruction.R <n.comp> <initial.seed>
 # n.comp refers to the number of components (PC/IC) that should be used
@@ -61,57 +62,65 @@ for (seed in filename.seeds) {
   test.data <- readRDS(test.rds)
   train.data <- RestructureNormList(train.data)
   
-  # for array data (first to be analyzed)
   # get rid of TDM at 0 & 100% seq levels
   train.data$tdm$`0` <- NULL
   train.data$tdm$`100` <- NULL
-
-  for (plt in platforms) {
-    # deal with TDM normalization in training data
-    if (plt == "seq" & is.null(train.data$tdm$`0`)){
-      # At the 0% RNA-seq level, TDM RNA-seq test data is transformed using the
-      # log-transformed 100% array data on the reference. So, use 
-      # log-transformed 100% array data as the training set for evaluating the 
-      # TDM method at 0% RNA-seq level. 
-      train.data$tdm$`0` <- train.data$log$`0`
-      train.data$tdm <- train.data$tdm[c(10, 1:9)]
-    } 
-    # evaluate platform test set PCA and ICA
-    for (rcn in recon.methods) {
-      message(paste("\t", plt, rcn, "reconstruction"))
-      results <- 
-        CompAnalysisEvalWrapper(train.list = train.data, 
-                                test.list = test.data[[plt]],
-                                no.comp = n.comp,
-                                method = rcn,
-                                platform = plt)
-      # add error data.frame to list that holds all error data.frames
-      # for this round of reconstruction
-      message("\t\t writing error data.frame to file...")
-      df.file.name <- paste0(df.file.lead, "_", plt, "_", rcn, "_", seed, 
-      		   ".tsv")
-      write.table(results$error.df, 
-                  file = file.path(rcn.res.dir, df.file.name), quote = F,
-      			      row.names = F, sep = "\t")
-      # save prcomp or fastICA objects to model directory
-      message("\t\t saving prcomp/fastICA objects RDS...")
-      comp.rds.name <- paste0(mdl.file.lead, plt, "_", rcn, "_", 
-                              seed, ".RDS")
-      saveRDS(results$COMP, file = file.path(mdl.dir, comp.rds.name))
-      # save reconstructed data to reconstructed data directory
-      message("\t\t saving reconstructed data RDS...")
-      recon.rds.name <- paste0(rcn.file.lead, plt, "_", rcn, "_", 
-                               seed, ".RDS")
-      saveRDS(results$RECON, file = file.path(rcn.dir, recon.rds.name))
+  
+  # for each method to be used for reconstruction (ICA and PCA) 
+  for (rcn in recon.methods) {
+    message(paste("  ", rcn, "on training set"))
     
-      rm(results)	
+    # perform ICA or PCA on the training data
+    train.comp.list <- TrainSetCompAnalysis(train.list = train.data,
+                                            num.comp = n.comp,
+                                            comp.method = rcn)
+    
+    # write the component objects to file in the models directory
+    comp.rds.name <- paste0(mdl.file.lead, rcn, "_", seed, ".RDS")
+    saveRDS(train.comp.list, file = file.path(mdl.dir, comp.rds.name))
+
+    # reconstruction on the holdout data
+    for(plt in platforms) { # for the two platforms -- microarray and RNA-seq
+      message(paste("\t Performing", plt, "reconstruction"))
+      if (plt == "seq" & is.null(train.comp.list$tdm$`0`)){
+        # At the 0% RNA-seq level, TDM RNA-seq test data is transformed using the
+        # log-transformed 100% array data on the reference. So, use 
+        # log-transformed 100% array data as the training set for evaluating the 
+        # TDM method at 0% RNA-seq level. 
+        train.comp.list$tdm$`0` <- train.comp.list$log$`0`
+        train.comp.list$tdm <- train.comp.list$tdm[c(10, 1:9)]
+      } 
+      
+      # perform the reconstruction experiment, which will return reconstructed
+      # holdout out data in data.table format suitable for subtype prediction
+      # and calculate the reconstruction error (MASE) to be returned as a
+      # data.frame
+      results <- ReconstructionWrapper(train.list = train.comp.list,
+                                       test.list = test.data[[plt]],
+                                       num.comps = n.comp)
+      
+      # save recon objects
+      message("\t   Saving reconstructed holdout data")
+      recon.rds <- paste0(rcn.file.lead, rcn, "_", plt, "_", seed,".RDS")
+      saveRDS(results$recon, file = file.path(rcn.dir, recon.rds))
+      
+      # write error data.frame to file
+      error.df <- results$mase.df
+      error.df <- cbind(error.df, rep(plt, nrow(error.df)))
+      colnames(error.df)[ncol(error.df)] <- "platform"
+      error.df.name <- paste0(df.file.lead, rcn, "_", plt, "_", seed, ".tsv")
+      message("\t   Saving MASE data.frame")
+      write.table(error.df, file = file.path(rcn.res.dir, error.df.name), 
+                  quote = FALSE, row.names = FALSE, sep = "\t")
+      
+      rm(results, error.df)	
       gc()
-	   
-    }  
+      
+    }
     
   }
   
   rm(train.data, test.data)
   gc()
-
-}
+  
+}  
