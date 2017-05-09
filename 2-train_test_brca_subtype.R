@@ -102,22 +102,23 @@ restr.train.list$tdm$`0` <- NULL
 restr.train.list$tdm$`100` <- NULL
 
 # get training kappa stats and write to file
-train.kappa.df <- GetTrainingSetKappa(model.list = train.model.list,
-                                       train.data.list = restr.train.list,
-                                       subtype.list = subtype.norm.list)
+train.kappa.df <- PredictWrapper(train.model.list = train.model.list,
+                                 pred.list = restr.train.list,
+                                 sample.df = sample.train.test,
+                                 return.kap = TRUE)
+
 write.table(train.kappa.df, file = train.kappa.file, sep = "\t", 
             row.names = FALSE, quote = FALSE)
 #### predictions - test data ---------------------------------------------------
 
 # get predictions on array test data as a data frame
-array.test.list <- 
-  PredictArrayDataWrapper(norm.array.list = norm.test.list$array,
-                          train.list = train.model.list,
-                          sample.df = sample.train.test)
-mlt.array <- melt(array.test.list)
-colnames(mlt.array) <- c("kappa", "perc.seq", "classifier", "norm.method")
-write.table(mlt.array, file = array.kappa.file, sep = "\t", row.names = FALSE, 
-            quote = FALSE)
+array.kappa.df <- PredictWrapper(train.model.list = train.model.list,
+                                 pred.list = norm.test.list$array,
+                                 sample.df = sample.train.test,
+                                 return.kap = TRUE)
+
+write.table(array.kappa.df, file = array.kappa.file, sep = "\t", 
+            row.names = FALSE, quote = FALSE)
 
 # for the 0 perc seq level of the titration, the model tested on log transformed
 # array data (100% array data) should be tested on the TDM transformed seq data
@@ -129,13 +130,11 @@ for(i in 1:length(train.model.list[[5]])){
 # get rid of 100 tdm list, it's NULL
 norm.test.list$seq$tdm$`100` <- NULL
 
-
 # get predictions on RNA-seq test data as a data frame
-seq.test.list <- 
-  PredictSeqDataWrapper(norm.seq.list = norm.test.list$seq,
-                          train.list = train.model.list,
-                          sample.df = sample.train.test)
-mlt.seq <- melt(seq.test.list)
-colnames(mlt.seq) <- c("kappa", "perc.seq", "classifier", "norm.method")
-write.table(mlt.seq, file = seq.kappa.file, sep = "\t", row.names = FALSE, 
+seq.kappa.df <- PredictWrapper(train.model.list = train.model.list,
+                               pred.list = norm.test.list$seq,
+                               sample.df = sample.train.test,
+                               return.kap = TRUE)
+
+write.table(seq.kappa.df, file = seq.kappa.file, sep = "\t", row.names = FALSE, 
             quote = FALSE)

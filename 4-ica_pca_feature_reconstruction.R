@@ -25,8 +25,6 @@ if (is.na(initial.seed)) {
   message(paste("\nInitial seed set to:", initial.seed))
 }
 
-set.seed(initial.seed)
-
 res.dir <- "results"
 norm.dir <- "normalized_data"
 mdl.dir <- "models"
@@ -53,6 +51,9 @@ for (seed in filename.seeds) {
   rep.count <- grep(seed, filename.seeds)
   message(paste("\n\n#### RECONSTRUCTION ROUND", 
                 rep.count, "of", length(filename.seeds), "####\n\n"))
+
+  # set seed for ICA
+  set.seed(initial.seed)
   
   #### read in data ####
   message("Reading in data...")

@@ -242,267 +242,143 @@ RestructureTrainedList <- function(train.list){
   
 }
 
-PredictArrayDataWrapper <- function(norm.array.list, train.list, sample.df){
-  # This function takes a list of normalized array data (test set), a 
-  # restructured train.list (from RestructuredTrainedList), and the data.frame
-  # that maps sample names to subtype labels and train/test set labels. It
-  # returns the Kappa statistic from the the various models
-  # 
-  # Args:
-  #   norm.array.list: a list of normalized array data (test set)
-  #   train.list: a list of predictive models, restructured using 
-  #               RestructuredTrainedList
-  #   sample.df: the data frame that maps sample name/header to subtype and
-  #              train/test set labels 
-  #              output of 0-expression_data_overlap_and_split.R
-  # 
-  # Returns:
-  #   pred.list: a list of Kappa statistics from predictions on the test 
-  #              array data
-  # 
-  
-  # parallel backend 
-  cl <- parallel::makeCluster(2)
-  doParallel::registerDoParallel(cl)
-  
-  pred.list <- foreach(n = 1:length(train.list)) %do% { # for each norm method
-    
-    mthd <- names(train.list)[n]  # what is the name of the norm method?
-    if (mthd == "tdm") {  # when TDM is used to normalize the % seq data 
-                          # included, we should test on log transformed array 
-                          # data test set
-      foreach(m = 1:3) %do% {  # exclude the seeds element of list (#4)
-        foreach(o = 1:length(train.list[[n]][[m]]),
-                .export=c("PredictCM",
-                          "GetCM",
-                          "GetOrderedSubtypeLabels")) %dopar% {
-                            PredictCM(model = train.list[[n]][[m]][[o]],
-                                         dt = norm.array.list[["log"]],
-                                         sample.df = sample.df,
-                                      model.type = rownames(train.list[[n]])[m],
-                                         return.kappa = TRUE
-                            )
-                          }
-      }
-    } else {  # all other norm methods can use the corresponding array data 
-      foreach(m = 1:3) %do% { # exclude the seeds element of list (#4)
-        foreach(o = 1:length(train.list[[n]][[m]]), # for each %seq level
-                .export=c("PredictCM",
-                          "GetCM",
-                          "GetOrderedSubtypeLabels")) %dopar% {
-                            PredictCM(model = train.list[[n]][[m]][[o]],
-                                      dt = norm.array.list[[mthd]],
-                                      sample.df = sample.df,
-                                      model.type = rownames(train.list[[n]])[m],
-                                      return.kappa = TRUE
-                            )
-                          }
-      }
-    }
-  }
-  
-  # sort out names, foreach does not retain element names like the apply family
-  for (n in 1:length(train.list)) { # norm methods
-    names(pred.list)[n] <- names(train.list)[n]
-    for (m in 1:3) { # model types
-      names(pred.list[[n]])[m] <- rownames(train.list[[n]])[m]
-      for (o in 1:length(train.list[[n]][[m]])) { # %seq levels
-        names(pred.list[[n]][[m]])[o] <- names(train.list[[n]][[m]])[o]
-      }
-    }
-  }
-  
-  # stop parallel back end
-  parallel::stopCluster(cl)
-  
-  return(pred.list)
-  
-}
-
-PredictSeqDataWrapper <- function(norm.seq.list, train.list, sample.df){
-  # This function takes a list of normalized RNA-seq data (test set), a 
-  # restructured train.list (from RestructuredTrainedList), and the data.frame
-  # that maps sample names to subtype labels and train/test set labels. It
-  # returns the Kappa statistic from the the various models
-  # 
-  # Args:
-  #   norm.seq.list: a list of normalized RNA-seq data (test set)
-  #   train.list: a list of predictive models, restructured using 
-  #               RestructuredTrainedList
-  #   sample.df: the data frame that maps sample name/header to subtype and
-  #              train/test set labels 
-  #              output of 0-expression_data_overlap_and_split.R
-  # 
-  # Returns:
-  #   pred.list: a list of Kappa statistics from predictions on the test 
-  #              seq data
-  # 
-  
-  # parallel backend 
-  cl <- parallel::makeCluster(2)
-  doParallel::registerDoParallel(cl)
-  
-  pred.list <- foreach(n = 1:length(train.list)) %do% {
-    
-    mthd <- names(train.list)[n]
-    # for the methods that require arrays as reference to normalize the 
-    # sequencing data (TDM and QN), the seq test data has been normalized using
-    # whatever arrays were used in the training set 
-    if (mthd == "tdm" | mthd == "qn") {
-      foreach(m = 1:3) %do% {  # exclude the seeds element of list (#4)
-        foreach(o = 1:length(train.list[[n]][[m]]),
-                .export=c("PredictCM",
-                          "GetCM",
-                          "GetOrderedSubtypeLabels")) %dopar% {
-                            PredictCM(model = train.list[[n]][[m]][[o]],
-                                      dt = norm.seq.list[[mthd]][[o]],
-                                      sample.df = sample.df,
-                                      model.type = rownames(train.list[[n]])[m],
-                                      return.kappa = TRUE
-                                         
-                            )
-                          }
-      }
-    } else { # the gene level normalization methods only have one seq test 
-             # data.table
-      foreach(m = 1:3) %do% {  # exclude the seeds element of list (#4)
-        foreach(o = 1:length(train.list[[n]][[m]]),
-                .export=c("PredictCM",
-                          "GetCM",
-                          "GetOrderedSubtypeLabels")) %dopar% {
-                            PredictCM(model = train.list[[n]][[m]][[o]],
-                                         dt = norm.seq.list[[mthd]],
-                                         sample.df = sample.df,
-                                      model.type = rownames(train.list[[n]])[m],
-                                         return.kappa = TRUE
-                            )
-                          }
-      }
-    }
-  }
-  
-  # sort out names
-  for (n in 1:length(train.list)) {  # norm methods
-    names(pred.list)[n] <- names(train.list)[n]
-    for (m in 1:3) {  # model type
-      names(pred.list[[n]])[m] <- rownames(train.list[[n]])[m]
-      for (o in 1:length(train.list[[n]][[m]])) {  # %seq level
-        names(pred.list[[n]][[m]])[o] <- names(train.list[[n]][[m]])[o]
-      }
-    }
-  }
-  
-  parallel::stopCluster(cl)
-  
-  return(pred.list)
-  
-}
-
-GetTrainingSetKappa <- function(model.list, train.data.list, subtype.list){
-  # This function takes a list of normalized training data (from 
-  # RestructuredNormList), a restructured train.list (from 
-  # RestructuredTrainedList), and the list of subtype labels used for training
-  # 
-  # Args:
-  #   train.data.list: a list of normalized training data, restructured using
-  #                    RestructureNormList
-  #   model.list: a list of predictive models, restructured using 
-  #               RestructuredTrainedList
-  #   subtype.list: list of subtype labels that were used for training
-  #   
-  # Returns:
-  #   train.kappa.mlt: a data.frame of Kappa statistics 
-  #                   from predictions on the training data
-  
-  # Error-handling 
-  equal.length <- (length(train.data.list) != length(model.list))
-  if (equal.length) {
-    stop("train.data.list and model.list must be of equal length")
-  }
-  
-  train.kappa.list <- list() # initialize list to hold all Kappa results
-  for (norm.indx in 1:length(train.data.list)) { # norm methods
-    norm.list <- list() # initialize lost to hold all results from the
-                        # current normalization method 
-    for (mdl.indx in 1:3) {  # exclude the seeds element of list (#4)
-      classif.list <- list() # initialize list to hold all results from the 
-                             # current model type
-      model.type <- rownames(model.list[[norm.indx]])[mdl.indx]
-      for (seq.indx in 1:length(train.data.list[[norm.indx]])) { # for each %seq
-        dt <- train.data.list[[norm.indx]][[seq.indx]]
-        dt.mat <- t(dt[, 2:ncol(dt), with=F])
-        perc.seq <- names(train.data.list[[norm.indx]])[seq.indx]
-        classif.list[[perc.seq]] <-
-          GetCM(model = model.list[[norm.indx]][[mdl.indx]][[seq.indx]],
-                   dt.mat = dt.mat,
-                   subtype = subtype.list[[perc.seq]],
-                   model.type = model.type,
-                   return.kappa = TRUE)
-      }  
-      norm.list[[model.type]] <- classif.list
-    }
-    train.kappa.list[[names(train.data.list)[norm.indx]]] <- norm.list
-  }
-  
-  train.kappa.mlt <- melt(train.kappa.list)
-  colnames(train.kappa.mlt) <- c("kappa", "perc.seq", "classifier", 
-                               "norm.method")
-  return(train.kappa.mlt)
-
-}
-
-PredictReconDataWrapper <- function(recon.list, train.list, sample.df,
-                                    return.kap = FALSE){
+PredictWrapper <- function(train.model.list, pred.list, sample.df, 
+                           return.kap = TRUE, run.parallel = TRUE) {
   # This function is a wrapper for performing subtype prediction on 
-  # reconstructed test/hold-out data, using the models trained on training data
+  # normalized expression data.tables (training data, holdout data, or
+  # reconstructed data) using the models trained on training data
   # in the supervised analysis (train.list from 2-train_test_brca_subtype.R).
   # 
   # Args:
-  #   recon.list: a list of reconstructed data
-  #   train.list: a list of predictive models (LASSO, linear SVM, random forest) 
+  #   train.model.list: a list of predictive models 
+  #                     (LASSO, linear SVM, random forest) 
+  #   pred.list: list of normalized expression data.tables, labels for this
+  #              data are going to be predicted
   #   sample.df: the data frame that maps sample name/header to subtype and
   #              train/test set labels 
   #              output of 0-expression_data_overlap_and_split.R
   #   return.kap: logical; should the entire confusionMatrix (FALSE) or just
-  #               the Kappa statistic associated with the prediction?
+  #               the Kappa statistic associated with the prediction be 
+  #               returned?
+  #   run.parallel: logical; should predictions be run in parallel?
   # 
   # Returns:
-  #   pred.list: a list of confusionMatrix objects (if return.kap = FALSE) 
-  #              or Kappa statistics (if return.kap = TRUE) from predictions on
-  #              the reconstructed data
-  #   
+  #   if return.kap = TRUE
+  #     kappa.df: a data.frame of Kappa statistics
+  #   else  
+  #     norm.list: a list of confusionMatrix objects (if return.kap = FALSE) 
+
   
-  pred.list <- list()  # initialize list for all predictions
-  for (mthd.iter in seq_along(train.list)) {  # for each normalization method
-    norm.list <- list()  # initialize list to hold all CM from all models
-    # and level of sequencing data
-    norm.mthd <- names(train.list)[mthd.iter] # name of normalization method
-    for (mdl.iter in 1:3) {  # for each model: glmnet, svm, rf
-      # excluding seeds element of list #4
-      mdl.list <- list()  #
-      mdl.name <- rownames(train.list[[norm.mthd]])[mdl.iter]  # name of model
-      for (seq.iter in 
-           seq_along(train.list[[mthd.iter]][[mdl.iter]])) {  # for each
-        # amount/level of sequencing data
-        seq.level <- names(train.list[[mthd.iter]][[mdl.iter]])[seq.iter]
-        # some methods (e.g., TDM) do not have data for each amount of
-        # sequencing, so check
-        if (!is.null(recon.list[[norm.mthd]][[seq.level]])) {
-          mdl <- train.list[[norm.mthd]][[mdl.iter]][[seq.level]]
-          recon.dt <- recon.list[[norm.mthd]][[seq.level]]
-          # get confusionMatrix
-          mdl.list[[seq.level]] <- PredictCM(model = mdl,
-                                             dt = recon.dt,
-                                             sample.df = sample.df,
-                                             model.type = mdl.name,
-                                             return.kappa = return.kap)
+  # since parallelizing -- other requirements are captured in PredictCM
+  require(foreach)
+  
+  # function for parallel prediction of seq levels
+  ParallelPredictFunction <- function(model.list,
+                                      pred.data.list,
+                                      sample.dataframe,
+                                      mdl.type,
+                                      rtrn.kappa = TRUE) {
+    
+    return.list <-
+      foreach(seq.iter = seq_along(model.list)) %dopar% {
+        seq.lvl <- names(model.list)[seq.iter]
+        # get the model for % seq level
+        trained.model <- model.list[[seq.lvl]]
+        # if pred.data.list is a list (has different sequencing levels),
+        # loop through the list -- this will be the case for RNA-seq hold out 
+        # data for TDM and QN methods, as well as training data and 
+        # reconstructed data
+        if (class(pred.data.list) == "list") {
+          # for some cases of TDM normalized data, not every seq level is 
+          # present
+          if (!is.null(pred.data.list[[seq.lvl]])) {
+            pred.dt <- pred.data.list[[seq.lvl]]
+          } else {
+            pred.dt <- NULL
+          }
+        } else {  # pred.data.list is a single data.table otherwise
+          pred.dt <- pred.data.list
         }
+        
+        # if pred.dt is not null, then perform prediction
+        if (!is.null(pred.dt)) {
+          PredictCM(model = trained.model,
+                    dt = pred.dt,
+                    sample.df = sample.dataframe,
+                    model.type = mdl.type,
+                    return.kappa = rtrn.kappa)
+          
+        }
+        
       }
-      norm.list[[mdl.name]] <- mdl.list
-    }
-    pred.list[[norm.mthd]] <- norm.list
+    
+    names(return.list) <- names(model.list)
+    
+    return(return.list)
+    
   }
   
-  return(pred.list)
+  if (run.parallel) {  # if run.parallel is false, %dopar% in
+    # ParallelPredictionFunction will run sequentially without parallel
+    # backend
+    
+    # start parallel backend
+    cl <- parallel::makeCluster(2)
+    doParallel::registerDoParallel(cl)
+    # these functions are required for prediction
+    parallel::clusterExport(cl,
+                            c("PredictCM",
+                              "GetCM",
+                              "GetOrderedSubtypeLabels"))
+  }
+  
+  norm.methods <- names(train.model.list) 
+  model.names <- c("glmnet", "rf", "svm")
+  norm.list <-
+    # for each normalization method
+    foreach(mthd.iter = seq_along(train.model.list)) %do% {
+      mthd <- norm.methods[mthd.iter]  # use method name rather than index
+      # if the method is tdm and there's no tdm data to use for prediction
+      # use log data -- this will be the case for array hold out sets
+      if (mthd == "tdm" & !("tdm" %in% names(pred.list))) {
+        input.list <- pred.list[["log"]]
+      } else {  # otherwise, just use the corresponding data for prediction
+        input.list <- pred.list[[mthd]]
+      }
+      # for each model (glmnet, rf, svm)
+      foreach(mdl.iter = seq_along(model.names)) %do% {
+        mdl <- model.names[mdl.iter]  # use model name rather than model index
+        # do parallel prediction
+        ParallelPredictFunction(model.list = 
+                                  train.model.list[[mthd]][mdl, ][[mdl]],
+                                pred.data.list = input.list,
+                                sample.dataframe = sample.df,
+                                mdl.type = mdl,
+                                rtrn.kappa = return.kap)
+        
+      }
+      
+    }
+  
+  if (run.parallel) {
+    # stop parallel backend
+    parallel::stopCluster(cl)
+  }
+  
+  # sort out names
+  names(norm.list) <- names(train.model.list)
+  for (nrm.it in seq_along(norm.list)) {
+    names(norm.list[[nrm.it]]) <- model.names
+  }
+  
+  # if returning Kappa -- melt the list into a data.frame and return
+  # the data.frame
+  if (return.kap) {
+    kappa.df <- reshape2::melt(norm.list)
+    colnames(kappa.df) <- c("kappa", "perc.seq", "classifier", "norm.method")
+    return(kappa.df)
+  } else {  # otherwise, return the list of confusionMatrix objects
+    return(norm.list)
+  }
   
 }
