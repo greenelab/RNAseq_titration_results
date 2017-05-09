@@ -1,6 +1,6 @@
 # J. Taroni Oct 2016
 # The purpose of this script is to perform PAM50 subtype prediction
-# (from 2-train_test_brca_subtype.R) on test/hold-out data that has been 
+# (from 2-train_test_brca_subtype.R) on test/holdout data that has been 
 # reconstructed using the components from ICA and PCA on training data (the 
 # output of 4-ica_pca_feature_reconstruction.R). It outputs a list of 
 # confusionMatrix objects and a data.frame of Kappa statistics from these 
@@ -74,25 +74,33 @@ for (seed in filename.seeds) {
       
       # read in reconstructed data from current platform and reconstruction 
       # method
-      file.identifier <- paste(plt, rcn, seed, sep = "_")
+      file.identifier <- paste(rcn, plt, seed, sep = "_")
       recon.rds <- recon.files[grep(file.identifier, recon.files)]
       recon.list <- readRDS(recon.rds)
       
       # get confusionMatrix objects
-      plt.list[[rcn]] <- PredictReconDataWrapper(train.list = train.list,
-                                                 recon.list = recon.list,
-                                                 sample.df = sample.df)
+      plt.list[[rcn]] <- PredictWrapper(train.model.list = train.list,
+                                        pred.list = recon.list,
+                                        sample.df = sample.df,
+                                        return.kap = FALSE,
+                                        run.parallel = FALSE)
       # get just Kappa statistic
-      plt.kap.list[[rcn]] <- PredictReconDataWrapper(train.list = train.list,
-                                                     recon.list = recon.list,
-                                                     sample.df = sample.df,
-                                                     return.kap = TRUE)
+      plt.kap.list[[rcn]] <- PredictWrapper(train.model.list = train.list,
+                                            pred.list = recon.list,
+                                            sample.df = sample.df,
+                                            return.kap = TRUE,
+                                            run.parallel = FALSE)
       
+      
+      # remove reconstructed datat
+      rm(recon.list)
+      gc()
+
     }
     
     cm.list[[plt]] <- plt.list
     kappa.list[[plt]] <- plt.kap.list
-
+    
   }
   
   # save confusion matrices
@@ -101,10 +109,13 @@ for (seed in filename.seeds) {
   
   # get kappa stats into data.frame from nested list and save as data.frame
   kappa.df <- reshape2::melt(kappa.list)
-  colnames(kappa.df) <- c("Kappa", "Perc.seq", "Classifier", "Normalization",
-                          "Reconstruction", "Platform")
+  colnames(kappa.df) <- c("Perc.seq", "Classifier", "Normalization", 
+                          "Measure", "Kappa", "Reconstruction", "Platform")                        
   kap.file.name <- file.path(rcn.res.dir, paste0(kap.file.lead, seed, ".tsv")) 
   write.table(kappa.df, file = kap.file.name, row.names = F, quote = F, 
               sep = "\t")
+
+  rm(train.list, kappa.list, cm.list)
+  gc()
 
 }
