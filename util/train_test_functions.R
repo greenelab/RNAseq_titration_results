@@ -258,7 +258,8 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
   #              train/test set labels 
   #              output of 0-expression_data_overlap_and_split.R
   #   return.kap: logical; should the entire confusionMatrix (FALSE) or just
-  #               the Kappa statistic associated with the prediction?
+  #               the Kappa statistic associated with the prediction be 
+  #               returned?
   #   run.parallel: logical; should predictions be run in parallel?
   # 
   # Returns:
