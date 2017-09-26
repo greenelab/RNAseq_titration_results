@@ -6,6 +6,7 @@
 
 source(file.path("util", "color_blind_friendly_palette.R"))
 
+`%>%` <- dplyr::`%>%`
 library(ggplot2)
 library(data.table)
 
@@ -77,3 +78,13 @@ for (cls in cls.methods) {
     theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) 
   ggsave(plot.nm, plot = last_plot(), height = 3.5, width = 15)
 }
+
+# get summary data.frame + write to file
+summary.df <- 
+  kappa.master.df %>%
+    dplyr::group_by(Classifier, Normalization, Platform, Perc.seq) %>%
+    dplyr::summarise(Median = median(Kappa),
+                     Mean = mean(Kappa),
+                     SD = sd(Kappa))
+readr::write_tsv(summary.df, 
+                 file.path("results", "BRCA_train_3_models_summary_table.tsv"))
