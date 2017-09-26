@@ -80,6 +80,18 @@ for (norm in norm.methods) {
     theme(axis.text.x=element_text(angle = 45, vjust = 0.5)) 
   ggsave(plot.nm, plot = last_plot(), height = 8.5, width = 11)
 }
+
+# get summary data.frame + write to file
+kappa.summary.df <- 
+  kappa.master.df %>%
+    dplyr::group_by(Classifier, Normalization, Platform, Perc.seq) %>%
+    dplyr::summarise(Median = median(Kappa),
+                     Mean = mean(Kappa),
+                     SD = sd(Kappa))
+readr::write_tsv(kappa.summary.df,
+                 file.path(rcn.res.dir,
+                           "BRCA_kappa_reconstructed_data_summary_table.tsv"))
+
 rm(kappa.master.df)
 
 #### plot error measures -------------------------------------------------------
