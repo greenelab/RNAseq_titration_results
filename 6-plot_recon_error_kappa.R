@@ -110,8 +110,7 @@ error.master.df$perc.seq <- factor(error.master.df$perc.seq,
                                    levels = seq(0, 100, by = 10))
 
 # get norm and reconstruction methods as factors 
-error.master.df$normalization <- as.factor(error.master.df$normalization)
-error.master.df$error.measure <- as.factor(error.master.df$error.measure)
+error.master.df$norm.method <- as.factor(error.master.df$norm.method)
 
 # rename platforms -- same as above for kappa data.frame
 error.master.df$platform <- car::recode(error.master.df$platform,
@@ -119,17 +118,16 @@ error.master.df$platform <- car::recode(error.master.df$platform,
 error.master.df$platform <- as.factor(error.master.df$platform)
 
 # reconstruction method as factor
-error.master.df$method <- as.factor(error.master.df$method)
+error.master.df$comp.method <- as.factor(error.master.df$comp.method)
 
 # take the average of each genes error across replicates 
 error.mean.df <- error.master.df %>% 
-                    group_by(gene, perc.seq, normalization, error.measure, 
-                             platform, method) %>% 
+                    group_by(gene, perc.seq, norm.method, comp.method, 
+                             platform) %>% 
                     summarise_each(funs(mean))
 rm(error.master.df)
 colnames(error.mean.df) <- c("Gene", "Perc_seq", "Normalization", 
-                             "Error_Measure", "Platform", "Method", 
-                             "Mean_Value")
+                             "Method", "Platform", "Mean_Value")
 
 # for each normalization method, plot reconstruction error
 norm.methods <- levels(error.mean.df$Normalization)
@@ -138,7 +136,7 @@ for (norm in norm.methods) {
   # violin plot is saved as a PDF
   ggplot(error.mean.df[which(error.mean.df$Normalization == norm), ], 
          aes(Perc_seq, y = Mean_Value, color = Platform, fill = Platform)) +
-    facet_wrap(Method ~ Error_Measure, ncol = 2) +
+    facet_wrap(~ Method, ncol = 2) +
     theme_bw() +
     scale_colour_manual(values = cbPalette[c(2, 3)]) +
     geom_violin(colour = "black", position = position_dodge(0.8),
