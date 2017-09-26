@@ -132,7 +132,8 @@ ggplot(jacc.df, aes(x = no.samples, y = jaccard, color = platform)) +
   ggtitle("Her2 vs. LumA FDR < 10%") +
   ylab("Jaccard similarity to standard") +
   xlab("Number of samples (n)") +
-  scale_colour_manual(values = cbPalette[c(2, 3)])
+  scale_colour_manual(values = cbPalette[c(2, 3)]) +
+  theme(text = element_text(size = 18))
 ggsave(filename = file.path("plots", 
                             "small_n_Her2vLumA_50-50_jaccard_lineplots.pdf"),
-       plot = last_plot())
+       plot = last_plot(), width = 5, height = 7)
