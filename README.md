@@ -1,6 +1,6 @@
 # Cross-platform normalization enables machine learning model training on microarray and RNA-seq data simultaneously
 
-The full output of a [version](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v1.) of this analysis is available at Figshare under the DOI: [10.6084/m9.figshare.5035997.v2](https://doi.org/10.6084/m9.figshare.5035997.v2)
+The full output of a [version](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v1.1) of this analysis is available at Figshare under the DOI: [10.6084/m9.figshare.5035997.v2](https://doi.org/10.6084/m9.figshare.5035997.v2)
 
 ## Summary
 
