@@ -1,5 +1,7 @@
 # Cross-platform normalization enables machine learning model training on microarray and RNA-seq data simultaneously
 
+The full output of a [version](https://github.com/greenelab/RNAseq_titration_results/tree/e73bbc122562d8bf966b4dafa7b96fb4804b85f4) of this analysis is available at Figshare under the DOI: [10.6084/m9.figshare.5035997.v2](https://doi.org/10.6084/m9.figshare.5035997.v2)
+
 ## Summary
 
 We performed a series of supervised and unsupervised machine learning 
@@ -20,7 +22,7 @@ A [version](https://github.com/greenelab/RNAseq_titration_results/tree/c44e06938
 
 _We are actively making improvements to this codebase; see [#12](https://github.com/greenelab/RNAseq_titration_results/issues/12), [#19](https://github.com/greenelab/RNAseq_titration_results/issues/19), and [#20](https://github.com/greenelab/RNAseq_titration_results/issues/20)._
  
-## Data
+## Breast Cancer Data
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.58862.svg)](https://doi.org/10.5281/zenodo.58862)
 
