@@ -2,22 +2,13 @@ FROM rocker/tidyverse:4.0.3
 
 # Update apt-get and install other libraries
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    apt-utils \
-    awscli \
-    bzip2 \
     curl \
-    dialog \
-    default-jdk \
     libbz2-dev \
     libglpk40 \
     liblzma-dev \
-    libopenmpi-dev \
-    libreadline-dev \
     libxt-dev \
-    openmpi-bin \
     python3-pip \
-    python3-dev \
-    zlib1g
+    python3-dev
 
 # R packages
 RUN install2.r --error --deps TRUE \
