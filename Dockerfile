@@ -10,6 +10,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-pip \
     python3-dev
 
+# Install pyrefinebio v0.3.0
+RUN pip3 install pyrefinebio==0.3.0
+
 # R packages
 RUN install2.r --error --deps TRUE \
     ape \
