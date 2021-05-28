@@ -52,9 +52,9 @@ RUN install2.r --error --deps TRUE \
 
 # R Bioconductor packages
 RUN Rscript -e "options(warn = 2); BiocManager::install(c( \
-  'limma', \
-  'quantro'), \
-  update = FALSE)"
+    'limma', \
+    'quantro'), \
+    update = FALSE)"
 
 # Threading issue with preprocessCore::normalize.quantiles
 # https://support.bioconductor.org/p/122925/#124701
@@ -64,4 +64,6 @@ RUN Rscript -e "options(warn = 2); BiocManager::install( \
     configure.args = '--disable-threading', \
     update = FALSE)"
 
-RUN installGithub.r greenelab/TDM
+# ref = 341eb77105e7efd2654b4f112578648584936e06 is latest greenelab/TDM commit 2021-05-28 
+RUN Rscript -e "options(warn = 2); remotes::install_github( \
+    'greenelab/TDM', ref = '341eb77105e7efd2654b4f112578648584936e06')"
