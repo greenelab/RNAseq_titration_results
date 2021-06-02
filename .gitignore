@@ -1,5 +1,8 @@
+.*bash_history
 .config
 .local
+.refinebio.yaml
+.Rhistory
 data
 normalized_data
 models
