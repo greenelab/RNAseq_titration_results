@@ -8,9 +8,8 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 data="data"
 mkdir -p $data
 
+# Obtain TCGA data freeze manifest file
 manifest_url="https://gdc.cancer.gov/files/public/file/PanCan-General_Open_GDC-Manifest_2.txt"
-
-# Obtain TCGA manifest file
 manifest_basename=$(basename $manifest_url)
 if [ -f $data/$manifest_basename ]; then
   echo TCGA file $data/$manifest_basename already exists and was not overwritten.
@@ -63,11 +62,14 @@ done
 #     Data Category = Raw microarray data
 #     Data Type = Raw intensities
 #     Experimental Strategy = Gene expression array
-brca_array_dir=$data/BRCA_array
-if [ -d $brca_array_dir ]; then
-  echo TCGA Legacy Archive data for BRCA already exists and was not overwritten.
-else
-  mkdir -p $brca_array_dir
-  gdc-client download --manifest gdc_manifest.2021-06-01.txt --dir $brca_array_dir
-fi
+################################################################################
+# UNCOMMENT TO DOWNLOAD TCGA LEGACY ARCHIVE BRCA EXPRESSION ARRAY DATA
+#brca_array_dir=$data/BRCA_array
+#if [ -d $brca_array_dir ]; then
+#  echo TCGA Legacy Archive data for BRCA already exists and was not overwritten.
+#else
+#  mkdir -p $brca_array_dir
+#  gdc-client download --manifest $data/gdc_manifest.2021-06-01.txt --dir $brca_array_dir
+#fi
+################################################################################
 
