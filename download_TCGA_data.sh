@@ -4,11 +4,12 @@ set -euo pipefail
 # change to the directory of this script
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
-# create raw and processed data directories
+# set data directory
 data="data"
 mkdir -p $data
 
 # Obtain TCGA data freeze manifest file
+# See here for more info: https://gdc.cancer.gov/about-data/publications/pancanatlas
 manifest_url="https://gdc.cancer.gov/files/public/file/PanCan-General_Open_GDC-Manifest_2.txt"
 manifest_basename=$(basename $manifest_url)
 if [ -f $data/$manifest_basename ]; then
@@ -19,12 +20,17 @@ else
 fi
 
 # download specific files from TCGA manifest
-copy_number="broad.mit.edu_PANCAN_Genome_Wide_SNP_6_whitelisted.seg"
 mutations="mc3.v0.2.8.PUBLIC.maf.gz"
+copy_number="broad.mit.edu_PANCAN_Genome_Wide_SNP_6_whitelisted.seg"
 clinical="TCGA-CDR-SupplementalTableS1.xlsx"
 rnaseq="EBPlusPlusAdjustPANCAN_IlluminaHiSeq_RNASeqV2.geneExp.tsv"
 
-for filename in $copy_number $mutations $clinical $rnaseq; do
+filename_array=($mutations \
+                $copy_number \
+                $clinical \
+                $rnaseq)
+
+for filename in ${filename_array[@]}; do
   if [ -f $data/$filename ]; then
     echo TCGA file $data/$filename already exists and was not overwritten.
   else
@@ -34,9 +40,10 @@ for filename in $copy_number $mutations $clinical $rnaseq; do
   fi
 done
 
-# get data from refinebio
+# get TCGA array expression using refine.bio client
+# GSE83130 GBM
+# GSE68833 AML
 for accession in GSE83130 GSE68833; do
-
   if [ -d $data/$accession ]; then
     echo refine.bio download for $accession already exists and was not overwritten.
   else
@@ -52,8 +59,8 @@ for accession in GSE83130 GSE68833; do
   fi
 done
 
-# get BRCA data from TCGA Legacy Archive
-# gdc_manifest.2021-06-01.txt was obtained from https://portal.gdc.cancer.gov/legacy-archive
+# get BRCA array expression data from TCGA Legacy Archive
+# data/gdc_manifest.2021-06-01.txt was obtained from https://portal.gdc.cancer.gov/legacy-archive
 # with search parameters
 #   Cases
 #     Cancer Program = TCGA
