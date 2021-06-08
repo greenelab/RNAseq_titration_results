@@ -60,7 +60,7 @@ for accession in GSE83130 GSE68833; do
 done
 
 # get BRCA array expression data from TCGA Legacy Archive
-# data/gdc_manifest.2021-06-01.txt was obtained from https://portal.gdc.cancer.gov/legacy-archive
+# data/gdc_legacy_archive_brca_manifest.txt was obtained from https://portal.gdc.cancer.gov/legacy-archive
 # with search parameters
 #   Cases
 #     Cancer Program = TCGA
@@ -76,7 +76,7 @@ done
 #  echo TCGA Legacy Archive data for BRCA already exists and was not overwritten.
 #else
 #  mkdir -p $brca_array_dir
-#  gdc-client download --manifest $data/gdc_manifest.2021-06-01.txt --dir $brca_array_dir
+#  gdc-client download --manifest $data/gdc_legacy_archive_brca_manifest.txt --dir $brca_array_dir
 #fi
 ################################################################################
 
