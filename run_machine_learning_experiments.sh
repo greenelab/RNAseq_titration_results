@@ -1,7 +1,9 @@
 #!/bin/sh
 
 # Run ten repeats of the supervised analysis
-Rscript classifier_repeat_wrapper.R
+Rscript classifier_repeat_wrapper.R 1
+
+exit 0
 
 # Run the unsupervised analyses 
 Rscript 4-ica_pca_feature_reconstruction.R 50
