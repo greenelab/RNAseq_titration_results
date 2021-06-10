@@ -134,7 +134,7 @@ TrainThreeModels <- function(dt, subtype, seed, folds.list){
     set.seed(seed)
     # need a seed list for parallel processing purposes?
     seed.list <- vector(mode = "list", length = 6)
-    for (i in 1:5) seed.list[[i]]<- sample.int(n=1000, 3) # tuneLength is 3
+    for (i in 1:5) seed.list[[i]]<- sample.int(n=1000, 6) #3) # tuneLength is 3
     seed.list[[6]] <- sample.int(n=1000, 1) # last model
     
     fit.control <- trainControl(method = "cv",
