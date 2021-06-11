@@ -164,6 +164,9 @@ TrainThreeModels <- function(dt, subtype, seed, folds.list){
 #                                        type.measure="class") 
     # Random Forest
     #train.list[["rf"]] <- train(t(dt[, 2:ncol(dt), with = F]),
+
+    print("about to train.list[[rf]]")
+
     train.list[["rf"]] <- train(t_dt, 
                                 subtype,
                                 method = "ranger", 
@@ -171,6 +174,9 @@ TrainThreeModels <- function(dt, subtype, seed, folds.list){
                                 tuneLength = 3)
     # Linear SVM
     #train.list[["svm"]] <- train(t(dt[, 2:ncol(dt), with = F]), 
+
+    print("about to train.list[[svm]]")
+
     train.list[["svm"]] <- train(t_dt,
                                  subtype,
                                  method = "svmLinear", 
@@ -179,6 +185,9 @@ TrainThreeModels <- function(dt, subtype, seed, folds.list){
 
     # LASSO
     #train.list[["glmnet"]] <- cv.glmnet(t(dt[, 2:ncol(dt), with = F]),
+
+    print("about to train.list[[glmnet]]")
+
     train.list[["glmnet"]] <- cv.glmnet(t_dt,
                                         subtype,
                                         family = "multinomial",

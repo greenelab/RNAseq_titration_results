@@ -78,8 +78,12 @@ train.model.list <-
     }
   }
 
+print(str(train.model.list))
+
 # stop parallel backend
 stopCluster(cl)
+
+print("gets here 1")
 
 # get names 
 names(train.model.list) <- names(restr.train.list)
@@ -89,12 +93,17 @@ train.model.list <- mapply(function(x, y){
                             }, x = train.model.list,
                             y = restr.train.list,
                             SIMPLIFY = TRUE)
+
+print("gets here 2")
+
 # restructure trained model list so from top to bottom: norm method -> model
 # type -> % seq level (0 - 100)
 train.model.list <- RestructureTrainedList(train.model.list)
 
 # save predictive models
 saveRDS(train.model.list, file = file.path(mdl.dir, trained.models.object))
+
+print("gets here 3")
 
 #### training kappa ---------------------------------------------------------
 # get rid of 0, 100 tdm list, they're NULL
@@ -107,6 +116,8 @@ train.kappa.df <- PredictWrapper(train.model.list = train.model.list,
                                  sample.df = sample.train.test,
                                  return.kap = TRUE)
 
+print(paste("writing to ", train.kappa.file))
+
 write.table(train.kappa.df, file = train.kappa.file, sep = "\t", 
             row.names = FALSE, quote = FALSE)
 #### predictions - test data ---------------------------------------------------
@@ -116,6 +127,8 @@ array.kappa.df <- PredictWrapper(train.model.list = train.model.list,
                                  pred.list = norm.test.list$array,
                                  sample.df = sample.train.test,
                                  return.kap = TRUE)
+
+print(paste("writing to ", array.kappa.file))
 
 write.table(array.kappa.df, file = array.kappa.file, sep = "\t", 
             row.names = FALSE, quote = FALSE)
@@ -135,6 +148,8 @@ seq.kappa.df <- PredictWrapper(train.model.list = train.model.list,
                                pred.list = norm.test.list$seq,
                                sample.df = sample.train.test,
                                return.kap = TRUE)
+
+print(paste("writing to ", seq.kappa.file))
 
 write.table(seq.kappa.df, file = seq.kappa.file, sep = "\t", row.names = FALSE, 
             quote = FALSE)
