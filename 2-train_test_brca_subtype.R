@@ -78,11 +78,10 @@ train.model.list <-
     }
   }
 
-print(str(train.model.list))
-
 # stop parallel backend
 stopCluster(cl)
 
+print(str(train.model.list))
 print("gets here 1")
 
 # get names 
