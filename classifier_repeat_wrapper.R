@@ -25,4 +25,5 @@ for(seed in seeds){
   rep.count <- rep.count + 1
 }
 
-system("Rscript 3-plot_subtype_kappa.R")
+print("gets to this point, uncomment 3-plot")
+#system("Rscript 3-plot_subtype_kappa.R")
