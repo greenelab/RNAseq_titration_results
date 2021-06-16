@@ -70,7 +70,9 @@ PredictCM <- function(model, dt, sample.df,
   require(data.table)
   
   subtype <- GetOrderedSubtypeLabels(dt, sample.df)
-  dt.mat <- t(dt[, 2:ncol(dt), with = F])
+  #dt.mat <- t(dt[, 2:ncol(dt), with = F])
+  dt.mat <- t(dt[, -1, with = F])
+  colnames(dt.mat) <- paste0("c", seq(1:ncol(dt.mat)))
   
   # check if dt.mat is character -- if so, make numeric
   if (any(apply(dt.mat, 1, is.character))) {
