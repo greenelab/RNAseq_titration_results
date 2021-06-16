@@ -171,20 +171,20 @@ TrainThreeModels <- function(dt, subtype, seed, folds.list){
                                 tuneLength = 3)
     # Linear SVM
     #train.list[["svm"]] <- train(t(dt[, 2:ncol(dt), with = F]), 
-    #train.list[["svm"]] <- train(t_dt,
-    #                             subtype,
-    #                             method = "svmLinear", 
-    #                             trControl = fit.control,
-    #                             tuneLength = 3)
+    train.list[["svm"]] <- train(t_dt,
+                                 subtype,
+                                 method = "svmLinear", 
+                                 trControl = fit.control,
+                                 tuneLength = 3)
 
     # LASSO
     #train.list[["glmnet"]] <- cv.glmnet(t(dt[, 2:ncol(dt), with = F]),
-    #train.list[["glmnet"]] <- cv.glmnet(t_dt,
-    #                                    subtype,
-    #                                    family = "multinomial",
-    #                                    foldid = fold.vector, # fold 'labels'
-    #                                    parallel = T,
-    #                                    type.measure="class")
+    train.list[["glmnet"]] <- cv.glmnet(t_dt,
+                                        subtype,
+                                        family = "multinomial",
+                                        foldid = fold.vector, # fold 'labels'
+                                        parallel = T,
+                                        type.measure="class")
     # stopCluster(cl)
     train.list[["seeds"]] <- seed.list
     return(train.list)
