@@ -41,6 +41,7 @@ train.test.labels <-
 #### load data -----------------------------------------------------------------
 
 sample.train.test <- fread(train.test.labels, data.table = FALSE)
+sample.train.test$subtype <- as.factor(sample.train.test$subtype)
 norm.titrate.list <- readRDS(file.path(norm.data.dir, norm.train.object))
 norm.test.list <- readRDS(file.path(norm.data.dir, norm.test.object))
 
