@@ -68,18 +68,18 @@ registerDoParallel(cl)
 resample.seed <- sample(1:10000, 1)
 message(paste("Random seed for resampling:", resample.seed), appendLF=TRUE)
 
-train.model.list <- readRDS(file.path(mdl.dir, trained.models.object))
-#  foreach(n = 1:length(restr.train.list)) %do% {  # foreach norm method
-#    foreach(m = 1:length(subtype.norm.list)) %dopar% {  # foreach % seq level
-#    foreach(m = 1:length(subtype.norm.list)) %do% {  # foreach % seq level
-#      print(c(n, m))
-#      TrainThreeModels(dt = restr.train.list[[n]][[m]], 
-#                       subtype =  subtype.norm.list[[m]], 
-#                       seed = resample.seed,
-#                       folds.list = folds.list[[m]])
-#      
-#    }
-#  }
+train.model.list <- # readRDS(file.path(mdl.dir, trained.models.object))
+  foreach(n = 1:length(restr.train.list)) %do% {  # foreach norm method
+    foreach(m = 1:length(subtype.norm.list)) %dopar% {  # foreach % seq level
+    foreach(m = 1:length(subtype.norm.list)) %do% {  # foreach % seq level
+      print(c(n, m))
+      TrainThreeModels(dt = restr.train.list[[n]][[m]], 
+                       subtype =  subtype.norm.list[[m]], 
+                       seed = resample.seed,
+                       folds.list = folds.list[[m]])
+      
+    }
+  }
 
 # stop parallel backend
 stopCluster(cl)
@@ -88,22 +88,22 @@ stopCluster(cl)
 print("gets here 1")
 
 # get names 
-#names(train.model.list) <- names(restr.train.list)
-#train.model.list <- mapply(function(x, y){
-#                              names(x) <- names(y)
-#                              return(x)
-#                            }, x = train.model.list,
-#                            y = restr.train.list,
-#                            SIMPLIFY = TRUE)
+names(train.model.list) <- names(restr.train.list)
+train.model.list <- mapply(function(x, y){
+                              names(x) <- names(y)
+                              return(x)
+                            }, x = train.model.list,
+                            y = restr.train.list,
+                            SIMPLIFY = TRUE)
 
 print("gets here 2")
 
 # restructure trained model list so from top to bottom: norm method -> model
 # type -> % seq level (0 - 100)
-#train.model.list <- RestructureTrainedList(train.model.list)
+train.model.list <- RestructureTrainedList(train.model.list)
 
 # save predictive models
-#saveRDS(train.model.list, file = file.path(mdl.dir, trained.models.object))
+saveRDS(train.model.list, file = file.path(mdl.dir, trained.models.object))
 
 print("gets here 3")
 
