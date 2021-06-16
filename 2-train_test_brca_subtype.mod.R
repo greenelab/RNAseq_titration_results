@@ -83,23 +83,23 @@ train.model.list <- readRDS(file.path(mdl.dir, trained.models.object))
 # stop parallel backend
 stopCluster(cl)
 
-print(str(train.model.list))
+#print(str(train.model.list))
 print("gets here 1")
 
 # get names 
-names(train.model.list) <- names(restr.train.list)
-train.model.list <- mapply(function(x, y){
-                              names(x) <- names(y)
-                              return(x)
-                            }, x = train.model.list,
-                            y = restr.train.list,
-                            SIMPLIFY = TRUE)
+#names(train.model.list) <- names(restr.train.list)
+#train.model.list <- mapply(function(x, y){
+#                              names(x) <- names(y)
+#                              return(x)
+#                            }, x = train.model.list,
+#                            y = restr.train.list,
+#                            SIMPLIFY = TRUE)
 
 print("gets here 2")
 
 # restructure trained model list so from top to bottom: norm method -> model
 # type -> % seq level (0 - 100)
-train.model.list <- RestructureTrainedList(train.model.list)
+#train.model.list <- RestructureTrainedList(train.model.list)
 
 # save predictive models
 #saveRDS(train.model.list, file = file.path(mdl.dir, trained.models.object))
