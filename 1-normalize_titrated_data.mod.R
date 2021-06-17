@@ -9,8 +9,8 @@ suppressMessages(source("load_packages.R"))
 source(file.path("util", "normalization_functions.R"))
 
 args <- commandArgs(trailingOnly = TRUE)
-filename.seed <- 2275 #as.integer(args[1])
-initial.seed <- 5003 #as.integer(args[2])
+filename.seed <- as.integer(args[1])
+initial.seed <- as.integer(args[2])
 set.seed(initial.seed)
 
 data.dir <- "data"
