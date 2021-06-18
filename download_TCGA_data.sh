@@ -81,7 +81,7 @@ done
 #  echo TCGA Legacy Archive data for BRCA already exists and was not overwritten.
 #else
 #  mkdir -p $brca_array_dir
-#  gdc-client download --manifest $data/gdc_legacy_archive_brca_manifest.txt --dir $brca_array_dir
+#  gdc-client download --manifest gdc_legacy_archive_brca_manifest.txt --dir $brca_array_dir
 #fi
 ################################################################################
 
