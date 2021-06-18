@@ -83,7 +83,8 @@ for (cls in cls.methods) {
 summary.df <-
   test.df %>% 
 #  kappa.master.df %>%
-    dplyr::group_by(Classifier, Normalization, Platform, Perc.seq) %>%
+#    dplyr::group_by(Classifier, Normalization, Platform, Perc.seq) %>%
+    dplyr::group_by(Classifier, Normalization, Platform, Perc.Seq) %>%
     dplyr::summarise(Median = median(Kappa),
                      Mean = mean(Kappa),
                      SD = sd(Kappa))
