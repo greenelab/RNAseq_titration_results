@@ -59,7 +59,7 @@ for accession in GSE83130 GSE68833; do
       --aggregation EXPERIMENT \
       --transformation NONE \
       --skip-quantile-normalization TRUE
-    unzip -d $data/$accession data/$accession\.zip && rm -f data/$accession\.zip
+    unzip -d $data/$accession $data/$accession\.zip && rm -f $data/$accession\.zip
   fi
 done
 
