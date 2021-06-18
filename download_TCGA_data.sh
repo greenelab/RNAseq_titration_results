@@ -8,6 +8,9 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 data="data"
 mkdir -p $data
 
+# downlaod BRCA array and seq data from URLs
+wget -i brca_data_urls.txt '--directory-prefix='$data
+
 # Obtain TCGA data freeze manifest file
 # See here for more info: https://gdc.cancer.gov/about-data/publications/pancanatlas
 manifest_url="https://gdc.cancer.gov/files/public/file/PanCan-General_Open_GDC-Manifest_2.txt"
@@ -61,7 +64,7 @@ for accession in GSE83130 GSE68833; do
 done
 
 # get BRCA array expression data from TCGA Legacy Archive
-# data/gdc_legacy_archive_brca_manifest.txt was obtained from https://portal.gdc.cancer.gov/legacy-archive
+# data/gdc_legacy_archive_brca_manifest.txt obtained from https://portal.gdc.cancer.gov/legacy-archive
 # with search parameters
 #   Cases
 #     Cancer Program = TCGA
@@ -72,6 +75,7 @@ done
 #     Experimental Strategy = Gene expression array
 ################################################################################
 # UNCOMMENT TO DOWNLOAD TCGA LEGACY ARCHIVE BRCA EXPRESSION ARRAY DATA
+# Need to rebuild docker image with gdc-client uncommented
 #brca_array_dir=$data/BRCA_array
 #if [ -d $brca_array_dir ]; then
 #  echo TCGA Legacy Archive data for BRCA already exists and was not overwritten.
