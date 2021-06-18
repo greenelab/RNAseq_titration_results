@@ -99,7 +99,7 @@ doParallel::registerDoParallel(cl)
 
 # 'mixed' both platform normalization
 norm.titrate.list[2:10] <- 
-  foreach(n = 2:10) %do% { #%dopar% {
+  foreach(n = 2:10) %dopar% {
     NormalizationWrapper(titrate.mix.dt.list[[n]]$array,
                          titrate.mix.dt.list[[n]]$seq)
   }
@@ -153,7 +153,7 @@ seq.qn.list[["0"]] <- QNSingleWithRef(ref.dt = norm.titrate.list$`0`$log,
 # for 10-90% seq - use the "raw array" training data at each level of sequencing
 # data (this is LOG data, but only the array samples)
 seq.qn.list[2:10] <- 
-  foreach(i = 2:10) %do% { #%dopar% {
+  foreach(i = 2:10) %dopar% {
     QNSingleWithRef(ref.dt = norm.titrate.list[[i]]$raw.array,
                     targ.dt = seq.test)
   }  
@@ -183,7 +183,7 @@ seq.tdm.list[["0"]] <- TDMSingleWithRef(ref.dt = norm.titrate.list$`0`$log,
 # for 10-90% seq - use the "raw array" training data at each level of sequencing
 # data (this is LOG data, but only the array samples)
 seq.tdm.list[2:10] <- 
-  foreach(i = 2:10) %do% { # %dopar% {
+  foreach(i = 2:10) %dopar% {
     TDMSingleWithRef(ref.dt = norm.titrate.list[[i]]$raw.array,
                      targ.dt = seq.test)
   }  

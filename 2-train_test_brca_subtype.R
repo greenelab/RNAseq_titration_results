@@ -69,8 +69,7 @@ message(paste("Random seed for resampling:", resample.seed), appendLF=TRUE)
 
 train.model.list <- 
   foreach(n = 1:length(restr.train.list)) %do% {  # foreach norm method
-#    foreach(m = 1:length(subtype.norm.list)) %dopar% {  # foreach % seq level
-    foreach(m = 1:length(subtype.norm.list)) %do% {  # foreach % seq level
+    foreach(m = 1:length(subtype.norm.list)) %dopar% {  # foreach % seq level
       print(c(n, m))
       TrainThreeModels(dt = restr.train.list[[n]][[m]], 
                        subtype =  subtype.norm.list[[m]], 
