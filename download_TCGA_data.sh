@@ -45,8 +45,7 @@ done
 
 # get TCGA array expression using refine.bio client
 # GSE83130 GBM
-# GSE68833 AML
-for accession in GSE83130 GSE68833; do
+for accession in GSE83130; do
   if [ -d $data/$accession ]; then
     echo refine.bio download for $accession already exists and was not overwritten.
   else
@@ -58,7 +57,7 @@ for accession in GSE83130 GSE68833; do
       --experiments $accession \
       --aggregation EXPERIMENT \
       --transformation NONE \
-      --skip-quantile-normalization TRUE
+      --skip-quantile-normalization True
     unzip -d $data/$accession $data/$accession\.zip && rm -f $data/$accession\.zip
   fi
 done
