@@ -53,8 +53,7 @@ RUN install2.r --error --deps TRUE \
 # R Bioconductor packages
 RUN Rscript -e "options(warn = 2); BiocManager::install(c( \
     'limma', \
-    'quantro', \
-    'SCAN.UPC'), \
+    'quantro'), \
     update = FALSE)"
 
 # Threading issue with preprocessCore::normalize.quantiles
