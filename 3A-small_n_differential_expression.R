@@ -125,7 +125,7 @@ write.table(jacc.df,
 # line plot is saved as a PDF
 ggplot(jacc.df, aes(x = no.samples, y = jaccard, color = platform)) +
   facet_wrap(~ normalization, ncol = 1) +
-  stat_summary(fun.y = median, geom = "line", aes(group = platform),
+  stat_summary(fun = median, geom = "line", aes(group = platform),
                position = position_dodge(0.2)) +
   stat_summary(fun.data = DataSummary, aes(group = platform),
                position = position_dodge(0.2), size = 0.2) +
