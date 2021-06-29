@@ -86,10 +86,11 @@ for (norm in norm.methods) {
 # get summary data.frame + write to file
 kappa.summary.df <-
   kappa.master.df %>%
-    dplyr::group_by(Classifier, Normalization, Platform, Perc.seq) %>%
-    dplyr::summarise(Median = median(Kappa),
-                     Mean = mean(Kappa),
-                     SD = sd(Kappa))
+  dplyr::group_by(Classifier, Normalization, Platform, Perc.seq) %>%
+  dplyr::summarise(Median = median(Kappa),
+                   Mean = mean(Kappa),
+                   SD = sd(Kappa),
+                   .groups = "drop")
 readr::write_tsv(kappa.summary.df,
                  file.path(rcn.res.dir,
                            "BRCA_kappa_reconstructed_data_summary_table.tsv"))
@@ -124,9 +125,10 @@ error.master.df$comp.method <- as.factor(error.master.df$comp.method)
 
 # take the average of each genes error across replicates
 error.mean.df <- error.master.df %>%
-                    group_by(gene, perc.seq, norm.method, comp.method,
-                             platform) %>%
-                    summarize(mean_mase = mean(MASE))
+  dplyr::group_by(gene, perc.seq, norm.method, comp.method,
+                  platform) %>%
+  dplyr::summarise(mean_mase = mean(MASE),
+                   .groups = "drop")
 rm(error.master.df)
 colnames(error.mean.df) <- c("Gene", "Perc_seq", "Normalization",
                              "Method", "Platform", "Mean_Value")
