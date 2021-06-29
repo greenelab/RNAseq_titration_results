@@ -17,6 +17,8 @@ rcn.res.dir <- file.path("results", "reconstructed_data")
 kap.plot.file.lead <- file.path(plot.dir, "BRCA_kappa_reconstructed_data_")
 err.plot.file.lead <- file.path(plot.dir, "BRCA_reconstruction_error_")
 
+# This pattern also captures the later output of kappa.summary.df written to
+# file.path(rcn.res.dir, "BRCA_kappa_reconstructed_data_summary_table.tsv")
 kappa.df.files <- list.files(rcn.res.dir, pattern = "kappa", full.names = TRUE)
 error.files <- list.files(rcn.res.dir, pattern = "BRCA_reconstruction_error",
                               full.names = TRUE)
@@ -124,7 +126,7 @@ error.master.df$comp.method <- as.factor(error.master.df$comp.method)
 error.mean.df <- error.master.df %>%
                     group_by(gene, perc.seq, norm.method, comp.method,
                              platform) %>%
-                    across(list(mean = mean))
+                    summarize(mean_mase = mean(MASE))
 rm(error.master.df)
 colnames(error.mean.df) <- c("Gene", "Perc_seq", "Normalization",
                              "Method", "Platform", "Mean_Value")
