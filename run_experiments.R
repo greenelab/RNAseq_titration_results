@@ -1,6 +1,6 @@
 # J. Taroni Jul 2016
 # The purpose of this script is to run the BRCA subtype classifier pipeline
-# for RNA-seq 'titration.' 
+# for RNA-seq 'titration.'
 # It should be run from the command line.
 # USAGE: Rscript run_experiments.R seed
 # where seed is an integer
@@ -17,5 +17,4 @@ system(paste("Rscript 0-expression_data_overlap_and_split.R", seeds[1]))
 message("\nNormalizing data...")
 system(paste("Rscript 1-normalize_titrated_data.mod.R", seeds[1], seeds[2]))
 message("\nTraining and testing models...")
-print(paste("running Rscript 2-train_test_brca_subtype.R", seeds[1], seeds[3]))
 system(paste("Rscript 2-train_test_brca_subtype.mod.R", seeds[1], seeds[3]))

@@ -29,8 +29,8 @@ seq.file <- file.path(data.dir, "BRCARNASeq_matchedOnly_ordered.pcl")
 array.file <- file.path(data.dir, "BRCAarray_matchedOnly_ordered.pcl")
 smpl.file <-
   file.path("results",
-#            "BRCA_matchedSamples_PAM50Array_training_testing_split_labels_3061.tsv")
-            "BRCA_matchedSamples_PAM50Array_training_testing_split_labels_2275.tsv")
+            "BRCA_matchedSamples_PAM50Array_training_testing_split_labels_3061.tsv")
+
 basal.rds <-
   file.path(deg.dir,
             "BRCA_titration_differential_exp_eBayes_fits_BasalvOther.RDS")
@@ -128,7 +128,7 @@ saveRDS(norm.titrate.list, file = norm.rds)
 #### Basal v. Other  -----------------------------------------------------------
 # design matrices
 design.mat.list <- GetDesignMatrixList(norm.titrate.list, sample.df,
-                                     subtype = "Basal")
+                                       subtype = "Basal")
 # differential expression
 fit.results.list <- GetFiteBayesList(norm.list = norm.titrate.list,
                                      design.list = design.mat.list)
@@ -145,12 +145,12 @@ pruned.norm.list <-
          function(x) lapply(x,
                             function(y) y[,
                                           c(1, which(colnames(y) %in%
-                                                          samples.to.keep)),
-                                         with = FALSE]))
+                                                       samples.to.keep)),
+                                          with = FALSE]))
 
 # get design matrices
 her2.design.list <- GetDesignMatrixList(pruned.norm.list,
-                                          sample.df, subtype = "Her2")
+                                        sample.df, subtype = "Her2")
 # differential expression
 her2.fit.results.list <- GetFiteBayesList(norm.list = pruned.norm.list,
                                           design.list = her2.design.list)

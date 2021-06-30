@@ -1,8 +1,8 @@
 # J. Taroni Jun 2016
 # The purpose of this script is to read in TGCA array and sequencing data,
-# already pre-processed to only include test tumor samples, 
+# already pre-processed to only include test tumor samples,
 # (output of 0-expression_data_overlap_and_split.R) and to normalize
-# the data.  
+# the data.
 # It should be run from the command line through the run_experiments.R script
 
 suppressMessages(source("load_packages.R"))
@@ -17,14 +17,14 @@ data.dir <- "data"
 norm.data.dir <- "normalized_data"
 seq.file <- "BRCARNASeq_matchedOnly_ordered.pcl"
 array.file <- "BRCAarray_matchedOnly_ordered.pcl"
-norm.test.object <- 
+norm.test.object <-
   paste0("BRCA_array_seq_test_data_normalized_list_", filename.seed, ".RDS")
-norm.train.object <- 
+norm.train.object <-
   paste0("BRCA_array_seq_train_titrate_normalized_list_", filename.seed, ".RDS")
 
 res.dir <- "results"
-train.test.file <- 
-  paste0("BRCA_matchedSamples_PAM50Array_training_testing_split_labels_", 
+train.test.file <-
+  paste0("BRCA_matchedSamples_PAM50Array_training_testing_split_labels_",
          filename.seed, ".tsv")
 train.test.labels <- file.path(res.dir, train.test.file)
 
@@ -39,25 +39,25 @@ sample.train.test <- read.delim(train.test.labels)
 train.sample.names <- as.character(sample.train.test$sample[
   which(sample.train.test$split == "train")])
 test.sample.names <- as.character(sample.train.test$sample[
-  which(sample.train.test$split == "test")]) 
+  which(sample.train.test$split == "test")])
 
-# get samples for 'titration' 
+# get samples for 'titration'
 titration.seed <- sample(1:10000, 1)
-message(paste("Random seed for titration:", 
+message(paste("Random seed for titration:",
               titration.seed), appendLF = TRUE)
 
 set.seed(titration.seed)
-titrate.sample.list <- lapply(seq(0, 1, by = 0.1), 
-                          function(x) GetTitratedSampleNames(train.sample.names, 
-                                                           x))
+titrate.sample.list <- lapply(seq(0, 1, by = 0.1),
+                              function(x) GetTitratedSampleNames(train.sample.names,
+                                                                 x))
 names(titrate.sample.list) <- as.character(seq(0, 100, by = 10))
 
 # these samples will be the RNA-seq samples in any given 'titration' experiment
 # remove rows that are equal to all ones -- for any combination + test data
 # z-score processing will not work on such rows
 seq.dt.list <- lapply(titrate.sample.list,
-                 function(x) seq.data[, c(1, which(colnames(seq.data) %in% x))])
-seq.dt.list[["test"]] <- 
+                      function(x) seq.data[, c(1, which(colnames(seq.data) %in% x))])
+seq.dt.list[["test"]] <-
   seq.data[, c(1, which(colnames(seq.data) %in% test.sample.names))]
 all1.list <- lapply(seq.dt.list[2:12],
                     function(x){
@@ -73,12 +73,12 @@ seq.data <- seq.data[-all.1.indx, ]
 
 # get a list that contains an
 # array data.table and seq data.table for each level of 'titration'
-array.train <- 
-  data.table(array.data[, 
-                        c(1, 
+array.train <-
+  data.table(array.data[,
+                        c(1,
                           which(colnames(array.data) %in% train.sample.names))])
-seq.train <- 
-  data.table(seq.data[, 
+seq.train <-
+  data.table(seq.data[,
                       c(1, which(colnames(seq.data) %in% train.sample.names))])
 titrate.mix.dt.list <- lapply(titrate.sample.list,
                               function(x) GetDataTablesForMixing(array.train,
@@ -89,16 +89,16 @@ titrate.mix.dt.list <- lapply(titrate.sample.list,
 norm.titrate.list <- list()
 
 # single platform array normalization
-norm.titrate.list[["0"]] <- 
-  SinglePlatformNormalizationWrapper(titrate.mix.dt.list[[1]]$array, 
-                                     platform = "array") 
+norm.titrate.list[["0"]] <-
+  SinglePlatformNormalizationWrapper(titrate.mix.dt.list[[1]]$array,
+                                     platform = "array")
 
 # parallel backend
 cl <- parallel::makeCluster(detectCores() - 1)
 doParallel::registerDoParallel(cl)
 
 # 'mixed' both platform normalization
-norm.titrate.list[2:10] <- 
+norm.titrate.list[2:10] <-
   foreach(n = 2:10) %dopar% {
     NormalizationWrapper(titrate.mix.dt.list[[n]]$array,
                          titrate.mix.dt.list[[n]]$seq)
@@ -110,24 +110,24 @@ parallel::stopCluster(cl)
 names(norm.titrate.list)[2:10] <- names(titrate.mix.dt.list)[2:10]
 
 # single platform seq normalization
-norm.titrate.list[["100"]] <- 
-  SinglePlatformNormalizationWrapper(titrate.mix.dt.list[[11]]$seq, 
+norm.titrate.list[["100"]] <-
+  SinglePlatformNormalizationWrapper(titrate.mix.dt.list[[11]]$seq,
                                      platform = "seq")
 
 # save train data
 saveRDS(norm.titrate.list, file = file.path(norm.data.dir, norm.train.object))
 
 #### normalize test data -------------------------------------------------------
-array.test <- 
-  data.table(array.data[, 
-                        c(1, 
+array.test <-
+  data.table(array.data[,
+                        c(1,
                           which(colnames(array.data) %in% test.sample.names))])
-seq.test <- 
+seq.test <-
   data.table(seq.data[, c(1, which(colnames(seq.data) %in% test.sample.names))])
 
 # array normalization
-array.test.norm.list <- 
-  SinglePlatformNormalizationWrapper(array.test, platform = "array") 
+array.test.norm.list <-
+  SinglePlatformNormalizationWrapper(array.test, platform = "array")
 
 # seq normalization
 # initialize list to hold normalized seq data
@@ -135,7 +135,7 @@ seq.test.norm.list <- list()
 
 # LOG normalization
 seq.test.norm.list[["log"]] <- LOGSeqOnly(seq.test)
-# NPN 
+# NPN
 seq.test.norm.list[["npn"]] <- NPNSingleDT(seq.test)
 
 # start parallel backend
@@ -152,14 +152,14 @@ seq.qn.list[["0"]] <- QNSingleWithRef(ref.dt = norm.titrate.list$`0`$log,
 
 # for 10-90% seq - use the "raw array" training data at each level of sequencing
 # data (this is LOG data, but only the array samples)
-seq.qn.list[2:10] <- 
+seq.qn.list[2:10] <-
   foreach(i = 2:10) %dopar% {
     QNSingleWithRef(ref.dt = norm.titrate.list[[i]]$raw.array,
                     targ.dt = seq.test)
-  }  
+  }
 names(seq.qn.list)[2:10] <- names(norm.titrate.list)[2:10]
 
-# stop parallel back end 
+# stop parallel back end
 parallel::stopCluster(cl)
 
 # QN 100% seq by itself (preProcessCore::normalize.quantiles)
@@ -182,11 +182,11 @@ seq.tdm.list[["0"]] <- TDMSingleWithRef(ref.dt = norm.titrate.list$`0`$log,
                                         targ.dt = seq.test)
 # for 10-90% seq - use the "raw array" training data at each level of sequencing
 # data (this is LOG data, but only the array samples)
-seq.tdm.list[2:10] <- 
+seq.tdm.list[2:10] <-
   foreach(i = 2:10) %dopar% {
     TDMSingleWithRef(ref.dt = norm.titrate.list[[i]]$raw.array,
                      targ.dt = seq.test)
-  }  
+  }
 names(seq.tdm.list)[2:10] <- names(norm.titrate.list)[2:10]
 
 # stop parallel backend

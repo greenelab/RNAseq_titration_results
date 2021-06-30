@@ -4,12 +4,12 @@ NAToZero <- function(dt, un=0) suppressWarnings(gdata::NAToUnknown(dt, un))
 LOGArrayOnly <- function(array.dt, zero.to.one = TRUE){
   # This function takes array data in the form of a data.table and returns a
   # log transformed, zero to one transformed (if zero.to.one = TRUE) data.table
-  # 
+  #
   # Args:
   #   array.dt: data.table where the first column contains gene identifiers,
   #             the columns are samples, rows are gene measurements
   #	  zero.to.one: logical - should the data be zero to one transformed?
-  # 
+  #
   # Returns:
   #   array.dt: log, zero to one transformed if zero.to.one = TRUE, data.table
   require(data.table)
@@ -18,7 +18,7 @@ LOGArrayOnly <- function(array.dt, zero.to.one = TRUE){
   if (!(array.is.dt)) {
     stop("\nInput must be a data.table")
   }
-  # if any negative values are found, then inverse log transform and relog 
+  # if any negative values are found, then inverse log transform and relog
   # transform using x+1
   any.negative <- any(as.vector(as.matrix(array.dt[, 2:ncol(array.dt),
                                                    with=F])) < 0)
@@ -31,7 +31,7 @@ LOGArrayOnly <- function(array.dt, zero.to.one = TRUE){
   array.dt <- NAToZero(array.dt)
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
-  	array.dt <- TDM::zero_to_one_transform(array.dt)
+    array.dt <- TDM::zero_to_one_transform(array.dt)
   }
   return(array.dt)
 }
@@ -39,12 +39,12 @@ LOGArrayOnly <- function(array.dt, zero.to.one = TRUE){
 LOGSeqOnly <- function(seq.dt, zero.to.one = TRUE){
   # This function takes RNA-seq data in the form of a data.table and returns a
   # log transformed, zero to one transformed (if zero.to.one = TRUE) data.table
-  # 
+  #
   # Args:
   #   seq.dt: data.table where the first column contains gene identifiers,
   #             the columns are samples, rows are gene measurements
   #	  zero.to.one: logical - should the data be zero to one transformed?
-  # 
+  #
   # Returns:
   #   log.dt: log, zero to one transformed if zero.to.one = TRUE, data.table
   require(data.table)
@@ -58,23 +58,23 @@ LOGSeqOnly <- function(seq.dt, zero.to.one = TRUE){
   # log.dt <- NAToZero(log.dt)
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
-  	log.dt <- TDM::zero_to_one_transform(log.dt)
+    log.dt <- TDM::zero_to_one_transform(log.dt)
   }
   return(log.dt)
 }
 
 QNSingleDT <- function(dt, zero.to.one = TRUE){
-  # This function takes gene expression data in the form of a data.table 
+  # This function takes gene expression data in the form of a data.table
   # and returns a quantile normalized, zero to one transformed (if zero.to.one
   # = TRUE) data.table
-  # 
+  #
   # Args:
   #   dt: data.table where the first column contains gene identifiers,
   #             the columns are samples, rows are gene measurements
   #	  zero.to.one: logical - should the data be zero to one transformed?
-  # 
+  #
   # Returns:
-  #   qn.dt: quantile normalized, 
+  #   qn.dt: quantile normalized,
   #          zero to one transformed if zero.to.one = TRUE, data
   require(data.table)
   dt.is.dt <- "data.table" %in% class(dt)
@@ -89,23 +89,23 @@ QNSingleDT <- function(dt, zero.to.one = TRUE){
   # qn.dt <- NAToZero(qn.dt)
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
-  	qn.dt <- TDM::zero_to_one_transform(qn.dt)
+    qn.dt <- TDM::zero_to_one_transform(qn.dt)
   }
   return(qn.dt)
 }
 
 NPNSingleDT <- function(dt, zero.to.one = TRUE){
-  # This function takes gene expression data in the form of a data.table 
+  # This function takes gene expression data in the form of a data.table
   # and returns a nonparanormal normalized, zero to one transformed
   # (if zero.to.one = TRUE) data.table
-  # 
+  #
   # Args:
   #   dt: data.table where the first column contains gene identifiers,
   #             the columns are samples, rows are gene measurements
   #	  zero.to.one: logical - should the data be zero to one transformed?
   #
   # Returns:
-  #   npn.dt: nonparanormal normalized, 
+  #   npn.dt: nonparanormal normalized,
   #           if zero.to.one = TRUE zero to one transformed, data.table
   require(data.table)
   dt.is.dt <- "data.table" %in% class(dt)
@@ -114,9 +114,9 @@ NPNSingleDT <- function(dt, zero.to.one = TRUE){
   }
   val <- data.frame(dt[, 2:ncol(dt), with = F])
   val.mat <- data.matrix(val)
-  npn.mat <- huge.npn(t(val.mat), npn.func = "shrinkage", 
-                             npn.thresh = NULL, 
-                             verbose = FALSE)
+  npn.mat <- huge.npn(t(val.mat), npn.func = "shrinkage",
+                      npn.thresh = NULL,
+                      verbose = FALSE)
   npn.dt <- data.table(cbind(as.character(dt[[1]]), t(npn.mat)))
   colnames(npn.dt) <- chartr(".", "-", colnames(dt))
   # npn.dt <- NAToZero(npn.dt)
@@ -128,9 +128,9 @@ NPNSingleDT <- function(dt, zero.to.one = TRUE){
 }
 
 ZScoreSingleDT <- function(dt, zero.to.one = TRUE){
-  # This function takes gene expression data in the form of a data.table 
+  # This function takes gene expression data in the form of a data.table
   # and returns a z-scored, zero to one transformed data.table
-  # 
+  #
   # Args:
   #   dt: data.table where the first column contains gene identifiers,
   #             the columns are samples, rows are gene measurements
@@ -146,7 +146,7 @@ ZScoreSingleDT <- function(dt, zero.to.one = TRUE){
   val <- data.frame(dt[, 2:ncol(dt), with = F])
   #  message("Z-score...\n")
   z.val <- t(apply(val, 1, function(x) scale(as.numeric(x))))
-  z.dt <- data.table(cbind(as.character(dt[[1]]), z.val))  
+  z.dt <- data.table(cbind(as.character(dt[[1]]), z.val))
   colnames(z.dt) <- chartr(".", "-", colnames(dt))
   # z.dt <- NAToZero(z.dt)
   #  message("\tZero to one transformation...\n")
@@ -157,15 +157,15 @@ ZScoreSingleDT <- function(dt, zero.to.one = TRUE){
 }
 
 QNZSingleDT <- function(dt, zero.to.one = TRUE){
-  # This function takes gene expression data in the form of a data.table 
-  # and returns a quantile normalized and then z-scored,  zero to one 
+  # This function takes gene expression data in the form of a data.table
+  # and returns a quantile normalized and then z-scored,  zero to one
   # transformed (if zero.to.one = TRUE) data.table
-  # 
+  #
   # Args:
   #   dt: data.table where the first column contains gene identifiers,
   #             the columns are samples, rows are gene measurements
   #	  zero.to.one: logical - should the data be zero to one transformed?
-  # 
+  #
   # Returns:
   #   qn.dt: quantile normalized, z-scored
   #          zero to one transformed if zero.to.one = TRUE, data
@@ -178,7 +178,7 @@ QNZSingleDT <- function(dt, zero.to.one = TRUE){
   #  message("Quantile normalization...\n")
   qn <- preprocessCore::normalize.quantiles(data.matrix(val), copy = F)
   z.qn <- t(apply(qn, 1, function(x) scale(as.numeric(x))))
-  z.dt <- data.table(cbind(as.character(dt[[1]]), z.qn))  
+  z.dt <- data.table(cbind(as.character(dt[[1]]), z.qn))
   colnames(z.dt) <- chartr(".", "-", colnames(dt))
   # z.dt <- NAToZero(z.dt)
   #  message("\tZero to one transformation...\n")
@@ -191,21 +191,21 @@ QNZSingleDT <- function(dt, zero.to.one = TRUE){
 QNSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
   # This function takes array gene expression data.table as a reference and
   # an RNA-seq expression data.table ('target') and returns the quantile
-  # normalized, zero to one transformed (if zero.to.one = TRUE) RNA-seq 
+  # normalized, zero to one transformed (if zero.to.one = TRUE) RNA-seq
   # expression data.table
-  # 
+  #
   # Args:
   #   ref.dt: array data.table where the first column contains gene identifiers,
   #           the columns are samples, rows are gene measurements
-  #   targ.dt: RNA-seq data.table where the first column contains gene 
+  #   targ.dt: RNA-seq data.table where the first column contains gene
   #            identifiers, the columns are samples, rows are gene measurements
   #	  zero.to.one: logical - should the data be zero to one transformed?
   #
   # Returns:
-  #   qn.targ: quantile normalized (quantiles from array data), zero to one 
+  #   qn.targ: quantile normalized (quantiles from array data), zero to one
   #            transformed if zero.to.one = TRUE, data.table
-  # 
-  require(data.table)  
+  #
+  require(data.table)
   # Error-handling
   ref.is.dt <- "data.table" %in% class(ref.dt)
   targ.is.dt <- "data.table" %in% class(targ.dt)
@@ -220,41 +220,41 @@ QNSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
   target.values <- data.frame(targ.dt[, 2:ncol(targ.dt), with = F])
   #  message("Quantile normalization...\n")
   # get target object "reference" for the quantile normalization
-  qn.ref <- 
+  qn.ref <-
     preprocessCore::normalize.quantiles.determine.target(
-                        data.matrix(ref.values), 
-                        target.length = nrow(ref.values))
-  
+      data.matrix(ref.values),
+      target.length = nrow(ref.values))
+
   # quantile normalize the data, against reference (array) distribution, using
   # replacement, not averaging
-  qn.targ <- 
-    preprocessCore::normalize.quantiles.use.target(data.matrix(target.values), 
+  qn.targ <-
+    preprocessCore::normalize.quantiles.use.target(data.matrix(target.values),
                                                    qn.ref,
                                                    copy = F)
   qn.targ <- data.table(cbind(as.character(targ.dt[[1]]), qn.targ))
-  colnames(qn.targ) <- chartr(".", "-", colnames(qn.targ))  
+  colnames(qn.targ) <- chartr(".", "-", colnames(qn.targ))
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
     qn.targ <- TDM::zero_to_one_transform(qn.targ)
   }
-  return(qn.targ) 
+  return(qn.targ)
 }
 
 TDMSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
   # This function takes array gene expression data.table as a reference and
   # an RNA-seq expression data.table ('target') and returns the TDM
-  # normalized, zero to one transformed (if zero.to.one = TRUE) RNA-seq 
+  # normalized, zero to one transformed (if zero.to.one = TRUE) RNA-seq
   # expression data.table
-  # 
+  #
   # Args:
   #   ref.dt: array data.table where the first column contains gene identifiers,
   #           the columns are samples, rows are gene measurements
-  #   targ.dt: RNA-seq data.table where the first column contains gene 
+  #   targ.dt: RNA-seq data.table where the first column contains gene
   #            identifiers, the columns are samples, rows are gene measurements
   #	  zero.to.one: logical - should the data be zero to one transformed?
   #
   # Returns:
-  #   tdm.targ: TDM normalized (array data as reference), zero to one 
+  #   tdm.targ: TDM normalized (array data as reference), zero to one
   #                transformed if zero.to.one = TRUE, data.table
   require(data.table)
   # Error-handling
@@ -268,11 +268,11 @@ TDMSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
     stop("Gene identifiers in data.tables must match")
   }
   #  message("TDM transformation...\n")
-  tdm.targ <- TDM::tdm_transform(target_data = targ.dt, 
-                                 ref_data = ref.dt, 
-                                 negative = FALSE, 
-                                 filter_p = FALSE, 
-                                 inv_reference = TRUE, 
+  tdm.targ <- TDM::tdm_transform(target_data = targ.dt,
+                                 ref_data = ref.dt,
+                                 negative = FALSE,
+                                 filter_p = FALSE,
+                                 inv_reference = TRUE,
                                  log_target=TRUE)
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
@@ -281,14 +281,14 @@ TDMSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
   return(tdm.targ)
 }
 
-SinglePlatformNormalizationWrapper <- function(dt, platform = "array", 
-                                               zto = TRUE, 
+SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
+                                               zto = TRUE,
                                                add.untransformed = FALSE,
                                                add.qn.z = FALSE){
   # This function is a wrapper for processing expression data.tables that
-  # contain only one RNA assay platform (array or seq). It returns a list of 
+  # contain only one RNA assay platform (array or seq). It returns a list of
   # normalized data.tables.
-  # 
+  #
   # Args:
   #   dt: data.table where the first column contains gene identifiers,
   #       the columns are samples, rows are gene measurements from a single
@@ -299,19 +299,19 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
   #	                     be added to the list?
   #	  add.qn.z: logical - should quantile normalized data that is then z-scored
   #	            be added to the list?
-  #   
+  #
   # Returns:
-  #   norm.list: a list of normalized, 
+  #   norm.list: a list of normalized,
   #              if zero.to.one = TRUE zero to one transformed, data.tables
-  # 
-  
+  #
+
   # error-handling
   if (platform == "array" & add.untransformed) {
     warning("If add.transformed = TRUE, must be RNA-seq data (platform = seq).\n
              Setting add.untransformed to FALSE...")
     add.untransformed <- FALSE
   }
-  
+
   norm.list <- list()
   if (platform == "array") {
     norm.list[["log"]] <- LOGArrayOnly(dt, zto)
@@ -358,26 +358,26 @@ GetTitratedSampleNames <- function(sample.set, p){
   #   selected.samples: the selected subset of sample names, character
   #
   sample.set <- as.character(sample.set)
-  no.select <- ceiling(length(sample.set) * p)  # number of samples to select 
+  no.select <- ceiling(length(sample.set) * p)  # number of samples to select
   selected.samples <- sample(sample.set, no.select)
   return(selected.samples)
 }
 
 ZScoreProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
-  # This function takes array and RNA-seq data in the form of data.table 
-  # to be 'mixed' (concatenated) and returns one z-scored, 
+  # This function takes array and RNA-seq data in the form of data.table
+  # to be 'mixed' (concatenated) and returns one z-scored,
   # zero to one transformed (if zero.to.one = TRUE) data.table
   # Args:
-  #   array.dt: data.table of array data where the first column contains 
-  #             gene identifiers, the columns are samples, 
+  #   array.dt: data.table of array data where the first column contains
+  #             gene identifiers, the columns are samples,
   #             rows are gene measurements
-  #   seq.dt:   data.table of RNA-seq data where the first column contains 
-  #             gene identifiers, the columns are samples, 
+  #   seq.dt:   data.table of RNA-seq data where the first column contains
+  #             gene identifiers, the columns are samples,
   #             rows are gene measurements
   #   zero.to.one: logical - should data be zero to one transformed?
-  # 
+  #
   # Returns:
-  #   z.dt: z-scored, zero to one transformed if zero.to.one = TRUE, 
+  #   z.dt: z-scored, zero to one transformed if zero.to.one = TRUE,
   #         data.table that contains both array and RNA-seq samples
   require(data.table)
   # Error-handling
@@ -397,7 +397,7 @@ ZScoreProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   z.seq <- t(apply(seq.mat, 1, function(x) scale(as.numeric(x))))
   #  message("\tConcatenation...\n")
   z.dt <- data.table(cbind(array.dt[[1]], z.array, z.seq))
-  colnames(z.dt) <- c("gene", 
+  colnames(z.dt) <- c("gene",
                       chartr(".", "-", colnames(array.mat)),
                       chartr(".", "-", colnames(seq.mat)))
   # z.dt <- NAToZero(z.dt)
@@ -409,23 +409,23 @@ ZScoreProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
 }
 
 QNProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
-  # This function takes array and RNA-seq data in the form of data.table 
-  # to be 'mixed' (concatenated) and returns one quantile normalized, 
-  # zero to one transformed (if zero.to.one = TRUE) data.table. The array data 
+  # This function takes array and RNA-seq data in the form of data.table
+  # to be 'mixed' (concatenated) and returns one quantile normalized,
+  # zero to one transformed (if zero.to.one = TRUE) data.table. The array data
   # is used as the target distribution.
-  # 
+  #
   # Args:
-  #   array.dt: data.table of array data where the first column contains 
-  #             gene identifiers, the columns are samples, 
+  #   array.dt: data.table of array data where the first column contains
+  #             gene identifiers, the columns are samples,
   #             rows are gene measurements
-  #   seq.dt:   data.table of RNA-seq data where the first column contains 
-  #             gene identifiers, the columns are samples, 
+  #   seq.dt:   data.table of RNA-seq data where the first column contains
+  #             gene identifiers, the columns are samples,
   #             rows are gene measurements
   #   zero.to.one: logical - should data be zero to one transformed?
-  # 
+  #
   # Returns:
   #   qn.cat:  quantile normalized, zero to one transformed if
-  #	           zero.to one = TRUE, data.table that contains both array and 
+  #	           zero.to one = TRUE, data.table that contains both array and
   #            RNA-seq samples
   require(data.table)
   # Error-handling
@@ -460,23 +460,23 @@ QNProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
 }
 
 QNZProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
-  # This function takes array and RNA-seq data in the form of data.table 
+  # This function takes array and RNA-seq data in the form of data.table
   # to be 'mixed' (concatenated) and returns one quantile normalized, z-scored
-  # zero to one transformed (if zero.to.one = TRUE) data.table. The array data 
+  # zero to one transformed (if zero.to.one = TRUE) data.table. The array data
   # is used as the target distribution.
-  # 
+  #
   # Args:
-  #   array.dt: data.table of array data where the first column contains 
-  #             gene identifiers, the columns are samples, 
+  #   array.dt: data.table of array data where the first column contains
+  #             gene identifiers, the columns are samples,
   #             rows are gene measurements
-  #   seq.dt:   data.table of RNA-seq data where the first column contains 
-  #             gene identifiers, the columns are samples, 
+  #   seq.dt:   data.table of RNA-seq data where the first column contains
+  #             gene identifiers, the columns are samples,
   #             rows are gene measurements
   #   zero.to.one: logical - should data be zero to one transformed?
-  # 
+  #
   # Returns:
   #   z.cat:  quantile normalized, z-scored, zero to one transformed if
-  #	           zero.to one = TRUE, data.table that contains both array and 
+  #	           zero.to one = TRUE, data.table that contains both array and
   #            RNA-seq samples
   require(data.table)
   # Error-handling
@@ -501,10 +501,10 @@ QNZProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   z.seq <- t(apply(qn.seq, 1, function(x) scale(as.numeric(x))))
   #  message("\tConcatenation...\n")
   z.dt <- data.table(cbind(array.dt[[1]], z.array, z.seq))
-  colnames(z.dt) <- c("gene", 
+  colnames(z.dt) <- c("gene",
                       chartr(".", "-", colnames(ref.values)),
                       chartr(".", "-", colnames(target.values)))
-  
+
   # z.dt <- NAToZero(z.dt)
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
@@ -514,23 +514,23 @@ QNZProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
 }
 
 NPNProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
-  # This function takes array and RNA-seq data in the form of data.table 
-  # to be 'mixed' (concatenated) and returns one nonparanormal normalized, 
+  # This function takes array and RNA-seq data in the form of data.table
+  # to be 'mixed' (concatenated) and returns one nonparanormal normalized,
   # zero to one transformed (if zero.to.one = TRUE) data.table
-  # 
+  #
   # Args:
-  #   array.dt: data.table of array data where the first column contains 
-  #             gene identifiers, the columns are samples, 
+  #   array.dt: data.table of array data where the first column contains
+  #             gene identifiers, the columns are samples,
   #             rows are gene measurements
-  #   seq.dt:   data.table of RNA-seq data where the first column contains 
-  #             gene identifiers, the columns are samples, 
+  #   seq.dt:   data.table of RNA-seq data where the first column contains
+  #             gene identifiers, the columns are samples,
   #             rows are gene measurements
   #   zero.to.one: logical - should data be zero to one transformed?
   #
   # Returns:
-  #   npn.cat: NPN normalized, zero to one transformed if zero.to.one = TRUE, 
+  #   npn.cat: NPN normalized, zero to one transformed if zero.to.one = TRUE,
   #            data.table that contains both array and RNA-seq samples
-  #             
+  #
   require(data.table)
   # Error-handling
   array.is.dt <- "data.table" %in% class(array.dt)
@@ -545,17 +545,17 @@ NPNProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   ref.values <- data.frame(array.dt[, 2:ncol(array.dt), with = F])
   target.values <- data.frame(seq.dt[, 2:ncol(seq.dt), with = F])
   npn.ref <- data.matrix(ref.values)
-  npn.array <- huge::huge.npn(t(npn.ref), npn.func = "shrinkage", 
+  npn.array <- huge::huge.npn(t(npn.ref), npn.func = "shrinkage",
                               npn.thresh = NULL, verbose = FALSE)
   npn.targ <- data.matrix(target.values)
-  npn.seq <- huge::huge.npn(t(npn.targ), npn.func = "shrinkage", 
+  npn.seq <- huge::huge.npn(t(npn.targ), npn.func = "shrinkage",
                             npn.thresh = NULL, verbose = FALSE)
   #  message("\tConcatenation...\n")
   npn.cat <- data.table(cbind(array.dt[[1]], t(npn.array), t(npn.seq)))
   colnames(npn.cat) <- c("gene",
                          chartr(".", "-", colnames(ref.values)),
                          chartr(".", "-", colnames(target.values)))
-  
+
   # npn.cat <- NAToZero(npn.cat)
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
@@ -565,22 +565,22 @@ NPNProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
 }
 
 TDMProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
-  # This function takes array and RNA-seq data in the form of data.table 
-  # to be 'mixed' (concatenated) and returns one TDM normalized, 
-  # zero to one transformed (if zero.to.one = TRUE) data.table. The array data 
+  # This function takes array and RNA-seq data in the form of data.table
+  # to be 'mixed' (concatenated) and returns one TDM normalized,
+  # zero to one transformed (if zero.to.one = TRUE) data.table. The array data
   # is used as the reference distribution.
-  # 
+  #
   # Args:
-  #   array.dt: data.table of array data where the first column contains 
-  #             gene identifiers, the columns are samples, 
+  #   array.dt: data.table of array data where the first column contains
+  #             gene identifiers, the columns are samples,
   #             rows are gene measurements
-  #   seq.dt:   data.table of RNA-seq data where the first column contains 
-  #             gene identifiers, the columns are samples, 
+  #   seq.dt:   data.table of RNA-seq data where the first column contains
+  #             gene identifiers, the columns are samples,
   #             rows are gene measurements
   #   zero.to.one: logical - should data be zero to one transformed?
-  # 
+  #
   # Returns:
-  #   tdm.cat: TDM normalized, zero to one transformed if zero.to.one = TRUE, 
+  #   tdm.cat: TDM normalized, zero to one transformed if zero.to.one = TRUE,
   #            data.table that contains both array and RNA-seq samples
   #
   require(data.table)
@@ -595,36 +595,36 @@ TDMProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
     stop("Gene identifiers in data.tables must match")
   }
   #  message("TDM transformation...\n")
-  tdm.seq <- TDM::tdm_transform(target_data = seq.dt, 
-                                ref_data = array.dt, 
-                                negative = FALSE, 
-                                filter_p = FALSE, 
-                                inv_reference = TRUE, 
+  tdm.seq <- TDM::tdm_transform(target_data = seq.dt,
+                                ref_data = array.dt,
+                                negative = FALSE,
+                                filter_p = FALSE,
+                                inv_reference = TRUE,
                                 log_target = TRUE)
   # array.dt <- NAToZero(array.dt)
   # tdm.seq <- NAToZero(tdm.seq)
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
-  	array.dt <- TDM::zero_to_one_transform(array.dt)
-  	tdm.seq <- TDM::zero_to_one_transform(tdm.seq)
+    array.dt <- TDM::zero_to_one_transform(array.dt)
+    tdm.seq <- TDM::zero_to_one_transform(tdm.seq)
   }
   #  message("\tConcatenation...\n")
   tdm.cat <- data.table(cbind(array.dt, tdm.seq[, 2:ncol(tdm.seq), with = F]))
-  
+
   return(tdm.cat)
 }
 
 LOGProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
-  # This function takes array and RNA-seq data in the form of data.table 
-  # to be 'mixed' (concatenated) and returns one log transformed, 
+  # This function takes array and RNA-seq data in the form of data.table
+  # to be 'mixed' (concatenated) and returns one log transformed,
   # zero to one transformed (if zero.to.one = TRUE) data.table
-  # 
+  #
   # Args:
-  #   array.dt: data.table of array data where the first column contains 
-  #             gene identifiers, the columns are samples, 
+  #   array.dt: data.table of array data where the first column contains
+  #             gene identifiers, the columns are samples,
   #             rows are gene measurements
-  #   seq.dt:   data.table of RNA-seq data where the first column contains 
-  #             gene identifiers, the columns are samples, 
+  #   seq.dt:   data.table of RNA-seq data where the first column contains
+  #             gene identifiers, the columns are samples,
   #             rows are gene measurements
   #   zero.to.one: logical - should data be zero to one transformed?
   #
@@ -662,62 +662,62 @@ UnNoZTOProcessing <- function(array.dt, seq.dt) {
   # zero to one transformation. It should be regarded as a negative control.
   #
   # Args:
-  #   array.dt: data.table of array data where the first column contains 
-  #             gene identifiers, the columns are samples, 
+  #   array.dt: data.table of array data where the first column contains
+  #             gene identifiers, the columns are samples,
   #             rows are gene measurements
-  #   seq.dt:   data.table of RNA-seq data where the first column contains 
-  #             gene identifiers, the columns are samples, 
+  #   seq.dt:   data.table of RNA-seq data where the first column contains
+  #             gene identifiers, the columns are samples,
   #             rows are gene measurements
-  # 
+  #
   # Returns:
   #   dt.cat: data.table that contains concatenated array data and untransformed
   #           RNA-seq data, zero to one transformation is not applied
-  #           
+  #
   dt.cat <- data.table(cbind(array.dt, seq.dt[, 2:ncol(seq.dt),
                                               with=F]))
   return(dt.cat)
-  
+
 }
 
-NormalizationWrapper <- function(array.dt, seq.dt, 
+NormalizationWrapper <- function(array.dt, seq.dt,
                                  zto = TRUE,
                                  add.untransformed = FALSE,
                                  add.qn.z = FALSE){
-  # This function takes array and RNA-seq data in the form of data.table 
+  # This function takes array and RNA-seq data in the form of data.table
   # to be 'mixed' (concatenated) and returns a list of normalized data.tables
   #
   # Args:
-  #   array.dt: data.table of array data where the first column contains 
-  #             gene identifiers, the columns are samples, 
+  #   array.dt: data.table of array data where the first column contains
+  #             gene identifiers, the columns are samples,
   #             rows are gene measurements
-  #   seq.dt:   data.table of RNA-seq data where the first column contains 
-  #             gene identifiers, the columns are samples, 
+  #   seq.dt:   data.table of RNA-seq data where the first column contains
+  #             gene identifiers, the columns are samples,
   #             rows are gene measurements
   #	  zto: logical - should data be zero to one transformed?
-  #	  add.untransformed: logical - should untransformed (counts/RSEM) RNA-seq 
+  #	  add.untransformed: logical - should untransformed (counts/RSEM) RNA-seq
   #	                     be concatenated to array data and added to the list?
   #	  add.qn.z: logical - should quantile normalized data that is then z-scored
   #	            be added to the list?
   #
   # Returns:
-  #	  norm.list: a list of normalized, zero to one 'mixed' data.tables 
-  #              if zto = TRUE (log transformation, nonparanormal normalized, 
-  #              quantile normalized, TDM normalized, z-scored, quantile 
+  #	  norm.list: a list of normalized, zero to one 'mixed' data.tables
+  #              if zto = TRUE (log transformation, nonparanormal normalized,
+  #              quantile normalized, TDM normalized, z-scored, quantile
   #              normalized + z-transformed [if add.qn.z = TRUE], untransformed
   #              [if add.untransformed = TRUE])
   #
   require(data.table)
-  
+
   # if zero to one transformation is to be performed AND untransformed RNA-seq
-  # data is to be added, warn the user that there is no zero to one 
+  # data is to be added, warn the user that there is no zero to one
   # transformation in the untransformed step
   if (zto & add.untransformed) {
     warning("Zero to one transformation will be performed for most normalization
             methods. Untransformed RNA-seq data step does not include zero to
             one transformation.")
   }
-  
-  # if any negative values are found, then inverse log transform and relog 
+
+  # if any negative values are found, then inverse log transform and relog
   # transform using x+1
   any.negative <- any(as.vector(as.matrix(array.dt[, 2:ncol(array.dt),
                                                    with=F])) < 0)
@@ -727,7 +727,7 @@ NormalizationWrapper <- function(array.dt, seq.dt,
     array.dt <- TDM::log_transform_p1(array.dt)
   }
   # convert NA to zero
-  array.dt <- NAToZero(array.dt)  
+  array.dt <- NAToZero(array.dt)
   norm.list <- list()
   # save array data.table to be used as 'reference' for test data
   norm.list[["raw.array"]] <- array.dt
@@ -745,31 +745,31 @@ NormalizationWrapper <- function(array.dt, seq.dt,
   if (add.untransformed) {
     norm.list[["un"]] <- UnNoZTOProcessing(array.dt, seq.dt)
   }
-  return(norm.list) 
+  return(norm.list)
 }
 
 GetDataTablesForMixing <- function(array.data, seq.data,
                                    titrate.sample.names){
-  # This function takes two full data.tables that contain array and RNA-seq 
-  # data,matched samples and a vector of sample names. It returns a list that 
-  # contains an array data.table (samples not in the sample names) and an 
+  # This function takes two full data.tables that contain array and RNA-seq
+  # data,matched samples and a vector of sample names. It returns a list that
+  # contains an array data.table (samples not in the sample names) and an
   # RNA-seq data.table (samples in the sample names).
   #
   # Args:
-  #   array.data: data.table of array data where the first column contains 
-  #               gene identifiers, the columns are samples, 
+  #   array.data: data.table of array data where the first column contains
+  #               gene identifiers, the columns are samples,
   #               rows are gene measurements
-  #   seq.data:   data.table of RNA-seq data where the first column contains 
-  #               gene identifiers, the columns are samples, 
+  #   seq.data:   data.table of RNA-seq data where the first column contains
+  #               gene identifiers, the columns are samples,
   #               rows are gene measurements
   #   titrate.sample.names: samples to be taken from RNA-seq data.table
   #
   # Returns:
-  #   mix.dt.list: list that contains the array data.table ("array") and 
-  #                the RNA-seq data.table ("seq") to be normalized 
+  #   mix.dt.list: list that contains the array data.table ("array") and
+  #                the RNA-seq data.table ("seq") to be normalized
   #                and concatenated
   require(data.table)
-  # Error-handling   
+  # Error-handling
   array.is.dt <- "data.table" %in% class(array.data)
   seq.is.dt <- "data.table" %in% class(seq.data)
   any.not.df <- !(any(c(array.is.dt, seq.is.dt)))
@@ -780,14 +780,14 @@ GetDataTablesForMixing <- function(array.data, seq.data,
   if (!(all(array.data[[1]] %in% seq.data[[1]]))) {
     stop("Gene identifiers in data.tables must match")
   }
-  if ((length(titrate.sample.names) > 0) 
+  if ((length(titrate.sample.names) > 0)
       & (length(titrate.sample.names) != (ncol(seq.data) - 1))) {
-    array.dt <- 
+    array.dt <-
       array.data[, which(!(colnames(array.data) %in% titrate.sample.names)),
                  with = F]
     array.dt <- data.table(array.dt)
-    seq.dt <- 
-      seq.data[, c(1, which(colnames(seq.data) %in% titrate.sample.names)), 
+    seq.dt <-
+      seq.data[, c(1, which(colnames(seq.data) %in% titrate.sample.names)),
                with = F]
     seq.dt <- data.table(seq.dt)
     mix.dt.list <- list("array" = array.dt, "seq" = seq.dt)

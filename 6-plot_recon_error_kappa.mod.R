@@ -17,11 +17,11 @@ rcn.res.dir <- file.path("results", "reconstructed_data")
 kap.plot.file.lead <- file.path(plot.dir, "BRCA_kappa_reconstructed_data_")
 err.plot.file.lead <- file.path(plot.dir, "BRCA_reconstruction_error_")
 
-# This pattern also captures the later output of kappa.summary.df written to
-# file.path(rcn.res.dir, "BRCA_kappa_reconstructed_data_summary_table.tsv")
-kappa.df.files <- list.files(rcn.res.dir, pattern = "kappa", full.names = TRUE)
+# pattern = "kappa" captures a downstream output file if this script is rerun
+# pattern = "kappa_[0-9]*.tsv" captures filenames including seeds between 1:10000
+kappa.df.files <- list.files(rcn.res.dir, pattern = "kappa_[0-9]*.tsv", full.names = TRUE)
 error.files <- list.files(rcn.res.dir, pattern = "BRCA_reconstruction_error",
-                              full.names = TRUE)
+                          full.names = TRUE)
 
 #### plot kappa stats ----------------------------------------------------------
 
@@ -103,7 +103,7 @@ rm(kappa.master.df)
 error.df.list <- list()
 for(fl.iter in seq_along(error.files)){
   error.df.list[[fl.iter]] <- data.table::fread(error.files[fl.iter],
-                                             data.table = FALSE)
+                                                data.table = FALSE)
 }
 error.master.df <- as.data.frame(data.table::rbindlist(error.df.list))
 rm(error.df.list)

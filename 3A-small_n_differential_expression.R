@@ -29,8 +29,7 @@ array.file <- file.path(data.dir, "BRCAarray_matchedOnly_ordered.pcl")
 
 smpl.file <-
   file.path("results",
-#            "BRCA_matchedSamples_PAM50Array_training_testing_split_labels_3061.tsv")
-            "BRCA_matchedSamples_PAM50Array_training_testing_split_labels_2275.tsv")
+            "BRCA_matchedSamples_PAM50Array_training_testing_split_labels_3061.tsv")
 
 #### functions -----------------------------------------------------------------
 
@@ -63,10 +62,10 @@ samples.to.keep <-
 
 array.dt <- data.table(array.data[,
                                   c(1, which(colnames(array.data) %in%
-                                      samples.to.keep))])
+                                               samples.to.keep))])
 seq.dt <- data.table(seq.data[,
-                                c(1, which(colnames(seq.data) %in%
-                                             samples.to.keep))])
+                              c(1, which(colnames(seq.data) %in%
+                                           samples.to.keep))])
 sample.df <- sample.df[which(sample.df$sample %in% samples.to.keep), ]
 
 # different sizes of n to test

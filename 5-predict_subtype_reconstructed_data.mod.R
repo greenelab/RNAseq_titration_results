@@ -58,9 +58,9 @@ for (seed in filename.seeds) {
   # need to read in corresponding sample.df
   sample.df.file <-
     file.path(res.dir,
-           paste0(
-             "BRCA_matchedSamples_PAM50Array_training_testing_split_labels_",
-              seed, ".tsv"))
+              paste0(
+                "BRCA_matchedSamples_PAM50Array_training_testing_split_labels_",
+                seed, ".tsv"))
   sample.df <- data.table::fread(sample.df.file, data.table = F)
   sample.df$subtype <- as.factor(sample.df$subtype)
 
@@ -93,7 +93,7 @@ for (seed in filename.seeds) {
                                             run.parallel = FALSE)
 
 
-      # remove reconstructed datat
+      # remove reconstructed data
       rm(recon.list)
       gc()
 
