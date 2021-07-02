@@ -66,9 +66,9 @@ for (cls in cls.methods) {
     facet_wrap(~ Normalization, ncol = 5) +
     geom_violin(colour = "black", position = position_dodge(0.8),
                 alpha = 0.2) +
-    stat_summary(fun.y = median, geom = "line", aes(group = Platform),
+    stat_summary(fun = median, geom = "line", aes(group = Platform),
                  position = position_dodge(0.6)) +
-    stat_summary(fun.y = median, geom = "point", aes(group = Platform),
+    stat_summary(fun = median, geom = "point", aes(group = Platform),
                  position = position_dodge(0.7), size = 1) +
     ggtitle(cls) +
     xlab("% RNA-seq samples") +
