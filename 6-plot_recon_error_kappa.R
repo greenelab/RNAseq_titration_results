@@ -18,8 +18,8 @@ kap.plot.file.lead <- file.path(plot.dir, "BRCA_kappa_reconstructed_data_")
 err.plot.file.lead <- file.path(plot.dir, "BRCA_reconstruction_error_")
 
 # pattern = "kappa" captures a downstream output file if this script is rerun
-# pattern = "kappa_[0-9]*.tsv" captures filenames including seeds between 1:10000
-kappa.df.files <- list.files(rcn.res.dir, pattern = "kappa_[0-9]*.tsv", full.names = TRUE)
+# pattern = "kappa_[0-9]+.tsv" captures the intended filenames including seeds between 1:10000
+kappa.df.files <- list.files(rcn.res.dir, pattern = "kappa_[0-9]+.tsv", full.names = TRUE)
 error.files <- list.files(rcn.res.dir, pattern = "BRCA_reconstruction_error",
                           full.names = TRUE)
 
