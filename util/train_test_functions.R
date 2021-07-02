@@ -136,7 +136,7 @@ TrainThreeModels <- function(dt, subtype, seed, folds.list){
     set.seed(seed)
     # need a seed list for parallel processing purposes?
     seed.list <- vector(mode = "list", length = 6)
-    for (i in 1:5) seed.list[[i]]<- sample.int(n=1000, 6) #3) # tuneLength is 3
+    for (i in 1:5) seed.list[[i]]<- sample.int(n=1000, 6) # needs 6 even though tuneLength is 3?
     seed.list[[6]] <- sample.int(n=1000, 1) # last model
 
     fit.control <- trainControl(method = "cv",
@@ -158,12 +158,12 @@ TrainThreeModels <- function(dt, subtype, seed, folds.list){
     colnames(t_dt) <- paste0("c", seq(1:ncol(t_dt)))
 
     # LASSO
-        train.list[["glmnet"]] <- cv.glmnet(t_dt,
-                                            subtype,
-                                            family = "multinomial",
-                                            foldid = fold.vector, # fold 'labels'
-                                            parallel = T,
-                                            type.measure="class")
+    train.list[["glmnet"]] <- cv.glmnet(t_dt,
+                                        subtype,
+                                        family = "multinomial",
+                                        foldid = fold.vector, # fold 'labels'
+                                        parallel = T,
+                                        type.measure="class")
     # Random Forest
     train.list[["rf"]] <- train(t_dt,
                                 subtype,
