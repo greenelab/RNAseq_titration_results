@@ -1,7 +1,7 @@
 # J. Taroni Oct 2016
 # The purpose of this script is to perform PAM50 subtype prediction
 # (from 2-train_test_brca_subtype.R) on test/holdout data that has been
-# reconstructed using the components from ICA and PCA on training data (the
+# reconstructed using the components from PCA on training data (the
 # output of 4-ica_pca_feature_reconstruction.R). It outputs a list of
 # confusionMatrix objects and a data.frame of Kappa statistics from these
 # predictions.
@@ -34,7 +34,7 @@ kap.file.lead <- sub("confusionMatrices", "kappa", cm.file.lead)
 #### main ----------------------------------------------------------------------
 
 platforms <- c("array", "seq")
-recon.methods <- c("ICA", "PCA")
+recon.methods <- c("PCA")
 
 for (seed in filename.seeds) {
 
