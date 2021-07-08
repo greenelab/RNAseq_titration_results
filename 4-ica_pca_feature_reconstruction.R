@@ -45,14 +45,15 @@ rcn.file.lead <- paste0("BRCA_reconstructed_data_", n.comp,
 
 #### main ----------------------------------------------------------------------
 platforms <- c("array", "seq")
-recon.methods <- c("ICA", "PCA")
+#recon.methods <- c("ICA", "PCA")
+recon.methods <- c("PCA") # July 2021 update to no longer run ICA
 
 for (seed in filename.seeds) {
   rep.count <- grep(seed, filename.seeds)
   message(paste("\n\n#### RECONSTRUCTION ROUND",
                 rep.count, "of", length(filename.seeds), "####\n\n"))
 
-  # set seed for ICA
+  # set seed
   set.seed(initial.seed)
 
   #### read in data ####
@@ -67,11 +68,11 @@ for (seed in filename.seeds) {
   train.data$tdm$`0` <- NULL
   train.data$tdm$`100` <- NULL
 
-  # for each method to be used for reconstruction (ICA and PCA)
+  # for each method to be used for reconstruction
   for (rcn in recon.methods) {
     message(paste("  ", rcn, "on training set"))
 
-    # perform ICA or PCA on the training data
+    # perform reconstruction method on the training data
     train.comp.list <- TrainSetCompAnalysis(train.list = train.data,
                                             num.comp = n.comp,
                                             comp.method = rcn)
