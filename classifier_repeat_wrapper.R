@@ -16,7 +16,8 @@ if (is.na(n.repeats)) {
 initial.seed <- 12
 set.seed(initial.seed)
 
-seeds <- sample(1:10000, n.repeats)
+# these seeds should be between 1000 and 9999 (be 4 digits) to match later file name parsing
+seeds <- sample(1000:9999, n.repeats)
 
 rep.count <- 1
 for(seed in seeds){
