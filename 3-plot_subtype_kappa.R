@@ -60,7 +60,11 @@ test.df$Classifier <- as.factor(test.df$Classifier)
 cls.methods <- unique(test.df$Classifier)
 for (cls in cls.methods) {
   plot.nm <- file.path(plot.dir,
-                       paste0(plot.file.lead, cls, "_VIOLIN_test.pdf"))
+                       paste0(plot.file.lead,
+                              stringr::str_replace_all(cls,
+                                                       pattern = " ",
+                                                       replacement = "_"),
+                              "_VIOLIN_test.pdf"))
   ggplot(test.df[which(test.df$Classifier == cls), ],
          aes(x = Perc.Seq, y = Kappa, color = Platform, fill = Platform)) +
     facet_wrap(~ Normalization, ncol = 5) +
