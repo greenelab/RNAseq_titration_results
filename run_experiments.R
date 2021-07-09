@@ -10,7 +10,9 @@ args <- commandArgs(trailingOnly = TRUE)
 
 initial.seed <- as.integer(args[1])
 set.seed(initial.seed)
-seeds <- sample(1:10000, 3)
+
+# these seeds should be between 1000 and 9999 (be 4 digits) to match later file name parsing
+seeds <- sample(1000:9999, 3)
 
 message("Getting overlap and splitting into training and testing sets...")
 system(paste("Rscript 0-expression_data_overlap_and_split.R", seeds[1]))
