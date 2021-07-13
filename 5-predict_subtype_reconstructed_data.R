@@ -83,7 +83,7 @@ for (seed in filename.seeds) {
       cm_kappa.list <- PredictWrapper(train.model.list = train.list,
                                       pred.list = recon.list,
                                       sample.df = sample.df,
-                                      return.kap = FALSE,
+                                      only.kap = FALSE,
                                       run.parallel = FALSE)
 
       # get confusionMatrix objects
