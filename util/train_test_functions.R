@@ -382,8 +382,35 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
     kappa.df <- reshape2::melt(norm.list)
     colnames(kappa.df) <- c("kappa", "perc.seq", "classifier", "norm.method")
     return(kappa.df)
-  } else {  # otherwise, return the list of confusionMatrix objects
-    return(norm.list)
+  } else {  # otherwise, return two objects:
+    # 1. the list of confusionMatrix objects (norm.list)
+    # 2. kappa data frame (kappa.df)
+
+    # create kappa.df from norm.list
+    norm_meth_vector <- c()
+    pred_meth_vector <- c()
+    seq_pct_vector <- c()
+    kappa_vector <- c()
+    for(norm_meth in names(norm.list)){
+      for(pred_meth in names(norm.list[[norm_meth]])){
+        for(seq_pct in names(norm.list[[norm_meth]][[pred_meth]])){
+          kappa <- as.numeric(norm.list[[norm_meth]][[pred_meth]][[seq_pct]][["overall"]][["Kappa"]])
+          norm_meth_vector <- c(norm_meth_vector, norm_meth)
+          pred_meth_vector <- c(pred_meth_vector, pred_meth)
+          seq_pct_vector <- c(seq_pct_vector, seq_pct)
+          kappa_vector <- c(kappa_vector, kappa)
+
+        }
+      }
+    }
+    kappa.df <- data.frame(kappa = kappa_vector,
+                           perc.seq = seq_pct_vector,
+                           classifier = pred_meth_vector,
+                           norm.method = norm_meth_vector)
+
+    # create list and return
+    return(list("confusion_matrix_objects" = norm.list,
+                "kappa_statistics" = kappa.df))
   }
 
 }

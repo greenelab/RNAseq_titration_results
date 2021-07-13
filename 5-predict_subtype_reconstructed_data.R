@@ -79,22 +79,21 @@ for (seed in filename.seeds) {
       recon.rds <- recon.files[grep(file.identifier, recon.files)]
       recon.list <- readRDS(recon.rds)
 
+      # return list of confusion matrix objects AND kappa statistics
+      cm_kappa.list <- PredictWrapper(train.model.list = train.list,
+                                      pred.list = recon.list,
+                                      sample.df = sample.df,
+                                      return.kap = FALSE,
+                                      run.parallel = FALSE)
+
       # get confusionMatrix objects
-      plt.list[[rcn]] <- PredictWrapper(train.model.list = train.list,
-                                        pred.list = recon.list,
-                                        sample.df = sample.df,
-                                        return.kap = FALSE,
-                                        run.parallel = FALSE)
-      # get just Kappa statistic
-      plt.kap.list[[rcn]] <- PredictWrapper(train.model.list = train.list,
-                                            pred.list = recon.list,
-                                            sample.df = sample.df,
-                                            return.kap = TRUE,
-                                            run.parallel = FALSE)
+      plt.list[[rcn]] <- cm_kappa.list$confusion_matrix_objects
 
+      # get kappa statistics
+      plt.kap.list[[rcn]] <- cm_kappa.list$kappa_statistics
 
-      # remove reconstructed data
-      rm(recon.list)
+      # remove reconstructed data and cm_kappa_list
+      rm(recon.list, cm_kappa_list)
       gc()
 
     }
