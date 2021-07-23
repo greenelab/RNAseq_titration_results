@@ -10,8 +10,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-pip \
     python3-dev
 
-# Install pyrefinebio v0.3.0
-RUN pip3 install pyrefinebio==0.3.0
+# Install pyrefinebio v0.3.4
+RUN pip3 install pyrefinebio==0.3.4
 
 # R packages
 RUN install2.r --error --deps TRUE \
@@ -67,3 +67,11 @@ RUN Rscript -e "options(warn = 2); BiocManager::install( \
 # ref = 341eb77105e7efd2654b4f112578648584936e06 is latest greenelab/TDM commit 2021-05-28 
 RUN Rscript -e "options(warn = 2); remotes::install_github( \
     'greenelab/TDM', ref = '341eb77105e7efd2654b4f112578648584936e06')"
+
+# gdc-client
+#RUN wget https://gdc.cancer.gov/files/public/file/gdc-client_v1.6.1_Ubuntu_x64-py3.7-ubuntu-16.04.zip && \
+#    unzip gdc-client_v1.6.1_Ubuntu_x64-py3.7-ubuntu-16.04.zip && \
+#    unzip gdc-client_v1.6.1_Ubuntu_x64.zip && \
+#    mv gdc-client /usr/bin/. && \
+#    rm -rf gdc-client_v1.6.1_Ubuntu_x64-py3.7-ubuntu-16.04.zip && \
+#    rm -rf gdc-client_v1.6.1_Ubuntu_x64.zip
