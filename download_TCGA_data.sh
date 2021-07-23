@@ -62,6 +62,12 @@ for accession in GSE83130; do
   fi
 done
 
+# download TCGA GBM clinical data including subtypes
+# Publication: Brennan, C. W. et al. The somatic genomic landscape of glioblastoma. Cell 155, 462–477 (2013)
+# Link to paper: https://doi.org/10.1016/j.cell.2013.09.034
+gbm_clinical_link="https://www.cell.com/cms/10.1016/j.cell.2013.09.034/attachment/9cefc2e8-caac-4225-bcdd-70f105ccf568/mmc7.xlsx"
+wget -O $data/gbm_clinical_table_S7.xlsx $gbm_clinical_link
+
 # get BRCA array expression data from TCGA Legacy Archive
 # data/gdc_legacy_archive_brca_manifest.txt obtained from https://portal.gdc.cancer.gov/legacy-archive
 # with search parameters
