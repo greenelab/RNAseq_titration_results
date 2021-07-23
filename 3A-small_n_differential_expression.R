@@ -1,9 +1,9 @@
 # J. Taroni Feb 2016
 # The purpose of this analysis is to examine how normalization methods
-# (quantile normalization or z-transformation) perform wrt differential 
-# expression when there are a small number of samples on each platform 
+# (quantile normalization or z-transformation) perform wrt differential
+# expression when there are a small number of samples on each platform
 # (50-50 split microarray and RNA-seq).
-# 
+#
 # USAGE: Rscript 3A-small_n_differential_expression.R
 
 suppressMessages(source("load_packages.R"))
@@ -27,15 +27,15 @@ deg.dir <- file.path("results", "differential_expression")
 seq.file <- file.path(data.dir, "BRCARNASeq_matchedOnly_ordered.pcl")
 array.file <- file.path(data.dir, "BRCAarray_matchedOnly_ordered.pcl")
 
-smpl.file <- 
-  file.path("results", 
+smpl.file <-
+  file.path("results",
             "BRCA_matchedSamples_PAM50Array_training_testing_split_labels_3061.tsv")
 
 #### functions -----------------------------------------------------------------
 
 DataSummary <- function(x) {
-  # This function is supplied to ggplot2::stat_summary in order to plot the 
-  # median value of a vector as a point and the "confidence interval on the 
+  # This function is supplied to ggplot2::stat_summary in order to plot the
+  # median value of a vector as a point and the "confidence interval on the
   # median" used in notched boxplots as a vertical line. See boxplot.stats for
   # more information.
   m <- median(x)
@@ -56,16 +56,16 @@ sample.names <- sample.df$sample
 #### main ----------------------------------------------------------------------
 
 # leave only Her2 and LumA samples to choose from & make data.table
-# remove all samples that are not Her2 or LumA 
-samples.to.keep <- 
+# remove all samples that are not Her2 or LumA
+samples.to.keep <-
   sample.df$sample[which(sample.df$subtype %in% c("LumA", "Her2"))]
-  
-array.dt <- data.table(array.data[, 
-                                  c(1, which(colnames(array.data) %in% 
-                                      samples.to.keep))])
-seq.dt <- data.table(seq.data[, 
-                                c(1, which(colnames(seq.data) %in% 
-                                             samples.to.keep))])
+
+array.dt <- data.table(array.data[,
+                                  c(1, which(colnames(array.data) %in%
+                                               samples.to.keep))])
+seq.dt <- data.table(seq.data[,
+                              c(1, which(colnames(seq.data) %in%
+                                           samples.to.keep))])
 sample.df <- sample.df[which(sample.df$sample %in% samples.to.keep), ]
 
 # different sizes of n to test
@@ -76,17 +76,17 @@ jacc.df.list <- list()
 
 # we're going to repeat the small n experiment 10 times
 for (trial.iter in 1:10) {
-  
+
   # for each n (3...50), get the sample names that will be included in the
   # experiment and on each platform
-  sample.list <- 
+  sample.list <-
     lapply(no.samples,  # for each n (3...50)
-           function(x) GetSamplesforMixingSmallN(x, sample.df, 
+           function(x) GetSamplesforMixingSmallN(x, sample.df,
                                                  subtype = "Her2"))
-  
+
   # initialize list to hold differential expression results (eBayes output)
   master.deg.list <- list()
-  
+
   for (smpl.no.iter in seq_along(sample.list)) {  # for each n (3...50)
     # normalize data
     norm.list <- SmallNNormWrapper(array.dt = array.dt,
@@ -94,21 +94,21 @@ for (trial.iter in 1:10) {
                                    mix.list = sample.list[[smpl.no.iter]],
                                    zto = FALSE)
     # perform differential expression analysis
-    master.deg.list[[as.character(no.samples[smpl.no.iter])]] <- 
-      SmallNDEGWrapper(norm.list = norm.list, sample.df = sample.df, 
+    master.deg.list[[as.character(no.samples[smpl.no.iter])]] <-
+      SmallNDEGWrapper(norm.list = norm.list, sample.df = sample.df,
                        subtype = "Her2")
   }
-  
-  top.table.list <- 
+
+  top.table.list <-
     lapply(master.deg.list,  # for each n (3...5)
            function(x)  # for each normalization method
              lapply(x, function(y) GetAllGenesTopTable(y)))  # extract DEGs
-  
+
   # how do the 50/50 array/seq differentially expressed genes compared to
   # the platform-specific standards?
   jacc.df.list[[trial.iter]] <- GetSmallNSilverStandardJaccard(top.table.list,
-                                                               cutoff = 0.1) 
-  
+                                                               cutoff = 0.1)
+
 }
 
 # combine jaccard similarity data.frames into one data.frame
@@ -116,15 +116,15 @@ for (trial.iter in 1:10) {
 
 jacc.df <- data.table::rbindlist(jacc.df.list)
 
-write.table(jacc.df, 
+write.table(jacc.df,
             file = file.path("results", "differential_expression",
                              "small_n_Her2vLumA_50-50_jaccard_results.tsv"),
             sep = "\t", quote = FALSE, row.names = FALSE)
 
 # line plot is saved as a PDF
-ggplot(jacc.df, aes(x = no.samples, y = jaccard, color = platform)) + 
+ggplot(jacc.df, aes(x = no.samples, y = jaccard, color = platform)) +
   facet_wrap(~ normalization, ncol = 1) +
-  stat_summary(fun.y = median, geom = "line", aes(group = platform),
+  stat_summary(fun = median, geom = "line", aes(group = platform),
                position = position_dodge(0.2)) +
   stat_summary(fun.data = DataSummary, aes(group = platform),
                position = position_dodge(0.2), size = 0.2) +
@@ -134,6 +134,6 @@ ggplot(jacc.df, aes(x = no.samples, y = jaccard, color = platform)) +
   xlab("Number of samples (n)") +
   scale_colour_manual(values = cbPalette[c(2, 3)]) +
   theme(text = element_text(size = 18))
-ggsave(filename = file.path("plots", 
+ggsave(filename = file.path("plots",
                             "small_n_Her2vLumA_50-50_jaccard_lineplots.pdf"),
        plot = last_plot(), width = 5, height = 7)

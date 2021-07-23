@@ -1,8 +1,8 @@
 # J. Taroni Jul 2016
-# The purpose of this script is to train LASSO, linear SVM, and 
-# predictive models on normalized and mixed array and RNA-seq data 
+# The purpose of this script is to train LASSO, linear SVM, and
+# predictive models on normalized and mixed array and RNA-seq data
 # (output of 1-normalized_titrated_data.R) and then to perform predictions on
-# normalized test data. 
+# normalized test data.
 # It should be run from the command line through the run_experiments.R script
 
 suppressMessages(source("load_packages.R"))
@@ -17,36 +17,37 @@ norm.data.dir <- "normalized_data"
 mdl.dir <- "models"
 res.dir <- "results"
 norm.test.object <-
-   paste0("BRCA_array_seq_test_data_normalized_list_", filename.seed, ".RDS")
-norm.train.object <- 
+  paste0("BRCA_array_seq_test_data_normalized_list_", filename.seed, ".RDS")
+norm.train.object <-
   paste0("BRCA_array_seq_train_titrate_normalized_list_", filename.seed, ".RDS")
 
-trained.models.object <- 
+trained.models.object <-
   paste0("BRCA_train_3_models_", filename.seed, ".RDS")
-train.kappa.file <- 
-  file.path(res.dir, 
-            paste0("BRCA_train_3_models_training_set_total_kappa_", 
+train.kappa.file <-
+  file.path(res.dir,
+            paste0("BRCA_train_3_models_training_set_total_kappa_",
                    filename.seed, ".tsv"))
 array.kappa.file <-
-  file.path(res.dir, paste0("BRCA_train_3_models_array_kappa_", filename.seed, 
+  file.path(res.dir, paste0("BRCA_train_3_models_array_kappa_", filename.seed,
                             ".tsv"))
-seq.kappa.file <- file.path(res.dir, paste0("BRCA_train_3_models_seq_kappa_", 
+seq.kappa.file <- file.path(res.dir, paste0("BRCA_train_3_models_seq_kappa_",
                                             filename.seed, ".tsv"))
 
-train.test.labels <- 
-  file.path(res.dir, 
-            paste0("BRCA_matchedSamples_PAM50Array_training_testing_split_labels_", 
-                  filename.seed, ".tsv"))
+train.test.labels <-
+  file.path(res.dir,
+            paste0("BRCA_matchedSamples_PAM50Array_training_testing_split_labels_",
+                   filename.seed, ".tsv"))
 
 #### load data -----------------------------------------------------------------
 
 sample.train.test <- fread(train.test.labels, data.table = FALSE)
+sample.train.test$subtype <- as.factor(sample.train.test$subtype)
 norm.titrate.list <- readRDS(file.path(norm.data.dir, norm.train.object))
 norm.test.list <- readRDS(file.path(norm.data.dir, norm.test.object))
 
 # subtype levels for each perc of seq data
-subtype.norm.list <- 
-  lapply(norm.titrate.list, 
+subtype.norm.list <-
+  lapply(norm.titrate.list,
          function(x) GetOrderedSubtypeLabels(x$z, sample.train.test))
 
 # restructure normalized list so that it's organized by normalization method
@@ -67,28 +68,29 @@ registerDoParallel(cl)
 resample.seed <- sample(1:10000, 1)
 message(paste("Random seed for resampling:", resample.seed), appendLF=TRUE)
 
-train.model.list <- 
+train.model.list <-
   foreach(n = 1:length(restr.train.list)) %do% {  # foreach norm method
     foreach(m = 1:length(subtype.norm.list)) %dopar% {  # foreach % seq level
-      TrainThreeModels(dt = restr.train.list[[n]][[m]], 
-                       subtype =  subtype.norm.list[[m]], 
+      TrainThreeModels(dt = restr.train.list[[n]][[m]],
+                       subtype =  subtype.norm.list[[m]],
                        seed = resample.seed,
                        folds.list = folds.list[[m]])
-      
+
     }
   }
 
 # stop parallel backend
 stopCluster(cl)
 
-# get names 
+# get names
 names(train.model.list) <- names(restr.train.list)
 train.model.list <- mapply(function(x, y){
-                              names(x) <- names(y)
-                              return(x)
-                            }, x = train.model.list,
-                            y = restr.train.list,
-                            SIMPLIFY = TRUE)
+  names(x) <- names(y)
+  return(x)
+}, x = train.model.list,
+y = restr.train.list,
+SIMPLIFY = TRUE)
+
 # restructure trained model list so from top to bottom: norm method -> model
 # type -> % seq level (0 - 100)
 train.model.list <- RestructureTrainedList(train.model.list)
@@ -107,8 +109,9 @@ train.kappa.df <- PredictWrapper(train.model.list = train.model.list,
                                  sample.df = sample.train.test,
                                  return.kap = TRUE)
 
-write.table(train.kappa.df, file = train.kappa.file, sep = "\t", 
+write.table(train.kappa.df, file = train.kappa.file, sep = "\t",
             row.names = FALSE, quote = FALSE)
+
 #### predictions - test data ---------------------------------------------------
 
 # get predictions on array test data as a data frame
@@ -117,7 +120,7 @@ array.kappa.df <- PredictWrapper(train.model.list = train.model.list,
                                  sample.df = sample.train.test,
                                  return.kap = TRUE)
 
-write.table(array.kappa.df, file = array.kappa.file, sep = "\t", 
+write.table(array.kappa.df, file = array.kappa.file, sep = "\t",
             row.names = FALSE, quote = FALSE)
 
 # for the 0 perc seq level of the titration, the model tested on log transformed
@@ -136,5 +139,5 @@ seq.kappa.df <- PredictWrapper(train.model.list = train.model.list,
                                sample.df = sample.train.test,
                                return.kap = TRUE)
 
-write.table(seq.kappa.df, file = seq.kappa.file, sep = "\t", row.names = FALSE, 
+write.table(seq.kappa.df, file = seq.kappa.file, sep = "\t", row.names = FALSE,
             quote = FALSE)
