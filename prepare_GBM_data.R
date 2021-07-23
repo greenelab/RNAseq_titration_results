@@ -102,3 +102,19 @@ gbm_seq_expression_renamed <- gene_id_single_mapping_in_array %>%
 
 
 # write to file
+
+
+# subtype information
+gbm_subtypes <- readxl::read_xlsx(path = "data/gbm_clinical_table_S7.xlsx",
+                                  sheet = "Clinical Data",
+                                  skip = 1) %>%
+  select("Case ID",
+         "MGMT Status",
+         "G-CIMP\r\n methylation",
+         "IDH1\r\n status",
+         "Expression\r\nSubclass") %>%
+  rename("sample" = "Case ID",
+         "MGMT_methylation_status" = "MGMT Status",
+         "G-CIMP_methylation" = "G-CIMP\r\n methylation",
+         "IDH1_mutation_status" = "IDH1\r\n status",
+         "subtype" = "Expression\r\nSubclass")
