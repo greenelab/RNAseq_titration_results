@@ -5,15 +5,59 @@
 # Steven Foltz July 2021
 
 library(tidyverse)
+library(optparse)
 
-# use optparse here
-tcga_seq_expression_input_filepath <- "data/EBPlusPlusAdjustPANCAN_IlluminaHiSeq_RNASeqV2.geneExp.tsv"
-gbm_array_expression_input_filepath
-metadata_json_input_filepath
-gbm_array_output_filepath
-gbm_seq_output_filepath
-clinical_xlxs_input_filepath
-clinical_xlxs_output_filepath
+option_list <- list(
+  make_option("--seq_input",
+              help = "TCGA sequencing expression input file path"),
+  make_option("--array_input",
+              help = "refine.bio microarray expression input file path"),
+  make_option("--metadata_input",
+              help = "refine.bio aggregated metadata JSON file path"),
+  make_option("--array_output",
+              help = "Processed microarray data output file path"),
+  make_option("--seq_output",
+              help = "Processed sequencing data output file path"),
+  make_option("--clinical_input",
+              help = "Clinical information input file path (Excel file"),
+  make_option("--clinical_output",
+              help = "Clinical information output file path (.tsv)"),
+  make_option("--overwrite",
+              action = "store_true",
+              default = FALSE,
+              help = "Overwrite existing output files [default: %default]")
+
+)
+
+opt <- parse_args(OptionParser(option_list=option_list))
+
+for(option in opt){
+  if (str_ends(option, "_input")) {
+    if (!file.exists(opt[[option]])) {
+      error: input file does not exist
+    }
+  } else if (str_ends(option, "_output")) {
+    if (!dir.exists(opt[[option]])) {
+      error: directory does not exist
+    } else if (file.exists(opt[[option]])) {
+      if (opt$overwrite) {
+         warn: File exists and overwriting
+      } else {
+         error: File exists and not overwriting
+      }
+    }
+  }
+
+
+}
+
+tcga_seq_expression_input_filepath <- opt$seq_input
+gbm_array_expression_input_filepath <- opt$array_input
+metadata_json_input_filepath <- opt$metadata_input
+gbm_array_output_filepath <- opt$array_output
+gbm_seq_output_filepath <- opt$seq_output
+clinical_xlxs_input_filepath <- opt$clinical_input
+clinical_xlxs_output_filepath <- opt$clinical_output
 
 ################################################################################
 # Array data
