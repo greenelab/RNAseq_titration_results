@@ -5,11 +5,11 @@ set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
 # set data directory
-data="data"
+data="data2"
 mkdir -p $data
 
 # downlaod BRCA array and seq data from URLs
-wget -i brca_data_urls.txt '--directory-prefix='$data
+wget -nc -i brca_data_urls.txt '--directory-prefix='$data
 
 # Obtain TCGA data freeze manifest file
 # See here for more info: https://gdc.cancer.gov/about-data/publications/pancanatlas
@@ -66,7 +66,22 @@ done
 # Publication: Brennan, C. W. et al. The somatic genomic landscape of glioblastoma. Cell 155, 462–477 (2013)
 # Link to paper: https://doi.org/10.1016/j.cell.2013.09.034
 gbm_clinical_link="https://www.cell.com/cms/10.1016/j.cell.2013.09.034/attachment/9cefc2e8-caac-4225-bcdd-70f105ccf568/mmc7.xlsx"
-wget -O $data/gbm_clinical_table_S7.xlsx $gbm_clinical_link
+if [ -f $data/gbm_clinical_table_S7.xlsx ]; then
+  echo GBM clinical spreadsheet $data/gbm_clinical_table_S7.xlsx already exists and was not overwritten.
+else 
+  wget -O $data/gbm_clinical_table_S7.xlsx $gbm_clinical_link
+done
+
+# process GBM data via script
+Rscript prepare_GBM_data.R \
+  --seq_input $data/EBPlusPlusAdjustPANCAN_IlluminaHiSeq_RNASeqV2.geneExp.tsv \
+  --array_input $data/GSE83130/GSE83130/GSE83130.tsv \
+  --metadata_input $data/GSE83130/aggregated_metadata.json \
+  --array_output $data/GBMarray.pcl \
+  --seq_output $data/GBMRNASeq.pcl \
+  --clinical_input $data/gbm_clinical_table_S7.xlsx \
+  --clinical_output $data/GBMClin.tsv \
+  --overwrite
 
 # get BRCA array expression data from TCGA Legacy Archive
 # data/gdc_legacy_archive_brca_manifest.txt obtained from https://portal.gdc.cancer.gov/legacy-archive
