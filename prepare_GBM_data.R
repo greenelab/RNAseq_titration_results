@@ -203,4 +203,5 @@ gbm_subtypes <- readxl::read_xlsx(path = clinical_xlxs_input_filepath,
          "G-CIMP_methylation" = "G-CIMP\r\n methylation",
          "IDH1_mutation_status" = "IDH1\r\n status",
          "subtype" = "Expression\r\nSubclass") %>%
+  mutate(subtype = na_if(subtype, "NA")) %>%
   write_tsv(path = clinical_xlxs_output_filepath)
