@@ -121,9 +121,9 @@ gbm_seq_tumor_samples <- tibble(tcga_id_raw = tcga_seq_expression_column_names[-
 gbm_seq_expression <- read_tsv(tcga_seq_expression_input_filepath,
                                col_types = cols(
                                  .default = col_double(),
-                                 gene_id = col_character()),
-                               col_select = c("gene_id",
-                                              gbm_seq_tumor_samples$tcga_id_raw))
+                                 gene_id = col_character())) %>%
+  select(c("gene_id",
+           gbm_seq_tumor_samples$tcga_id_raw))
 colnames(gbm_seq_expression) <- c("gene_id",
                                   gbm_seq_tumor_samples$tcga_id)
 
