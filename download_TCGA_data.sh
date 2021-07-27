@@ -39,7 +39,7 @@ for filename in ${filename_array[@]}; do
   else
     echo Downloading $filename
     id=$(grep -w $filename $data/$manifest_basename | cut -f1)
-    curl -o $data/$filename --silent https://api.gdc.cancer.gov/data/$id
+    curl -o $data/$filename https://api.gdc.cancer.gov/data/$id
   fi
 done
 
