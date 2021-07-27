@@ -70,7 +70,7 @@ if [ -f $data/gbm_clinical_table_S7.xlsx ]; then
   echo GBM clinical spreadsheet $data/gbm_clinical_table_S7.xlsx already exists and was not overwritten.
 else 
   wget -O $data/gbm_clinical_table_S7.xlsx $gbm_clinical_link
-done
+fi
 
 # process GBM data via script
 Rscript prepare_GBM_data.R \
