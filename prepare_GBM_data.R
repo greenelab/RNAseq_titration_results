@@ -38,7 +38,7 @@ source("util/option_functions.R")
 check_options(opt, "prepare_GBM_data.R") # how to get this script name easily?
 
 # load libraries
-library(tidyverse)
+suppressMessages(library(tidyverse))
 
 # set options
 tcga_seq_expression_input_filepath <- opt$seq_input
@@ -49,13 +49,13 @@ gbm_seq_output_filepath <- opt$seq_output
 clinical_xlxs_input_filepath <- opt$clinical_input
 clinical_xlxs_output_filepath <- opt$clinical_output
 
-tcga_seq_expression_input_filepath <- "data2/EBPlusPlusAdjustPANCAN_IlluminaHiSeq_RNASeqV2.geneExp.tsv"
-gbm_array_expression_input_filepath <- "data2/GSE83130/GSE83130/GSE83130.tsv"
-metadata_json_input_filepath <- "data2/GSE83130/aggregated_metadata.json"
-gbm_array_output_filepath <- "data2/GBMarray.pcl"
-gbm_seq_output_filepath <- "data2/GBMRNASeq.pcl"
-clinical_xlxs_input_filepath <- "data2/gbm_clinical_table_S7.xlsx"
-clinical_xlxs_output_filepath <- "data2/GBMClin.tsv"
+#tcga_seq_expression_input_filepath <- "data2/EBPlusPlusAdjustPANCAN_IlluminaHiSeq_RNASeqV2.geneExp.tsv"
+#gbm_array_expression_input_filepath <- "data2/GSE83130/GSE83130/GSE83130.tsv"
+#metadata_json_input_filepath <- "data2/GSE83130/aggregated_metadata.json"
+#gbm_array_output_filepath <- "data2/GBMarray.pcl"
+#gbm_seq_output_filepath <- "data2/GBMRNASeq.pcl"
+#clinical_xlxs_input_filepath <- "data2/gbm_clinical_table_S7.xlsx"
+#clinical_xlxs_output_filepath <- "data2/GBMClin.tsv"
 
 
 ################################################################################
