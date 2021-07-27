@@ -4,53 +4,43 @@
 
 # Steven Foltz July 2021
 
-library(tidyverse)
-library(optparse)
-
 option_list <- list(
-  make_option("--seq_input",
-              help = "TCGA sequencing expression input file path"),
-  make_option("--array_input",
-              help = "refine.bio microarray expression input file path"),
-  make_option("--metadata_input",
-              help = "refine.bio aggregated metadata JSON file path"),
-  make_option("--array_output",
-              help = "Processed microarray data output file path"),
-  make_option("--seq_output",
-              help = "Processed sequencing data output file path"),
-  make_option("--clinical_input",
-              help = "Clinical information input file path (Excel file"),
-  make_option("--clinical_output",
-              help = "Clinical information output file path (.tsv)"),
-  make_option("--overwrite",
-              action = "store_true",
-              default = FALSE,
-              help = "Overwrite existing output files [default: %default]")
+  optparse::make_option("--seq_input",
+                        default = NULL,
+                        help = "TCGA sequencing expression input file path"),
+  optparse::make_option("--array_input",
+                        default = NULL,
+                        help = "refine.bio microarray expression input file path"),
+  optparse::make_option("--metadata_input",
+                        default = NULL,
+                        help = "refine.bio aggregated metadata JSON file path"),
+  optparse::make_option("--array_output",
+                        default = NULL,
+                        help = "Processed microarray data output file path"),
+  optparse::make_option("--seq_output",
+                        default = NULL,
+                        help = "Processed sequencing data output file path"),
+  optparse::make_option("--clinical_input",
+                        default = NULL,
+                        help = "Clinical information input file path (Excel file)"),
+  optparse::make_option("--clinical_output",
+                        default = NULL,
+                        help = "Clinical information output file path (.tsv)"),
+  optparse::make_option("--overwrite",
+                        action = "store_true",
+                        default = FALSE,
+                        help = "Overwrite existing output files [default: %default]")
 
 )
 
-opt <- parse_args(OptionParser(option_list=option_list))
+opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
+source("util/option_functions.R")
+check_options(opt, "prepare_GBM_data.R") # how to get this script name easily?
 
-for(option in opt){
-  if (str_ends(option, "_input")) {
-    if (!file.exists(opt[[option]])) {
-      error: input file does not exist
-    }
-  } else if (str_ends(option, "_output")) {
-    if (!dir.exists(opt[[option]])) {
-      error: directory does not exist
-    } else if (file.exists(opt[[option]])) {
-      if (opt$overwrite) {
-         warn: File exists and overwriting
-      } else {
-         error: File exists and not overwriting
-      }
-    }
-  }
+# load libraries
+library(tidyverse)
 
-
-}
-
+# set options
 tcga_seq_expression_input_filepath <- opt$seq_input
 gbm_array_expression_input_filepath <- opt$array_input
 metadata_json_input_filepath <- opt$metadata_input
