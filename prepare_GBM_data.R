@@ -49,6 +49,15 @@ gbm_seq_output_filepath <- opt$seq_output
 clinical_xlxs_input_filepath <- opt$clinical_input
 clinical_xlxs_output_filepath <- opt$clinical_output
 
+tcga_seq_expression_input_filepath <- "data2/EBPlusPlusAdjustPANCAN_IlluminaHiSeq_RNASeqV2.geneExp.tsv"
+gbm_array_expression_input_filepath <- "data2/GSE83130/GSE83130/GSE83130.tsv"
+metadata_json_input_filepath <- "data2/GSE83130/aggregated_metadata.json"
+gbm_array_output_filepath <- "data2/GBMarray.pcl"
+gbm_seq_output_filepath <- "data2/GBMRNASeq.pcl"
+clinical_xlxs_input_filepath <- "data2/gbm_clinical_table_S7.xlsx"
+clinical_xlxs_output_filepath <- "data2/GBMClin.tsv"
+
+
 ################################################################################
 # Array data
 ################################################################################
@@ -118,12 +127,14 @@ gbm_seq_tumor_samples <- tibble(tcga_id_raw = tcga_seq_expression_column_names[-
   summarize(tcga_id_raw = sort(tcga_id_raw)[1]) # keep one raw ID per person
 
 # now read in GBM subset of entire TCGA seq expression file
+# this is faster and uses less memory than reading in entire file and then subsetting
+# read these GBM columns only
+tcga_seq_gbm_tf <- tcga_seq_expression_column_names[-1] %in% gbm_seq_tumor_samples$tcga_id_raw
+# use these column types
+tcga_seq_gbm_col_types <- str_c(c("c", c("-", "d")[tcga_seq_gbm_tf + 1]), collapse = "")
+# read in my defined subset of columns with column types
 gbm_seq_expression <- read_tsv(tcga_seq_expression_input_filepath,
-                               col_types = cols(
-                                 .default = col_double(),
-                                 gene_id = col_character())) %>%
-  select(c("gene_id",
-           gbm_seq_tumor_samples$tcga_id_raw))
+                               col_types = tcga_seq_gbm_col_types)
 colnames(gbm_seq_expression) <- c("gene_id",
                                   gbm_seq_tumor_samples$tcga_id)
 
@@ -150,7 +161,6 @@ gene_id_mapping_in_array <- symbol_entrez_ids %>%
   left_join(entrez_ensembl_ids,
             by = "ENTREZID") %>%
   filter(!is.na(GENEID)) %>%
-  rowwise() %>%
   filter(GENEID %in% gbm_array_expression$Gene)
 
 # filter for ENSGs with a one-to-one mapping with entrez
