@@ -93,7 +93,7 @@ colnames(gbm_array_expression_renamed) <- c("sample",
 
 # write to file
 write_tsv(gbm_array_expression_renamed,
-          file = gbm_array_output_filepath)
+          path = gbm_array_output_filepath)
 
 ################################################################################
 # Sequencing data
@@ -172,7 +172,7 @@ gbm_seq_expression_renamed <- gene_id_single_mapping_in_array %>%
 
 # write to file
 write_tsv(gbm_seq_expression_renamed,
-          file = gbm_seq_output_filepath)
+          path = gbm_seq_output_filepath)
 
 ################################################################################
 # subtype information
@@ -193,4 +193,4 @@ gbm_subtypes <- readxl::read_xlsx(path = clinical_xlxs_input_filepath,
          "G-CIMP_methylation" = "G-CIMP\r\n methylation",
          "IDH1_mutation_status" = "IDH1\r\n status",
          "subtype" = "Expression\r\nSubclass") %>%
-  write_tsv(file = clinical_xlxs_output_filepath)
+  write_tsv(path = clinical_xlxs_output_filepath)
