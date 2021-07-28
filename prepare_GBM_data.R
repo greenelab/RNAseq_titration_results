@@ -30,7 +30,6 @@ option_list <- list(
                         action = "store_true",
                         default = FALSE,
                         help = "Overwrite existing output files [default: %default]")
-
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
@@ -48,15 +47,6 @@ gbm_array_output_filepath <- opt$array_output
 gbm_seq_output_filepath <- opt$seq_output
 clinical_xlxs_input_filepath <- opt$clinical_input
 clinical_xlxs_output_filepath <- opt$clinical_output
-
-#tcga_seq_expression_input_filepath <- "data2/EBPlusPlusAdjustPANCAN_IlluminaHiSeq_RNASeqV2.geneExp.tsv"
-#gbm_array_expression_input_filepath <- "data2/GSE83130/GSE83130/GSE83130.tsv"
-#metadata_json_input_filepath <- "data2/GSE83130/aggregated_metadata.json"
-#gbm_array_output_filepath <- "data2/GBMarray.pcl"
-#gbm_seq_output_filepath <- "data2/GBMRNASeq.pcl"
-#clinical_xlxs_input_filepath <- "data2/gbm_clinical_table_S7.xlsx"
-#clinical_xlxs_output_filepath <- "data2/GBMClin.tsv"
-
 
 ################################################################################
 # Array data
@@ -131,6 +121,8 @@ gbm_seq_tumor_samples <- tibble(tcga_id_raw = tcga_seq_expression_column_names[-
 # read these GBM columns only
 tcga_seq_gbm_tf <- tcga_seq_expression_column_names[-1] %in% gbm_seq_tumor_samples$tcga_id_raw
 # use these column types
+# first column is 'c' for gene_id, then '-' for non-GBM samples, then 'd' for GBM
+# setting column type to '-' skips over that column when reading file
 tcga_seq_gbm_col_types <- str_c(c("c", c("-", "d")[tcga_seq_gbm_tf + 1]), collapse = "")
 # read in my defined subset of columns with column types
 gbm_seq_expression <- read_tsv(tcga_seq_expression_input_filepath,
@@ -154,27 +146,23 @@ entrez_ensembl_ids <- ensembldb::select(EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86,
                                         keys= symbol_entrez_ids$ENTREZID,
                                         keytype = "ENTREZID",
                                         columns = "GENEID") %>%
+  as_tibble() %>%
   mutate(ENTREZID = as.character(ENTREZID))
 
-# collate gene name schemes, filter for those that mapped and exist in array
+# collate gene name schemes
+# filter for those that mapped and exist in array
+# filter for ENSGs with a one-to-one mapping with entrez
 gene_id_mapping_in_array <- symbol_entrez_ids %>%
   left_join(entrez_ensembl_ids,
             by = "ENTREZID") %>%
   filter(!is.na(GENEID)) %>%
-  filter(GENEID %in% gbm_array_expression$Gene)
-
-# filter for ENSGs with a one-to-one mapping with entrez
-# output is two columns: gene_id (SYMBOL|ENTREZID) and GENEID (ENSG)
-gene_id_single_mapping_in_array <- gene_id_mapping_in_array %>%
-  count(gene_id) %>%
+  add_count(GENEID) %>%
   filter(n == 1) %>%
-  select(gene_id) %>%
-  left_join(gene_id_mapping_in_array,
-            by = "gene_id") %>%
+  filter(GENEID %in% gbm_array_expression$Gene) %>%
   select(gene_id, GENEID)
 
 # starting with acceptable genes, left join with seq expression and select cols
-gbm_seq_expression_renamed <- gene_id_single_mapping_in_array %>%
+gbm_seq_expression_renamed <- gene_id_mapping_in_array %>%
   left_join(gbm_seq_expression,
             by = "gene_id") %>%
   select(-gene_id) %>%
