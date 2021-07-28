@@ -80,8 +80,7 @@ Rscript prepare_GBM_data.R \
   --array_output $data/GBMarray.pcl \
   --seq_output $data/GBMRNASeq.pcl \
   --clinical_input $data/gbm_clinical_table_S7.xlsx \
-  --clinical_output $data/GBMClin.tsv \
-  --overwrite
+  --clinical_output $data/GBMClin.tsv
 
 # get BRCA array expression data from TCGA Legacy Archive
 # data/gdc_legacy_archive_brca_manifest.txt obtained from https://portal.gdc.cancer.gov/legacy-archive
