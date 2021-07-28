@@ -5,7 +5,7 @@ set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
 # set data directory
-data="data2"
+data="data"
 mkdir -p $data
 
 # downlaod BRCA array and seq data from URLs
