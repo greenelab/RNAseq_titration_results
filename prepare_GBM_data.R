@@ -46,7 +46,7 @@ metadata_json_input_filepath <- opt$metadata_input
 gbm_array_output_filepath <- opt$array_output
 gbm_seq_output_filepath <- opt$seq_output
 clinical_xlxs_input_filepath <- opt$clinical_input
-clinical_xlxs_output_filepath <- opt$clinical_output
+clinical_tsv_output_filepath <- opt$clinical_output
 
 ################################################################################
 # Array data
@@ -192,4 +192,4 @@ gbm_subtypes <- readxl::read_xlsx(path = clinical_xlxs_input_filepath,
          "IDH1_mutation_status" = "IDH1\r\n status",
          "subtype" = "Expression\r\nSubclass") %>%
   mutate(subtype = na_if(subtype, "NA")) %>%
-  write_tsv(path = clinical_xlxs_output_filepath)
+  write_tsv(path = clinical_tsv_output_filepath)
