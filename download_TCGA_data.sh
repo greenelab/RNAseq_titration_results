@@ -68,11 +68,12 @@ done
 gbm_clinical_link="https://www.cell.com/cms/10.1016/j.cell.2013.09.034/attachment/9cefc2e8-caac-4225-bcdd-70f105ccf568/mmc7.xlsx"
 if [ -f $data/gbm_clinical_table_S7.xlsx ]; then
   echo GBM clinical spreadsheet $data/gbm_clinical_table_S7.xlsx already exists and was not overwritten.
-else 
+else
   wget -O $data/gbm_clinical_table_S7.xlsx $gbm_clinical_link
 fi
 
 # process GBM data via script
+echo Processing GBM data using R script prepare_GBM_data.R ...
 Rscript prepare_GBM_data.R \
   --seq_input $data/EBPlusPlusAdjustPANCAN_IlluminaHiSeq_RNASeqV2.geneExp.tsv \
   --array_input $data/GSE83130/GSE83130/GSE83130.tsv \

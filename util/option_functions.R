@@ -1,4 +1,4 @@
-check_options <- function(opt, name_of_script_where_called) {
+check_options <- function(opt) {
   # this function checks standardized command line options given to scripts
   # options ending with "_input" are checked to see if the input file exists
   # options ending with "_output" are checked to see if the output directory exists
@@ -40,10 +40,10 @@ check_options <- function(opt, name_of_script_where_called) {
   }
 
   if (length(my_messages) > 0) {
-    message("Messages from ", name_of_script_where_called, ":", my_messages, "\n")
+    message("  Messages:", my_messages, "\n")
   }
   if (length(my_errors) > 0) {
-    message("Errors from ", name_of_script_where_called, ":", my_errors, "\n")
+    message("  Errors:", my_errors, "\n")
     stop()
   }
 }
