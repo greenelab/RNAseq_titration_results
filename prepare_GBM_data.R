@@ -66,15 +66,27 @@ metadata_json <- jsonlite::fromJSON(metadata_json_input_filepath,
 # accession IDs present in expression data
 available_array_accession_ids <- colnames(gbm_array_expression)[-1]
 
+# All about TCGA barcodes
+# TCGA barcodes are defined in this format: TCGA-XX-YYYY-ZZ*
+# XX is the two character tissue source site (TSS) (defines a combination of hospital system and cancer type -- so multiple TSSs map to single cancer type)
+# YYYY is the four digit participant ID specific to a TSS (so TCGA-XX-YYYY defines an individual patient -- patients from different TSSs may have same participant ID)
+# ZZ is the sample type (starts with 0 for tumor samples; specifically 01 for primary solid tumors)
+# After ZZ (*) is more specific information not relevant in this context
+# Links to more info:
+# https://docs.gdc.cancer.gov/Encyclopedia/pages/TCGA_Barcode/
+# https://gdc.cancer.gov/resources-tcga-users/tcga-code-tables/tissue-source-site-codes
+# https://gdc.cancer.gov/resources-tcga-users/tcga-code-tables/sample-type-codes
+
 # starting with flattened metadata, parse out raw TCGA IDs and filter for tumors
 all_array_tumor_samples <- tibble(accession = names(metadata_json$samples)) %>%
   filter(accession %in% available_array_accession_ids) %>% # check these are ==
   rowwise() %>%
   mutate(tcga_id_raw = metadata_json$samples[[accession]]$refinebio_annotations[[1]]$characteristics_ch1[[9]] %>%
            str_remove("sample: ")) %>%
-  mutate(tcga_id = str_sub(tcga_id_raw, 1, 12),
-         sample = str_sub(tcga_id_raw, 14, 15)) %>%
-  filter(str_starts(sample, "0")) %>% # remove non-tumor samples
+  # tcga_id_raw is the entire TCGA barcode (includes information after ZZ which we need to drop)
+  mutate(tcga_id = str_sub(tcga_id_raw, 1, 15), # so tcga_id includes TCGA-XX-YYYY-ZZ
+         sample = str_sub(tcga_id_raw, 14, 15)) %>% # and sample refers to ZZ
+  filter(sample == "01") %>% # filter for primary solid tumors only
   ungroup()
 
 # keep one (first) accession per TCGA ID
@@ -109,9 +121,9 @@ tcga_seq_expression_column_names <- read_tsv(tcga_seq_expression_input_filepath,
 # identify sequencing TCGA IDs of samples present in array data
 # (a more inclusive approach would be selecting GBM samples based on TSS codes)
 gbm_seq_tumor_samples <- tibble(tcga_id_raw = tcga_seq_expression_column_names[-1]) %>%
-  mutate(tcga_id = str_sub(tcga_id_raw, 1, 12),
-         sample = str_sub(tcga_id_raw, 14, 15)) %>%
-  filter(str_starts(sample, "0")) %>% # remove non-tumor samples
+  mutate(tcga_id = str_sub(tcga_id_raw, 1, 15), # as with array, tcga_id refers to TCGA-XX-YYYY-ZZ
+         sample = str_sub(tcga_id_raw, 14, 15)) %>% # and sample is ZZ
+  filter(sample == "01") %>% # require sample to be primary solid tumor
   filter(tcga_id %in% array_accession_tcga_id_keep$tcga_id) %>% # keep array GBMs
   group_by(tcga_id) %>%
   summarize(tcga_id_raw = sort(tcga_id_raw)[1]) # keep one raw ID per person
