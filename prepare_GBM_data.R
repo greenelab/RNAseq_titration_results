@@ -121,11 +121,12 @@ tcga_seq_expression_column_names <- read_tsv(tcga_seq_expression_input_filepath,
 # identify sequencing TCGA IDs of samples present in array data
 # (a more inclusive approach would be selecting GBM samples based on TSS codes)
 gbm_seq_tumor_samples <- tibble(tcga_id_raw = tcga_seq_expression_column_names[-1]) %>%
-  mutate(tcga_id = str_sub(tcga_id_raw, 1, 15), # as with array, tcga_id refers to TCGA-XX-YYYY-ZZ
+  mutate(tcga_patient = str_sub(tcga_id_raw, 1, 12), # TCGA-XX-YYYY to match with clinical
+         tcga_id = str_sub(tcga_id_raw, 1, 15), # as with array, tcga_id refers to TCGA-XX-YYYY-ZZ
          sample = str_sub(tcga_id_raw, 14, 15)) %>% # and sample is ZZ
   filter(sample == "01") %>% # require sample to be primary solid tumor
   filter(tcga_id %in% array_accession_tcga_id_keep$tcga_id) %>% # keep array GBMs
-  group_by(tcga_id) %>%
+  group_by(tcga_patient, tcga_id) %>%
   summarize(tcga_id_raw = sort(tcga_id_raw)[1]) # keep one raw ID per person
 
 # now read in GBM subset of entire TCGA seq expression file
@@ -193,15 +194,17 @@ write_tsv(gbm_seq_expression_renamed,
 gbm_subtypes <- readxl::read_xlsx(path = clinical_xlxs_input_filepath,
                                   sheet = "Clinical Data",
                                   skip = 1) %>%
-  select("Case ID",
+  right_join(gbm_seq_tumor_samples,
+             by = c("Case ID" = "tcga_patient")) %>%
+  select("tcga_id",
          "MGMT Status",
          "G-CIMP\r\n methylation",
          "IDH1\r\n status",
          "Expression\r\nSubclass") %>%
-  rename("sample" = "Case ID",
-         "MGMT_methylation_status" = "MGMT Status",
+  rename("MGMT_methylation_status" = "MGMT Status",
          "G-CIMP_methylation" = "G-CIMP\r\n methylation",
          "IDH1_mutation_status" = "IDH1\r\n status",
          "subtype" = "Expression\r\nSubclass") %>%
   mutate(subtype = na_if(subtype, "NA")) %>%
+  mutate(Type = "tumor") %>%
   write_tsv(path = clinical_tsv_output_filepath)
