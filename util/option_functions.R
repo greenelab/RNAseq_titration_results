@@ -14,6 +14,13 @@ check_options <- function(opt) {
     if (is.null(opt[[option]])) { # all required options should default to NULL
       my_errors[[option]] <- stringr::str_c("\nOption given for --", option,
                                             " is missing and must be specified.")
+    } else if (option == "cancer_type") {
+      
+      if (!(opt[[option]] %in% c("BRCA", "GBM"))) { # cancer type must be BRCA or GBM
+        my_errors[[option]] <- strinr::str_c("\nCancer type given for --", option,
+                                             " (", opt[[option]], ") ",
+                                             " must be BRCA or GBM.")  
+      }
     } else if (stringr::str_ends(option, "_input")) { # option related to inputs
       if (!file.exists(opt[[option]])) {
         my_errors[[option]] <- stringr::str_c("\nInput file given for --", option,
