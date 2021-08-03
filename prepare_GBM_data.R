@@ -102,10 +102,6 @@ gbm_array_expression_renamed <- gbm_array_expression %>%
 colnames(gbm_array_expression_renamed) <- c("sample",
                                             array_accession_tcga_id_keep$tcga_id)
 
-# write to file
-write_tsv(gbm_array_expression_renamed,
-          path = gbm_array_output_filepath)
-
 ################################################################################
 # Sequencing data
 ################################################################################
@@ -181,10 +177,6 @@ gbm_seq_expression_renamed <- gene_id_mapping_in_array %>%
   select(-gene_id) %>%
   rename("sample" = "GENEID")
 
-# write to file
-write_tsv(gbm_seq_expression_renamed,
-          path = gbm_seq_output_filepath)
-
 ################################################################################
 # subtype information
 ################################################################################
@@ -201,10 +193,30 @@ gbm_subtypes <- readxl::read_xlsx(path = clinical_xlxs_input_filepath,
          "G-CIMP\r\n methylation",
          "IDH1\r\n status",
          "Expression\r\nSubclass") %>%
-  rename("MGMT_methylation_status" = "MGMT Status",
+  rename("Sample" = "tcga_id",
+         "MGMT_methylation_status" = "MGMT Status",
          "G-CIMP_methylation" = "G-CIMP\r\n methylation",
          "IDH1_mutation_status" = "IDH1\r\n status",
          "subtype" = "Expression\r\nSubclass") %>%
   mutate(subtype = na_if(subtype, "NA")) %>%
-  mutate(Type = "tumor") %>%
-  write_tsv(path = clinical_tsv_output_filepath)
+  mutate(Type = "tumor")
+
+missing_clinical <- gbm_subtypes %>%
+  filter(is.na(subtype)) %>%
+  pull(Sample)
+
+################################################################################
+# Write to file, excluding samples without clinical info
+################################################################################
+
+write_tsv(gbm_array_expression_renamed %>%
+            select(-all_of(missing_clinical)),
+          path = gbm_array_output_filepath)
+
+write_tsv(gbm_seq_expression_renamed %>%
+            select(-all_of(missing_clinical)),
+          path = gbm_seq_output_filepath)
+
+write_tsv(gbm_subtypes %>%
+            filter(!is.na(subtype)),
+          path = clinical_tsv_output_filepath)
