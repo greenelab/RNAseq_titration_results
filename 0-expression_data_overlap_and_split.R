@@ -63,9 +63,8 @@ array.tumor.smpls <-
   clinical$Sample[which(clinical$Type == "tumor")]
 array.tumor.smpls <- substr(array.tumor.smpls, 1, 15)
 
-if (cancer_type == "BRCA") {
-  clinical <- clinical %>%
-    rename("subtype" = "PAM50")
+if (cancer_type == "BRCA") { # rename from PAM50
+  colnames(clinical)[4] <- "subtype"
 }
 
 array.subtypes <- clinical$subtype[which(clinical$Type == "tumor")]
@@ -75,6 +74,7 @@ array.data <- array.data[, c(1, which(colnames(array.data) %in%
                                         array.tumor.smpls))]
 
 # what are the overlapping sample names -- "matched" samples?
+# includes "gene" column
 sample.overlap <- intersect(colnames(array.data), colnames(seq.data))
 
 # what are the overlapping genes between the two platforms?
@@ -91,10 +91,8 @@ array.matched <- array.matched[order(array.matched$gene), ]
 seq.matched <- seq.matched[order(seq.matched$gene), ]
 
 # reorder samples on both platforms
-array.matched <- array.matched[, c(1, (order(colnames(array.matched)
-                                             [2:ncol(array.matched)]) + 1))]
-seq.matched <- seq.matched[, c(1, (order(colnames(seq.matched)
-                                         [2:ncol(seq.matched)]) + 1))]
+array.matched <- array.matched[, c(1, (order(colnames(array.matched)[-1]) + 1))]
+seq.matched <- seq.matched[, c(1, (order(colnames(seq.matched)[-1]) + 1))]
 
 #  remove subtype labels for samples missing expression data
 array.subtypes <- as.factor(array.subtypes[-which(!(array.tumor.smpls %in%
