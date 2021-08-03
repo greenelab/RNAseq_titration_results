@@ -94,12 +94,12 @@ seq.matched <- seq.matched[order(seq.matched$gene), ]
 array.matched <- array.matched[, c(1, (order(colnames(array.matched)[-1]) + 1))]
 seq.matched <- seq.matched[, c(1, (order(colnames(seq.matched)[-1]) + 1))]
 
-#  remove subtype labels for samples missing expression data
-array.subtypes <- as.factor(array.subtypes[-which(!(array.tumor.smpls %in%
-                                                      colnames(array.matched)))])
+# keep subtype labels for samples with expression data
+array.subtypes <- as.factor(array.subtypes[which(array.tumor.smpls %in%
+                                                      colnames(array.matched))])
 
-array.tumor.smpls <- array.tumor.smpls[-which(!(array.tumor.smpls %in%
-                                                  colnames(array.matched)))]
+array.tumor.smpls <- array.tumor.smpls[which(array.tumor.smpls %in%
+                                                  colnames(array.matched))]
 
 # remove "unmatched" / "raw" expression data
 rm(array.data, seq.data)
