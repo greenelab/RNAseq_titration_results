@@ -11,13 +11,17 @@ option_list <- list(
                         help = "Cancer type"),
   optparse::make_option("--seed",
                         default = NULL,
-                        help = "Random seed used to initiate this repeat")
+                        help = "Random seed")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
 source("util/option_functions.R")
 check_options(opt)
 
+# set options
+cancer_type <- opt$cancer_type
+
+# set seed
 initial.seed <- opt$seed
 set.seed(initial.seed)
 
@@ -28,8 +32,18 @@ message(paste("Initial seed:", initial.seed))
 message(paste("Secondary seeds:", stringr::str_c(seeds, collapse = ", ")))
 
 message("Getting overlap and splitting into training and testing sets...")
-system(paste("Rscript 0-expression_data_overlap_and_split.R", seeds[1]))
+system(paste("Rscript 0-expression_data_overlap_and_split.R",
+             "--cancer_type", cancer_type,
+             "--seed1", seeds[1]))
+
 message("\nNormalizing data...")
-system(paste("Rscript 1-normalize_titrated_data.R", seeds[1], seeds[2]))
+system(paste("Rscript 1-normalize_titrated_data.R",
+             "--cancer_type", cancer_type,
+             "--seed1", seeds[1],
+             "--seed2", seeds[2]))
+
 message("\nTraining and testing models...")
-system(paste("Rscript 2-train_test_brca_subtype.R", seeds[1], seeds[3]))
+system(paste("Rscript 2-train_test_brca_subtype.R",
+             "--cancer_type", cancer_type,
+             "--seed1", seeds[1],
+             "--seed3", seeds[3]))
