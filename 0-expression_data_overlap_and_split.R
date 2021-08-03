@@ -4,26 +4,46 @@
 # subtype information, and to split the data into training and testing sets
 # It should be run from the command line through the run_experiments.R script
 
+option_list <- list(
+  optparse::make_option("--cancer_type",
+                        default = NULL,
+                        help = "Cancer type"),
+  optparse::make_option("--seed1",
+                        default = NULL,
+                        help = "Random seed")
+)
+
+opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
+source("util/option_functions.R")
+check_options(opt)
+
+# load libraries
 suppressMessages(source("load_packages.R"))
 
-args <- commandArgs(trailingOnly = TRUE)
-initial.seed <- as.integer(args[1])
+# set options
+cancer_type <- opt$cancer_type
+
+# set seed
+initial.seed <- as.integer(opt$seed1)
 set.seed(initial.seed)
 
+# define directories
 data.dir <- "data"
-seq.exprs.filename <- "BRCARNASeq.pcl"
-array.exprs.filename <- "BRCAarray.pcl"
-seq.clin.filename <- "BRCARNASeqClin.tsv"
-array.clin.filename <- "BRCAClin.tsv"
-
 plot.dir <- "plots"
-subtype.distribtion.plot <-
-  paste0("BRCA_PAM50_subtypes_dist_split_stacked_bar_", initial.seed, ".pdf")
-
 res.dir <- "results"
-train.test.labels <-
-  paste0("BRCA_matchedSamples_PAM50Array_training_testing_split_labels_",
-         initial.seed, ".tsv")
+
+# name input files
+seq.exprs.filename <- paste0(cancer_type, "RNASeq.pcl")
+array.exprs.filename <- paste0(cancer_type, "array.pcl")
+clin.filename <- paste0(cancer_type, "Clin.tsv")
+
+# name output files
+subtype.distribtion.plot <- paste0(cancer_type,
+                                   "_subtypes_dist_split_stacked_bar_",
+                                   initial.seed, ".pdf")
+train.test.labels <- paste0(cancer_type,
+                            "_matchedSamples_subtypes_training_testing_split_labels_",
+                            initial.seed, ".tsv")
 
 #### read in expression and clinical data --------------------------------------
 
@@ -32,25 +52,27 @@ seq.data <- fread(file.path(data.dir, seq.exprs.filename),
                   data.table = FALSE)
 array.data <- fread(file.path(data.dir, array.exprs.filename),
                     data.table = FALSE)
-seq.clinical <- fread(file.path(data.dir, seq.clin.filename),
-                      data.table = FALSE)
-array.clinical <- fread(file.path(data.dir, array.clin.filename),
-                        data.table = FALSE)
+clinical <- fread(file.path(data.dir, clin.filename),
+                  data.table = FALSE)
 
 # change first column name to "gene"
 colnames(array.data)[1] <- colnames(seq.data)[1] <- "gene"
 
 # remove tumor-adjacent samples from the array data set
 array.tumor.smpls <-
-  array.clinical$Sample[which(array.clinical$Type == "tumor")]
+  clinical$Sample[which(clinical$Type == "tumor")]
 array.tumor.smpls <- substr(array.tumor.smpls, 1, 15)
 
-array.subtypes <- array.clinical$PAM50[which(array.clinical$Type == "tumor")]
+if (cancer_type == "BRCA") {
+  clinical <- clinical %>%
+    rename("subtype" = "PAM50")
+}
+
+array.subtypes <- clinical$subtype[which(clinical$Type == "tumor")]
 
 # filter array data only to include tumor samples
 array.data <- array.data[, c(1, which(colnames(array.data) %in%
                                         array.tumor.smpls))]
-
 
 # what are the overlapping sample names -- "matched" samples?
 sample.overlap <- intersect(colnames(array.data), colnames(seq.data))
@@ -87,13 +109,13 @@ rm(array.data, seq.data)
 # write matched only samples to pcl files
 array.output.nm <- sub(".pcl", "_matchedOnly_ordered.pcl", array.exprs.filename)
 array.output.nm <- file.path(data.dir, array.output.nm)
-write.table(array.matched, file = array.output.nm, row.names = FALSE,
-            quote = FALSE, sep = "\t")
+write.table(array.matched, file = array.output.nm,
+            row.names = FALSE, quote = FALSE, sep = "\t")
 
 seq.output.nm <- sub(".pcl", "_matchedOnly_ordered.pcl", seq.exprs.filename)
 seq.output.nm <- file.path(data.dir, seq.output.nm)
-write.table(seq.matched, file = seq.output.nm, row.names = FALSE,
-            quote = FALSE, sep = "\t")
+write.table(seq.matched, file = seq.output.nm,
+            row.names = FALSE, quote = FALSE, sep = "\t")
 
 #### split data into balanced training and testing sets ------------------------
 
@@ -122,9 +144,13 @@ cbPalette <- c("#000000", "#E69F00", "#56B4E9",
                "#009E73", "#F0E442","#0072B2", "#D55E00", "#CC79A7")
 
 plot.nm <- file.path(plot.dir, subtype.distribtion.plot)
-ggplot(as.data.frame(mstr.df), aes(x = split, fill = subtype)) + geom_bar() +
-  theme_classic() + scale_fill_manual(values = cbPalette)
-ggsave(plot.nm, plot = last_plot(), height = 6, width = 6)
+ggplot(as.data.frame(mstr.df), aes(x = split, fill = subtype)) +
+  geom_bar() +
+  theme_classic() +
+  scale_fill_manual(values = cbPalette) +
+  ggsave(plot.nm,
+         height = 6,
+         width = 6)
 
 #### write training/test labels to file ----------------------------------------
 
