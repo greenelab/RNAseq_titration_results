@@ -62,6 +62,10 @@ for accession in GSE83130; do
   fi
 done
 
+# retrieve BRCA and GBM mutations in PIK3CA, PTEN, and TP53 from TCGA MC3
+# output is stored in data/mutations.* TSV and MAF files
+python3 retrieve_MC3_mutations.py
+
 # get BRCA array expression data from TCGA Legacy Archive
 # data/gdc_legacy_archive_brca_manifest.txt obtained from https://portal.gdc.cancer.gov/legacy-archive
 # with search parameters
