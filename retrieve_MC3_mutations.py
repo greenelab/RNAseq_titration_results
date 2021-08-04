@@ -70,10 +70,10 @@ for line in mc3:
 
     # if gene of interest, add to mutation dict list for that ID and outputs
     if hugo_symbol in genes_of_interest:
-      chromosome = record[4]
-      start_position = record[5]
-      hgvsc = record[34]
-      variant_class = record[94]
+      chromosome = record[4] # chromosome of mutation
+      start_position = record[5] # position of mutation
+      hgvsc = record[34] # HGVS variant nomenclature (e.g. c.844C>T) 
+      variant_class = record[94] # e.g. SNV, deletion
     
       mutation_dict[cancer_type][tcga_id].append(hugo_symbol)
 
