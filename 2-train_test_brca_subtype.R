@@ -5,38 +5,67 @@
 # normalized test data.
 # It should be run from the command line through the run_experiments.R script
 
+option_list <- list(
+  optparse::make_option("--cancer_type",
+                        default = NULL,
+                        help = "Cancer type"),
+  optparse::make_option("--seed1",
+                        default = NULL,
+                        help = "Random seed"),
+  optparse::make_option("--seed3",
+                        default = NULL,
+                        help = "Random seed")
+)
+
+opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
+source("util/option_functions.R")
+check_options(opt)
+
+# load libraries
 suppressMessages(source("load_packages.R"))
 source(file.path("util", "train_test_functions.R"))
 
-args <- commandArgs(trailingOnly = TRUE)
-filename.seed <- as.integer(args[1])
-initial.seed <- as.integer(args[2])
+# set options
+cancer_type <- opt$cancer_type
+
+# set seed
+filename.seed <- opt$seed1
+initial.seed <- opt$seed3
 set.seed(initial.seed)
 
+# define directories
 norm.data.dir <- "normalized_data"
 mdl.dir <- "models"
 res.dir <- "results"
-norm.test.object <-
-  paste0("BRCA_array_seq_test_data_normalized_list_", filename.seed, ".RDS")
-norm.train.object <-
-  paste0("BRCA_array_seq_train_titrate_normalized_list_", filename.seed, ".RDS")
 
-trained.models.object <-
-  paste0("BRCA_train_3_models_", filename.seed, ".RDS")
-train.kappa.file <-
-  file.path(res.dir,
-            paste0("BRCA_train_3_models_training_set_total_kappa_",
-                   filename.seed, ".tsv"))
-array.kappa.file <-
-  file.path(res.dir, paste0("BRCA_train_3_models_array_kappa_", filename.seed,
-                            ".tsv"))
-seq.kappa.file <- file.path(res.dir, paste0("BRCA_train_3_models_seq_kappa_",
-                                            filename.seed, ".tsv"))
+# define input files
+norm.test.object <- paste0(cancer_type,
+                           "_array_seq_test_data_normalized_list_",
+                           filename.seed, ".RDS")
+norm.train.object <- paste0(cancer_type,
+                            "_array_seq_train_titrate_normalized_list_",
+                            filename.seed, ".RDS")
+train.test.labels <- file.path(res.dir,
+                               paste0(cancer_type,
+                                      "_matchedSamples_subtypes_training_testing_split_labels_",
+                                      filename.seed, ".tsv"))
 
-train.test.labels <-
-  file.path(res.dir,
-            paste0("BRCA_matchedSamples_PAM50Array_training_testing_split_labels_",
-                   filename.seed, ".tsv"))
+# define output files
+trained.models.object <- paste0(cancer_type,
+                                "_train_3_models_",
+                                filename.seed, ".RDS")
+train.kappa.file <- file.path(res.dir,
+                              paste0(cancer_type,
+                                     "_train_3_models_training_set_total_kappa_",
+                                     filename.seed, ".tsv"))
+array.kappa.file <- file.path(res.dir,
+                              paste0(cancer_type,
+                                     "_train_3_models_array_kappa_",
+                                     filename.seed, ".tsv"))
+seq.kappa.file <- file.path(res.dir,
+                            paste0(cancer_type,
+                                   "_train_3_models_seq_kappa_",
+                                   filename.seed, ".tsv"))
 
 #### load data -----------------------------------------------------------------
 
@@ -46,9 +75,9 @@ norm.titrate.list <- readRDS(file.path(norm.data.dir, norm.train.object))
 norm.test.list <- readRDS(file.path(norm.data.dir, norm.test.object))
 
 # subtype levels for each perc of seq data
-subtype.norm.list <-
-  lapply(norm.titrate.list,
-         function(x) GetOrderedSubtypeLabels(x$z, sample.train.test))
+subtype.norm.list <- lapply(norm.titrate.list,
+                            function(x) GetOrderedSubtypeLabels(x$z,
+                                                                sample.train.test))
 
 # restructure normalized list so that it's organized by normalization method
 restr.train.list <- RestructureNormList(norm.titrate.list)
@@ -75,7 +104,7 @@ train.model.list <-
                        subtype =  subtype.norm.list[[m]],
                        seed = resample.seed,
                        folds.list = folds.list[[m]])
-
+      
     }
   }
 
@@ -139,5 +168,5 @@ seq.kappa.df <- PredictWrapper(train.model.list = train.model.list,
                                sample.df = sample.train.test,
                                return.kap = TRUE)
 
-write.table(seq.kappa.df, file = seq.kappa.file, sep = "\t", row.names = FALSE,
-            quote = FALSE)
+write.table(seq.kappa.df, file = seq.kappa.file, sep = "\t",
+            row.names = FALSE, quote = FALSE)
