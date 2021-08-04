@@ -3,6 +3,8 @@
 .local
 .refinebio.yaml
 .Rhistory
+.rstudio
+.wget-hsts
 data
 normalized_data
 models
