@@ -12,6 +12,6 @@ else
 fi
 
 # Run differential expression scripts
-Rscript 1A-detect_differentially_expressed_genes.R --cancer_type $cancer_type
-Rscript 2A-plot_DE_results.R --cancer_type $cancer_type
-Rscript 3A-small_n_differential_expression.R --cancer_type $cancer_type
+Rscript 1A-detect_differentially_expressed_genes.R --cancer_type $cancer_type --one_vs_others $2 --one_vs_one $3
+Rscript 2A-plot_DE_results.R --cancer_type $cancer_type --one_vs_others $2 --one_vs_one $3
+Rscript 3A-small_n_differential_expression.R --cancer_type $cancer_type --max_n $4 --one_vs_one $3
