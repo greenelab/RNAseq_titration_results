@@ -4,7 +4,7 @@
 # expression when there are a small number of samples on each platform
 # (50-50 split microarray and RNA-seq).
 #
-# USAGE: Rscript 3A-small_n_differential_expression.R --cancer_type --subtype_vs_subtype --max_n
+# USAGE: Rscript 3A-small_n_differential_expression.R --cancer_type --subtype_vs_subtype
 
 option_list <- list(
   optparse::make_option("--cancer_type",
