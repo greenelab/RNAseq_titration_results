@@ -1,0 +1,831 @@
+﻿TSS Code,Disease type
+01,Ovarian serous cystadenocarcinoma
+02,Glioblastoma multiforme
+04,Ovarian serous cystadenocarcinoma
+05,Lung adenocarcinoma
+06,Glioblastoma multiforme
+07,Cell Line Control
+08,Glioblastoma multiforme
+09,Ovarian serous cystadenocarcinoma
+10,Ovarian serous cystadenocarcinoma
+11,Lung squamous cell carcinoma
+12,Glioblastoma multiforme
+13,Ovarian serous cystadenocarcinoma
+14,Glioblastoma multiforme
+15,Glioblastoma multiforme
+16,Glioblastoma multiforme
+17,Lung adenocarcinoma
+18,Lung squamous cell carcinoma
+19,Glioblastoma multiforme
+1Z,Thymoma
+20,Ovarian serous cystadenocarcinoma
+21,Lung squamous cell carcinoma
+22,Lung squamous cell carcinoma
+23,Ovarian serous cystadenocarcinoma
+24,Ovarian serous cystadenocarcinoma
+25,Ovarian serous cystadenocarcinoma
+26,Glioblastoma multiforme
+27,Glioblastoma multiforme
+28,Glioblastoma multiforme
+29,Ovarian serous cystadenocarcinoma
+2A,Prostate adenocarcinoma
+2E,Uterine Corpus Endometrial Carcinoma
+2F,Bladder Urothelial Carcinoma
+2G,Testicular Germ Cell Tumors
+2H,Esophageal carcinoma
+2J,Pancreatic adenocarcinoma
+2K,Kidney renal papillary cell carcinoma
+2L,Pancreatic adenocarcinoma
+2M,Esophageal carcinoma
+2N,Stomach adenocarcinoma
+2P,Pancreatic adenocarcinoma
+2V,Liver hepatocellular carcinoma
+2W,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+2X,Testicular Germ Cell Tumors
+2Y,Liver hepatocellular carcinoma
+2Z,Kidney renal papillary cell carcinoma
+30,Ovarian serous cystadenocarcinoma
+31,Ovarian serous cystadenocarcinoma
+32,Glioblastoma multiforme
+33,Lung squamous cell carcinoma
+34,Lung squamous cell carcinoma
+35,Lung adenocarcinoma
+36,Ovarian serous cystadenocarcinoma
+37,Lung squamous cell carcinoma
+38,Lung adenocarcinoma
+39,Lung squamous cell carcinoma
+3A,Pancreatic adenocarcinoma
+3B,Sarcoma
+3C,Breast invasive carcinoma
+3E,Pancreatic adenocarcinoma
+3G,Thymoma
+3H,Mesothelioma
+3J,Breast invasive carcinoma
+3K,Liver hepatocellular carcinoma
+3L,Colon adenocarcinoma
+3M,Stomach adenocarcinoma
+3N,Skin Cutaneous Melanoma
+3P,Ovarian serous cystadenocarcinoma
+3Q,Thymoma
+3R,Sarcoma
+3S,Thymoma
+3T,Thymoma
+3U,Mesothelioma
+3W,Sarcoma
+3X,Cholangiocarcinoma
+3Z,Kidney renal clear cell carcinoma
+41,Glioblastoma multiforme
+42,Ovarian serous cystadenocarcinoma
+43,Lung squamous cell carcinoma
+44,Lung adenocarcinoma
+46,Lung squamous cell carcinoma
+49,Lung adenocarcinoma
+4A,Kidney renal papillary cell carcinoma
+4B,Lung adenocarcinoma
+4C,Thyroid carcinoma
+4D,Ovarian serous cystadenocarcinoma
+4E,Uterine Corpus Endometrial Carcinoma
+4G,Cholangiocarcinoma
+4H,Breast invasive carcinoma
+4J,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+4K,Testicular Germ Cell Tumors
+4L,Prostate adenocarcinoma
+4N,Colon adenocarcinoma
+4P,Head and Neck squamous cell carcinoma
+4Q,Sarcoma
+4R,Liver hepatocellular carcinoma
+4S,Prostate adenocarcinoma
+4T,Colon adenocarcinoma
+4V,Thymoma
+4W,Glioblastoma multiforme
+4X,Thymoma
+4Y,Sarcoma
+4Z,Bladder Urothelial Carcinoma
+50,Lung adenocarcinoma
+51,Lung squamous cell carcinoma
+52,Lung squamous cell carcinoma
+53,Lung adenocarcinoma
+55,Lung adenocarcinoma
+56,Lung squamous cell carcinoma
+57,Ovarian serous cystadenocarcinoma
+58,Lung squamous cell carcinoma
+59,Ovarian serous cystadenocarcinoma
+5A,Cholangiocarcinoma
+5B,Uterine Corpus Endometrial Carcinoma
+5C,Liver hepatocellular carcinoma
+5D,Sarcoma
+5F,Thyroid carcinoma
+5G,Thymoma
+5H,Uveal Melanoma
+5J,Acute Myeloid Leukemia
+5K,Thymoma
+5L,Breast invasive carcinoma
+5M,Colon adenocarcinoma
+5N,Bladder Urothelial Carcinoma
+5P,Kidney renal papillary cell carcinoma
+5Q,Pancreatic adenocarcinoma
+5R,Liver hepatocellular carcinoma
+5S,Uterine Corpus Endometrial Carcinoma
+5T,Breast invasive carcinoma
+5U,Thymoma
+5V,Thymoma
+5W,Uterine Corpus Endometrial Carcinoma
+5X,Ovarian serous cystadenocarcinoma
+60,Lung squamous cell carcinoma
+61,Ovarian serous cystadenocarcinoma
+62,Lung adenocarcinoma
+63,Lung squamous cell carcinoma
+64,Lung adenocarcinoma
+65,Glioblastoma multiforme
+66,Lung squamous cell carcinoma
+67,Lung adenocarcinoma
+68,Lung squamous cell carcinoma
+69,Lung adenocarcinoma
+6A,Lung squamous cell carcinoma
+6D,Kidney renal clear cell carcinoma
+6G,Rectum adenocarcinoma
+6H,Chronic Myelogenous Leukemia
+70,Lung squamous cell carcinoma
+71,Lung adenocarcinoma
+72,Ovarian serous cystadenocarcinoma
+73,Lung adenocarcinoma
+74,Glioblastoma multiforme
+75,Lung adenocarcinoma
+76,Glioblastoma multiforme
+77,Lung squamous cell carcinoma
+78,Lung adenocarcinoma
+79,Lung squamous cell carcinoma
+80,Lung adenocarcinoma
+81,Glioblastoma multiforme
+82,Lung squamous cell carcinoma
+83,Lung adenocarcinoma
+85,Lung squamous cell carcinoma
+86,Lung adenocarcinoma
+87,Glioblastoma multiforme
+90,Lung squamous cell carcinoma
+91,Lung adenocarcinoma
+92,Lung squamous cell carcinoma
+93,Lung adenocarcinoma
+94,Lung squamous cell carcinoma
+95,Lung adenocarcinoma
+96,Lung squamous cell carcinoma
+97,Lung adenocarcinoma
+98,Lung squamous cell carcinoma
+99,Lung adenocarcinoma
+A1,Breast invasive carcinoma
+A2,Breast invasive carcinoma
+A3,Kidney renal clear cell carcinoma
+A4,Kidney renal papillary cell carcinoma
+A5,Uterine Corpus Endometrial Carcinoma
+A6,Colon adenocarcinoma
+A7,Breast invasive carcinoma
+A8,Breast invasive carcinoma
+AA,Colon adenocarcinoma
+AB,Acute Myeloid Leukemia
+AC,Breast invasive carcinoma
+AD,Colon adenocarcinoma
+AF,Rectum adenocarcinoma
+AG,Rectum adenocarcinoma
+AH,Rectum adenocarcinoma
+AJ,Uterine Corpus Endometrial Carcinoma
+AK,Kidney renal clear cell carcinoma
+AL,Kidney renal papillary cell carcinoma
+AM,Colon adenocarcinoma
+AN,Breast invasive carcinoma
+AO,Breast invasive carcinoma
+AP,Uterine Corpus Endometrial Carcinoma
+AQ,Breast invasive carcinoma
+AR,Breast invasive carcinoma
+AS,Kidney renal clear cell carcinoma
+AT,Kidney renal papillary cell carcinoma
+AU,Colon adenocarcinoma
+AV,Cell Line Control
+AW,Uterine Corpus Endometrial Carcinoma
+AX,Uterine Corpus Endometrial Carcinoma
+AY,Colon adenocarcinoma
+AZ,Colon adenocarcinoma
+B0,Kidney renal clear cell carcinoma
+B1,Kidney renal papillary cell carcinoma
+B2,Kidney renal clear cell carcinoma
+B3,Kidney renal papillary cell carcinoma
+B4,Kidney renal clear cell carcinoma
+B5,Uterine Corpus Endometrial Carcinoma
+B6,Breast invasive carcinoma
+B7,Stomach adenocarcinoma
+B8,Kidney renal clear cell carcinoma
+B9,Kidney renal papillary cell carcinoma
+BA,Head and Neck squamous cell carcinoma
+BB,Head and Neck squamous cell carcinoma
+BC,Liver hepatocellular carcinoma
+BD,Liver hepatocellular carcinoma
+BF,Skin Cutaneous Melanoma
+BG,Uterine Corpus Endometrial Carcinoma
+BH,Breast invasive carcinoma
+BI,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+BJ,Thyroid carcinoma
+BK,Uterine Corpus Endometrial Carcinoma
+BL,Bladder Urothelial Carcinoma
+BM,Rectum adenocarcinoma
+BP,Kidney renal clear cell carcinoma
+BQ,Kidney renal papillary cell carcinoma
+BR,Stomach adenocarcinoma
+BS,Uterine Corpus Endometrial Carcinoma
+BT,Bladder Urothelial Carcinoma
+BW,Liver hepatocellular carcinoma
+C4,Bladder Urothelial Carcinoma
+C5,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+C8,Breast invasive carcinoma
+C9,Head and Neck squamous cell carcinoma
+CA,Colon adenocarcinoma
+CB,Kidney renal clear cell carcinoma
+CC,Liver hepatocellular carcinoma
+CD,Stomach adenocarcinoma
+CE,Thyroid carcinoma
+CF,Bladder Urothelial Carcinoma
+CG,Stomach adenocarcinoma
+CH,Prostate adenocarcinoma
+CI,Rectum adenocarcinoma
+CJ,Kidney renal clear cell carcinoma
+CK,Colon adenocarcinoma
+CL,Rectum adenocarcinoma
+CM,Colon adenocarcinoma
+CN,Head and Neck squamous cell carcinoma
+CQ,Head and Neck squamous cell carcinoma
+CR,Head and Neck squamous cell carcinoma
+CS,Brain Lower Grade Glioma
+CU,Bladder Urothelial Carcinoma
+CV,Head and Neck squamous cell carcinoma
+CW,Kidney renal clear cell carcinoma
+CX,Head and Neck squamous cell carcinoma
+CZ,Kidney renal clear cell carcinoma
+D1,Uterine Corpus Endometrial Carcinoma
+D3,Skin Cutaneous Melanoma
+D5,Colon adenocarcinoma
+D6,Head and Neck squamous cell carcinoma
+D7,Stomach adenocarcinoma
+D8,Breast invasive carcinoma
+D9,Skin Cutaneous Melanoma
+DA,Skin Cutaneous Melanoma
+DB,Brain Lower Grade Glioma
+DC,Rectum adenocarcinoma
+DD,Liver hepatocellular carcinoma
+DE,Thyroid carcinoma
+DF,Uterine Corpus Endometrial Carcinoma
+DG,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+DH,Brain Lower Grade Glioma
+DI,Uterine Corpus Endometrial Carcinoma
+DJ,Thyroid carcinoma
+DK,Bladder Urothelial Carcinoma
+DM,Colon adenocarcinoma
+DO,Thyroid carcinoma
+DQ,Head and Neck squamous cell carcinoma
+DR,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+DS,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+DT,Rectum adenocarcinoma
+DU,Brain Lower Grade Glioma
+DV,Kidney renal clear cell carcinoma
+DW,Kidney renal papillary cell carcinoma
+DX,Sarcoma
+DY,Rectum adenocarcinoma
+DZ,Kidney renal papillary cell carcinoma
+E1,Brain Lower Grade Glioma
+E2,Breast invasive carcinoma
+E3,Thyroid carcinoma
+E5,Bladder Urothelial Carcinoma
+E6,Uterine Corpus Endometrial Carcinoma
+E7,Bladder Urothelial Carcinoma
+E8,Thyroid carcinoma
+E9,Breast invasive carcinoma
+EA,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+EB,Skin Cutaneous Melanoma
+EC,Uterine Corpus Endometrial Carcinoma
+ED,Liver hepatocellular carcinoma
+EE,Skin Cutaneous Melanoma
+EF,Rectum adenocarcinoma
+EI,Rectum adenocarcinoma
+EJ,Prostate adenocarcinoma
+EK,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+EL,Thyroid carcinoma
+EM,Thyroid carcinoma
+EO,Uterine Corpus Endometrial Carcinoma
+EP,Liver hepatocellular carcinoma
+EQ,Stomach adenocarcinoma
+ER,Skin Cutaneous Melanoma
+ES,Liver hepatocellular carcinoma
+ET,Thyroid carcinoma
+EU,Kidney renal clear cell carcinoma
+EV,Kidney renal papillary cell carcinoma
+EW,Breast invasive carcinoma
+EX,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+EY,Uterine Corpus Endometrial Carcinoma
+EZ,Brain Lower Grade Glioma
+F1,Stomach adenocarcinoma
+F2,Pancreatic adenocarcinoma
+F4,Colon adenocarcinoma
+F5,Rectum adenocarcinoma
+F6,Brain Lower Grade Glioma
+F7,Head and Neck squamous cell carcinoma
+F9,Kidney renal papillary cell carcinoma
+FA,Lymphoid Neoplasm Diffuse Large B-cell Lymphoma
+FB,Pancreatic adenocarcinoma
+FC,Prostate adenocarcinoma
+FD,Bladder Urothelial Carcinoma
+FE,Thyroid carcinoma
+FF,Lymphoid Neoplasm Diffuse Large B-cell Lymphoma
+FG,Brain Lower Grade Glioma
+FH,Thyroid carcinoma
+FI,Uterine Corpus Endometrial Carcinoma
+FJ,Bladder Urothelial Carcinoma
+FK,Thyroid carcinoma
+FL,Uterine Corpus Endometrial Carcinoma
+FM,Lymphoid Neoplasm Diffuse Large B-cell Lymphoma
+FN,Brain Lower Grade Glioma
+FP,Stomach adenocarcinoma
+FQ,Pancreatic adenocarcinoma
+FR,Skin Cutaneous Melanoma
+FS,Skin Cutaneous Melanoma
+FT,Bladder Urothelial Carcinoma
+FU,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+FV,Liver hepatocellular carcinoma
+FW,Skin Cutaneous Melanoma
+FX,Sarcoma
+FY,Thyroid carcinoma
+FZ,Pancreatic adenocarcinoma
+G2,Bladder Urothelial Carcinoma
+G3,Liver hepatocellular carcinoma
+G4,Colon adenocarcinoma
+G5,Rectum adenocarcinoma
+G6,Kidney renal clear cell carcinoma
+G7,Kidney renal papillary cell carcinoma
+G8,Lymphoid Neoplasm Diffuse Large B-cell Lymphoma
+G9,Prostate adenocarcinoma
+GC,Bladder Urothelial Carcinoma
+GD,Bladder Urothelial Carcinoma
+GE,Thyroid carcinoma
+GF,Skin Cutaneous Melanoma
+GG,Uterine Corpus Endometrial Carcinoma
+GH,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+GI,Breast invasive carcinoma
+GJ,Liver hepatocellular carcinoma
+GK,Kidney renal clear cell carcinoma
+GL,Kidney renal papillary cell carcinoma
+GM,Breast invasive carcinoma
+GN,Skin Cutaneous Melanoma
+GP,Acute Myeloid Leukemia
+GR,Lymphoid Neoplasm Diffuse Large B-cell Lymphoma
+GS,Lymphoid Neoplasm Diffuse Large B-cell Lymphoma
+GU,Bladder Urothelial Carcinoma
+GV,Bladder Urothelial Carcinoma
+GZ,Lymphoid Neoplasm Diffuse Large B-cell Lymphoma
+H1,Stomach adenocarcinoma
+H2,Thyroid carcinoma
+H3,Lymphoid Neoplasm Diffuse Large B-cell Lymphoma
+H4,Bladder Urothelial Carcinoma
+H5,Uterine Corpus Endometrial Carcinoma
+H6,Pancreatic adenocarcinoma
+H7,Head and Neck squamous cell carcinoma
+H8,Pancreatic adenocarcinoma
+H9,Prostate adenocarcinoma
+HA,Stomach adenocarcinoma
+HB,Sarcoma
+HC,Prostate adenocarcinoma
+HD,Head and Neck squamous cell carcinoma
+HE,Kidney renal papillary cell carcinoma
+HF,Stomach adenocarcinoma
+HG,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+HH,Stomach adenocarcinoma
+HI,Prostate adenocarcinoma
+HJ,Stomach adenocarcinoma
+HK,Brain Lower Grade Glioma
+HL,Head and Neck squamous cell carcinoma
+HM,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+HN,Breast invasive carcinoma
+HP,Liver hepatocellular carcinoma
+HQ,Bladder Urothelial Carcinoma
+HR,Skin Cutaneous Melanoma
+HS,Sarcoma
+HT,Brain Lower Grade Glioma
+HU,Stomach adenocarcinoma
+HV,Pancreatic adenocarcinoma
+HW,Brain Lower Grade Glioma
+HZ,Pancreatic adenocarcinoma
+IA,Kidney renal papillary cell carcinoma
+IB,Pancreatic adenocarcinoma
+IC,Esophageal carcinoma
+IE,Sarcoma
+IF,Sarcoma
+IG,Esophageal carcinoma
+IH,Skin Cutaneous Melanoma
+IJ,Acute Myeloid Leukemia
+IK,Brain Lower Grade Glioma
+IM,Thyroid carcinoma
+IN,Stomach adenocarcinoma
+IP,Stomach adenocarcinoma
+IQ,Head and Neck squamous cell carcinoma
+IR,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+IS,Sarcoma
+IW,Sarcoma
+IZ,Kidney renal papillary cell carcinoma
+J1,Lung squamous cell carcinoma
+J2,Lung adenocarcinoma
+J4,Prostate adenocarcinoma
+J7,Kidney renal papillary cell carcinoma
+J8,Thyroid carcinoma
+J9,Prostate adenocarcinoma
+JA,Head and Neck squamous cell carcinoma
+JL,Breast invasive carcinoma
+JU,Uterine Corpus Endometrial Carcinoma
+JV,Sarcoma
+JW,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+JX,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+JY,Esophageal carcinoma
+JZ,Esophageal carcinoma
+K1,Sarcoma
+K4,Bladder Urothelial Carcinoma
+K6,Uterine Corpus Endometrial Carcinoma
+K7,Liver hepatocellular carcinoma
+K8,Skin Cutaneous Melanoma
+KA,Esophageal carcinoma
+KB,Stomach adenocarcinoma
+KC,Prostate adenocarcinoma
+KD,Sarcoma
+KE,Uterine Corpus Endometrial Carcinoma
+KF,Sarcoma
+KG,Pancreatic adenocarcinoma
+KH,Esophageal carcinoma
+KJ,Uterine Corpus Endometrial Carcinoma
+KK,Prostate adenocarcinoma
+KL,Kidney Chromophobe
+KM,Kidney Chromophobe
+KN,Kidney Chromophobe
+KO,Kidney Chromophobe
+KP,Uterine Corpus Endometrial Carcinoma
+KQ,Bladder Urothelial Carcinoma
+KR,Liver hepatocellular carcinoma
+KS,Thyroid carcinoma
+KT,Brain Lower Grade Glioma
+KU,Head and Neck squamous cell carcinoma
+KV,Kidney renal papillary cell carcinoma
+KZ,Stomach adenocarcinoma
+L1,Pancreatic adenocarcinoma
+L3,Lung squamous cell carcinoma
+L4,Lung adenocarcinoma
+L5,Esophageal carcinoma
+L6,Thyroid carcinoma
+L7,Esophageal carcinoma
+L8,Kidney renal papillary cell carcinoma
+L9,Lung adenocarcinoma
+LA,Lung squamous cell carcinoma
+LB,Pancreatic adenocarcinoma
+LC,Bladder Urothelial Carcinoma
+LD,Breast invasive carcinoma
+LG,Liver hepatocellular carcinoma
+LH,Skin Cutaneous Melanoma
+LI,Sarcoma
+LK,Mesothelioma
+LL,Breast invasive carcinoma
+LN,Esophageal carcinoma
+LP,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+LQ,Breast invasive carcinoma
+LS,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+LT,Bladder Urothelial Carcinoma
+M7,Prostate adenocarcinoma
+M8,Pancreatic adenocarcinoma
+M9,Esophageal carcinoma
+MA,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+MB,Sarcoma
+ME,Lung adenocarcinoma
+MF,Lung squamous cell carcinoma
+MG,Prostate adenocarcinoma
+MH,Kidney renal papillary cell carcinoma
+MI,Liver hepatocellular carcinoma
+MJ,Sarcoma
+MK,Thyroid carcinoma
+ML,Lung squamous cell carcinoma
+MM,Kidney renal clear cell carcinoma
+MN,Lung adenocarcinoma
+MO,Sarcoma
+MP,Lung adenocarcinoma
+MQ,Mesothelioma
+MR,Liver hepatocellular carcinoma
+MS,Breast invasive carcinoma
+MT,Head and Neck squamous cell carcinoma
+MU,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+MV,Bladder Urothelial Carcinoma
+MW,Kidney renal clear cell carcinoma
+MX,Stomach adenocarcinoma
+MY,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+MZ,Head and Neck squamous cell carcinoma
+N1,Sarcoma
+N5,Uterine Carcinosarcoma
+N6,Uterine Carcinosarcoma
+N7,Uterine Carcinosarcoma
+N8,Uterine Carcinosarcoma
+N9,Uterine Carcinosarcoma
+NA,Uterine Carcinosarcoma
+NB,Lung adenocarcinoma
+NC,Lung squamous cell carcinoma
+ND,Uterine Carcinosarcoma
+NF,Uterine Carcinosarcoma
+NG,Uterine Carcinosarcoma
+NH,Colon adenocarcinoma
+NI,Liver hepatocellular carcinoma
+NJ,Lung adenocarcinoma
+NK,Lung squamous cell carcinoma
+NM,Head and Neck squamous cell carcinoma
+NP,Kidney Chromophobe
+NQ,Mesothelioma
+NS,Skin Cutaneous Melanoma
+O1,Lung adenocarcinoma
+O2,Lung squamous cell carcinoma
+O8,Liver hepatocellular carcinoma
+O9,Kidney renal papillary cell carcinoma
+OC,Lung squamous cell carcinoma
+OD,Skin Cutaneous Melanoma
+OE,Pancreatic adenocarcinoma
+OJ,Thyroid carcinoma
+OK,Breast invasive carcinoma
+OL,Breast invasive carcinoma
+OR,Adrenocortical carcinoma
+OU,Adrenocortical carcinoma
+OW,Miscellaneous
+OX,Glioblastoma multiforme
+OY,Ovarian serous cystadenocarcinoma
+P3,Head and Neck squamous cell carcinoma
+P4,Kidney renal papillary cell carcinoma
+P5,Brain Lower Grade Glioma
+P6,Adrenocortical carcinoma
+P7,Pheochromocytoma and Paraganglioma
+P8,Pheochromocytoma and Paraganglioma
+P9,Pancreatic adenocarcinoma
+PA,Adrenocortical carcinoma
+PB,Lymphoid Neoplasm Diffuse Large B-cell Lymphoma
+PC,Sarcoma
+PD,Liver hepatocellular carcinoma
+PE,Breast invasive carcinoma
+PG,Uterine Corpus Endometrial Carcinoma
+PH,Acute Myeloid Leukemia
+PJ,Kidney renal papillary cell carcinoma
+PK,Adrenocortical carcinoma
+PL,Breast invasive carcinoma
+PN,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+PQ,Bladder Urothelial Carcinoma
+PR,Pheochromocytoma and Paraganglioma
+PT,Sarcoma
+PZ,Pancreatic adenocarcinoma
+Q1,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+Q2,Kidney renal papillary cell carcinoma
+Q3,Pancreatic adenocarcinoma
+Q4,Acute Myeloid Leukemia
+Q9,Esophageal carcinoma
+QA,Liver hepatocellular carcinoma
+QB,Skin Cutaneous Melanoma
+QC,Sarcoma
+QD,Thyroid carcinoma
+QF,Uterine Corpus Endometrial Carcinoma
+QG,Colon adenocarcinoma
+QH,Brain Lower Grade Glioma
+QJ,Ovarian serous cystadenocarcinoma
+QK,Head and Neck squamous cell carcinoma
+QL,Colon adenocarcinoma
+QM,Uterine Carcinosarcoma
+QN,Uterine Carcinosarcoma
+QQ,Sarcoma
+QR,Pheochromocytoma and Paraganglioma
+QS,Uterine Corpus Endometrial Carcinoma
+QT,Pheochromocytoma and Paraganglioma
+QU,Prostate adenocarcinoma
+QV,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+QW,Stomach adenocarcinoma
+R1,Colon adenocarcinoma
+R2,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+R3,Bladder Urothelial Carcinoma
+R5,Stomach adenocarcinoma
+R6,Esophageal carcinoma
+R7,Head and Neck squamous cell carcinoma
+R8,Brain Lower Grade Glioma
+R9,Ovarian serous cystadenocarcinoma
+RA,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+RB,Pancreatic adenocarcinoma
+RC,Liver hepatocellular carcinoma
+RD,Stomach adenocarcinoma
+RE,Esophageal carcinoma
+RG,Liver hepatocellular carcinoma
+RH,Head and Neck squamous cell carcinoma
+RL,Pancreatic adenocarcinoma
+RM,Pheochromocytoma and Paraganglioma
+RN,Sarcoma
+RP,Skin Cutaneous Melanoma
+RQ,Lymphoid Neoplasm Diffuse Large B-cell Lymphoma
+RR,Glioblastoma multiforme
+RS,Head and Neck squamous cell carcinoma
+RT,Pheochromocytoma and Paraganglioma
+RU,Colon adenocarcinoma
+RV,Pancreatic adenocarcinoma
+RW,Pheochromocytoma and Paraganglioma
+RX,Pheochromocytoma and Paraganglioma
+RY,Brain Lower Grade Glioma
+RZ,Uveal Melanoma
+S2,Lung adenocarcinoma
+S3,Breast invasive carcinoma
+S4,Pancreatic adenocarcinoma
+S5,Bladder Urothelial Carcinoma
+S6,Testicular Germ Cell Tumors
+S7,Pheochromocytoma and Paraganglioma
+S8,Esophageal carcinoma
+S9,Brain Lower Grade Glioma
+SA,Pheochromocytoma and Paraganglioma
+SB,Testicular Germ Cell Tumors
+SC,Mesothelioma
+SD,Pancreatic adenocarcinoma
+SE,Pheochromocytoma and Paraganglioma
+SG,Sarcoma
+SH,Mesothelioma
+SI,Sarcoma
+SJ,Uterine Corpus Endometrial Carcinoma
+SK,Colon adenocarcinoma
+SL,Uterine Corpus Endometrial Carcinoma
+SN,Testicular Germ Cell Tumors
+SO,Testicular Germ Cell Tumors
+SP,Pheochromocytoma and Paraganglioma
+SQ,Pheochromocytoma and Paraganglioma
+SR,Pheochromocytoma and Paraganglioma
+SS,Colon adenocarcinoma
+ST,Head and Neck squamous cell carcinoma
+SU,Prostate adenocarcinoma
+SW,Stomach adenocarcinoma
+SX,Kidney renal papillary cell carcinoma
+SY,Bladder Urothelial Carcinoma
+T1,Liver hepatocellular carcinoma
+T2,Head and Neck squamous cell carcinoma
+T3,Head and Neck squamous cell carcinoma
+T6,Lung adenocarcinoma
+T7,Kidney renal clear cell carcinoma
+T9,Colon adenocarcinoma
+TE,Skin Cutaneous Melanoma
+TG,Head and Neck squamous cell carcinoma
+TK,Prostate adenocarcinoma
+TL,Stomach adenocarcinoma
+TM,Brain Lower Grade Glioma
+TN,Head and Neck squamous cell carcinoma
+TP,Prostate adenocarcinoma
+TQ,Brain Lower Grade Glioma
+TR,Skin Cutaneous Melanoma
+TS,Mesothelioma
+TT,Pheochromocytoma and Paraganglioma
+TV,Breast invasive carcinoma
+UB,Liver hepatocellular carcinoma
+UC,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+UD,Mesothelioma
+UE,Sarcoma
+UF,Head and Neck squamous cell carcinoma
+UJ,Lung squamous cell carcinoma
+UL,Breast invasive carcinoma
+UN,Kidney renal papillary cell carcinoma
+UP,Head and Neck squamous cell carcinoma
+UR,Prostate adenocarcinoma
+US,Pancreatic adenocarcinoma
+UT,Mesothelioma
+UU,Breast invasive carcinoma
+UV,Liver hepatocellular carcinoma
+UW,Kidney Chromophobe
+UY,Bladder Urothelial Carcinoma
+UZ,Kidney renal papillary cell carcinoma
+V1,Prostate adenocarcinoma
+V2,Prostate adenocarcinoma
+V3,Uveal Melanoma
+V4,Uveal Melanoma
+V5,Esophageal carcinoma
+V6,Stomach adenocarcinoma
+V7,Breast invasive carcinoma
+V8,Kidney renal clear cell carcinoma
+V9,Kidney renal papillary cell carcinoma
+VA,Stomach adenocarcinoma
+VB,Lymphoid Neoplasm Diffuse Large B-cell Lymphoma
+VD,Uveal Melanoma
+VF,Testicular Germ Cell Tumors
+VG,Ovarian serous cystadenocarcinoma
+VK,Colon adenocarcinoma
+VL,Rectum adenocarcinoma
+VM,Brain Lower Grade Glioma
+VN,Prostate adenocarcinoma
+VP,Prostate adenocarcinoma
+VQ,Stomach adenocarcinoma
+VR,Esophageal carcinoma
+VS,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+VT,Sarcoma
+VV,Brain Lower Grade Glioma
+VW,Brain Lower Grade Glioma
+VX,Stomach adenocarcinoma
+VZ,Pheochromocytoma and Paraganglioma
+W2,Pheochromocytoma and Paraganglioma
+W3,Skin Cutaneous Melanoma
+W4,Testicular Germ Cell Tumors
+W5,Cholangiocarcinoma
+W6,Cholangiocarcinoma
+W7,Cholangiocarcinoma
+W8,Breast invasive carcinoma
+W9,Brain Lower Grade Glioma
+WA,Head and Neck squamous cell carcinoma
+WB,Pheochromocytoma and Paraganglioma
+WC,Uveal Melanoma
+WD,Cholangiocarcinoma
+WE,Skin Cutaneous Melanoma
+WF,Pancreatic adenocarcinoma
+WG,Lung squamous cell carcinoma
+WH,Brain Lower Grade Glioma
+WJ,Liver hepatocellular carcinoma
+WK,Sarcoma
+WL,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+WM,Kidney renal clear cell carcinoma
+WN,Kidney renal papillary cell carcinoma
+WP,Sarcoma
+WQ,Liver hepatocellular carcinoma
+WR,Ovarian serous cystadenocarcinoma
+WS,Colon adenocarcinoma
+WT,Breast invasive carcinoma
+WU,Colon adenocarcinoma
+WW,Prostate adenocarcinoma
+WX,Liver hepatocellular carcinoma
+WY,Brain Lower Grade Glioma
+WZ,Testicular Germ Cell Tumors
+X2,Sarcoma
+X3,Testicular Germ Cell Tumors
+X4,Prostate adenocarcinoma
+X5,Bladder Urothelial Carcinoma
+X6,Sarcoma
+X7,Thymoma
+X8,Esophageal carcinoma
+X9,Sarcoma
+XA,Prostate adenocarcinoma
+XB,Esophageal carcinoma
+XC,Lung squamous cell carcinoma
+XD,Pancreatic adenocarcinoma
+XE,Testicular Germ Cell Tumors
+XF,Bladder Urothelial Carcinoma
+XG,Pheochromocytoma and Paraganglioma
+XH,Thymoma
+XJ,Prostate adenocarcinoma
+XK,Prostate adenocarcinoma
+XM,Thymoma
+XN,Pancreatic adenocarcinoma
+XP,Esophageal carcinoma
+XQ,Prostate adenocarcinoma
+XR,Liver hepatocellular carcinoma
+XS,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+XT,Mesothelioma
+XU,Thymoma
+XV,Skin Cutaneous Melanoma
+XX,Breast invasive carcinoma
+XY,Testicular Germ Cell Tumors
+Y3,Acute Myeloid Leukemia
+Y5,Sarcoma
+Y6,Prostate adenocarcinoma
+Y8,Kidney renal papillary cell carcinoma
+YA,Liver hepatocellular carcinoma
+YB,Pancreatic adenocarcinoma
+YC,Bladder Urothelial Carcinoma
+YD,Skin Cutaneous Melanoma
+YF,Bladder Urothelial Carcinoma
+YG,Skin Cutaneous Melanoma
+YH,Pancreatic adenocarcinoma
+YJ,Prostate adenocarcinoma
+YL,Prostate adenocarcinoma
+YN,Skin Cutaneous Melanoma
+YR,Cholangiocarcinoma
+YS,Mesothelioma
+YT,Thymoma
+YU,Testicular Germ Cell Tumors
+YV,Uveal Melanoma
+YW,Sarcoma
+YX,Stomach adenocarcinoma
+YY,Pancreatic adenocarcinoma
+YZ,Uveal Melanoma
+Z2,Skin Cutaneous Melanoma
+Z3,Sarcoma
+Z4,Sarcoma
+Z5,Pancreatic adenocarcinoma
+Z6,Esophageal carcinoma
+Z7,Breast invasive carcinoma
+Z8,Pancreatic adenocarcinoma
+ZA,Stomach adenocarcinoma
+ZB,Thymoma
+ZC,Thymoma
+ZD,Cholangiocarcinoma
+ZE,Lung squamous cell carcinoma
+ZF,Bladder Urothelial Carcinoma
+ZG,Prostate adenocarcinoma
+ZH,Cholangiocarcinoma
+ZJ,Cervical squamous cell carcinoma and endocervical adenocarcinoma
+ZK,Cholangiocarcinoma
+ZL,Thymoma
+ZM,Testicular Germ Cell Tumors
+ZN,Mesothelioma
+ZP,Liver hepatocellular carcinoma
+ZQ,Stomach adenocarcinoma
+ZR,Esophageal carcinoma
+ZS,Liver hepatocellular carcinoma
+ZT,Thymoma
+ZU,Cholangiocarcinoma
+ZW,Pancreatic adenocarcinoma
+ZX,Cervical squamous cell carcinoma and endocervical adenocarcinoma
