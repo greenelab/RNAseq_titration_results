@@ -64,7 +64,7 @@ subtype_vs_others.rds <- file.path(deg.dir,
 two_subtypes.rds <- file.path(deg.dir,
                               paste0(cancer_type,
                                      "_titration_differential_exp_eBayes_fits_",
-                                     two_subtypes[1], "v", two_subtypes[2], ".RDS"))
+                                     stringr::str_c(two_subtypes, collapse = "v"), ".RDS"))
 norm.rds <- file.path("normalized_data",
                       paste0(cancer_type, "_titration_no_ZTO_transform_with_UN.RDS"))
 
