@@ -42,6 +42,7 @@ RUN install2.r --error --deps TRUE \
     here \
     Hmisc \
     huge \
+    jsonlite \
     kernlab \
     optparse \
     plyr \
@@ -56,6 +57,8 @@ RUN install2.r --error --deps TRUE \
 
 # R Bioconductor packages
 RUN Rscript -e "options(warn = 2); BiocManager::install(c( \
+    'EnsDb.Hsapiens.v86' , \
+    'ensembldb', \
     'limma', \
     'quantro'), \
     update = FALSE)"

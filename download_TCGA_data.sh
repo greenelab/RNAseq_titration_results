@@ -9,7 +9,7 @@ data="data"
 mkdir -p $data
 
 # downlaod BRCA array and seq data from URLs
-wget -i brca_data_urls.txt '--directory-prefix='$data
+wget -nc -i brca_data_urls.txt '--directory-prefix='$data
 
 # Obtain TCGA data freeze manifest file
 # See here for more info: https://gdc.cancer.gov/about-data/publications/pancanatlas
@@ -39,7 +39,7 @@ for filename in ${filename_array[@]}; do
   else
     echo Downloading $filename
     id=$(grep -w $filename $data/$manifest_basename | cut -f1)
-    curl -o $data/$filename --silent https://api.gdc.cancer.gov/data/$id
+    curl -o $data/$filename https://api.gdc.cancer.gov/data/$id
   fi
 done
 
@@ -61,6 +61,27 @@ for accession in GSE83130; do
     unzip -d $data/$accession $data/$accession\.zip && rm -f $data/$accession\.zip
   fi
 done
+
+# download TCGA GBM clinical data including subtypes
+# Publication: Brennan, C. W. et al. The somatic genomic landscape of glioblastoma. Cell 155, 462–477 (2013)
+# Link to paper: https://doi.org/10.1016/j.cell.2013.09.034
+gbm_clinical_link="https://www.cell.com/cms/10.1016/j.cell.2013.09.034/attachment/9cefc2e8-caac-4225-bcdd-70f105ccf568/mmc7.xlsx"
+if [ -f $data/gbm_clinical_table_S7.xlsx ]; then
+  echo GBM clinical spreadsheet $data/gbm_clinical_table_S7.xlsx already exists and was not overwritten.
+else
+  wget -O $data/gbm_clinical_table_S7.xlsx $gbm_clinical_link
+fi
+
+# process GBM data via script
+echo Processing GBM data using R script prepare_GBM_data.R ...
+Rscript prepare_GBM_data.R \
+  --seq_input $data/EBPlusPlusAdjustPANCAN_IlluminaHiSeq_RNASeqV2.geneExp.tsv \
+  --array_input $data/GSE83130/GSE83130/GSE83130.tsv \
+  --metadata_input $data/GSE83130/aggregated_metadata.json \
+  --array_output $data/GBMarray.pcl \
+  --seq_output $data/GBMRNASeq.pcl \
+  --clinical_input $data/gbm_clinical_table_S7.xlsx \
+  --clinical_output $data/GBMClin.tsv
 
 # retrieve BRCA and GBM mutations in PIK3CA, PTEN, and TP53 from TCGA MC3
 # output is stored in data/mutations.* TSV and MAF files
