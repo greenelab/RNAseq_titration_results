@@ -31,7 +31,6 @@ source(file.path("util", "differential_expression_functions.R"))
 cancer_type <- opt$cancer_type
 subtype_vs_others <- opt$subtype_vs_others
 subtype_vs_subtype <- opt$subtype_vs_subtype
-# really this could be any number of subtypes
 two_subtypes <- as.vector(stringr::str_split(subtype_vs_subtype, pattern = ",", simplify = TRUE))
 
 #### plot Subtype v. Other results ---------------------------------------------
@@ -56,7 +55,7 @@ ggsave(file.path("plots", paste0(subtype_vs_others, "_v_other_jaccard_lineplot.p
 
 #### plot Subtype v. Subtype results --------------------------------------------
 subtypes_combination <- stringr::str_c(two_subtypes, collapse = "v")
-subtypes_combination_nice <- stringr::str_c(two_subtypes, collapse = " v.")
+subtypes_combination_nice <- stringr::str_c(two_subtypes, collapse = " vs. ")
 
 last_subtype.fit.list <- readRDS(file.path(
   "results", "differential_expression",
