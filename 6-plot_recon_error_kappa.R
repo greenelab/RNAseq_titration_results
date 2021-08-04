@@ -3,25 +3,37 @@
 # 4-ica_pca_feature_reconstruction.R and the Kappa statistics associated with
 # predictions on reconstructed data from 5-predict_subtype_reconstructed_data.R
 # as violin plots, respectively.
-# USAGE: Rscript 6-plot_recon_error_kappa.R
-#
+# USAGE: Rscript 6-plot_recon_error_kappa.R --cancer_type
 
+option_list <- list(
+  optparse::make_option("--cancer_type",
+                        default = NULL,
+                        help = "Cancer type")
+)
+
+opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
+source("util/option_functions.R")
+check_options(opt)
+
+# load libraries
 source(file.path("util", "color_blind_friendly_palette.R"))
-
 library(ggplot2)
 library(dplyr)
 
+# define directories
 plot.dir <- "plots"
 rcn.res.dir <- file.path("results", "reconstructed_data")
 
-kap.plot.file.lead <- file.path(plot.dir, "BRCA_kappa_reconstructed_data_")
-err.plot.file.lead <- file.path(plot.dir, "BRCA_reconstruction_error_")
-
+# define input files
 # pattern = "kappa" captures a downstream output file if this script is rerun
 # pattern = "kappa_[0-9]+.tsv" captures the intended filenames including seeds between 1:10000
 kappa.df.files <- list.files(rcn.res.dir, pattern = "kappa_[0-9]+.tsv", full.names = TRUE)
-error.files <- list.files(rcn.res.dir, pattern = "BRCA_reconstruction_error",
+error.files <- list.files(rcn.res.dir, pattern = paste0(cancer_type, "_reconstruction_error"),
                           full.names = TRUE)
+
+# define output files
+kap.plot.file.lead <- file.path(plot.dir, paste0(cancer_type, "_kappa_reconstructed_data_"))
+err.plot.file.lead <- file.path(plot.dir, paste0(cancer_type, "BRCA_reconstruction_error_"))
 
 #### plot kappa stats ----------------------------------------------------------
 
@@ -74,7 +86,7 @@ for (norm in norm.methods) {
                  position = position_dodge(0.6)) +
     stat_summary(fun = median, geom = "point", aes(group = Platform),
                  position = position_dodge(0.7), size = 1) +
-    ggtitle(toupper(norm)) +
+    ggtitle(paste0(cancer_type, ": ", toupper(norm))) +
     xlab("% RNA-seq samples") +
     theme_bw() +
     scale_colour_manual(values = cbPalette[c(2, 3)]) +
@@ -93,7 +105,7 @@ kappa.summary.df <-
                    .groups = "drop")
 readr::write_tsv(kappa.summary.df,
                  file.path(rcn.res.dir,
-                           "BRCA_kappa_reconstructed_data_summary_table.tsv"))
+                           paste0(cancer_type, "_kappa_reconstructed_data_summary_table.tsv")))
 
 rm(kappa.master.df)
 
@@ -151,6 +163,6 @@ for (norm in norm.methods) {
                  position = position_dodge(0.8)) +
     xlab("% RNA-seq") +
     ylab("Mean Value (per gene)") +
-    ggtitle(toupper(norm))
+    ggtitle(paste0(cancer_type, ": ", toupper(norm))) +
   ggsave(plot.nm, plot = last_plot(), height = 8.5, width = 8.5)
 }
