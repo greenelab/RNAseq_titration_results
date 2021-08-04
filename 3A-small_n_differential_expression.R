@@ -135,7 +135,7 @@ for (trial.iter in 1:10) {
   }
 
   top.table.list <-
-    lapply(master.deg.list,  # for each n (3...5)
+    lapply(master.deg.list,  # for each n (3...50)
            function(x)  # for each normalization method
              lapply(x, function(y) GetAllGenesTopTable(y)))  # extract DEGs
 
