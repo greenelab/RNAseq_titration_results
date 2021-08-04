@@ -17,10 +17,18 @@ check_options <- function(opt) {
     } else if (option == "cancer_type") {
       
       if (!(opt[[option]] %in% c("BRCA", "GBM"))) { # cancer type must be BRCA or GBM
-        my_errors[[option]] <- strinr::str_c("\nCancer type given for --", option,
+        my_errors[[option]] <- stringr::str_c("\nCancer type given for --", option,
                                              " (", opt[[option]], ") ",
                                              " must be BRCA or GBM.")  
       }
+    } else if (option == "subtype_vs_subtype") {
+      two_subtypes <- as.vector(stringr::str_split(opt[[option]], pattern = ",", simplify = TRUE))
+      if (length(two_subtypes) != 2) {
+        my_errors[[option]] <- stringr::str_c("\nSubtypes given for --", option,
+                                             " (", opt[[option]], ") ",
+                                             " must have (only) two comma-separated subtypes.")
+      }
+      
     } else if (stringr::str_ends(option, "_input")) { # option related to inputs
       if (!file.exists(opt[[option]])) {
         my_errors[[option]] <- stringr::str_c("\nInput file given for --", option,
