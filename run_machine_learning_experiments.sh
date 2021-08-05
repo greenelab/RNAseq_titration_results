@@ -4,9 +4,7 @@ set -euo pipefail
 # cancer type (either BRCA or GBM)
 cancer_type=$1
 
-if [ $cancer_type = "BRCA" ] || [ $cancer_type = "GBM" ]; then
-  continue
-else
+if [ $cancer_type != "BRCA" ] && [ $cancer_type != "GBM" ]; then
   echo Cancer type must be BRCA or GBM in run_machine_learning_experiments.sh [cancer_type]
   exit
 fi

@@ -12,9 +12,7 @@ subtype_vs_others=$2
 subtype_vs_subtype=$3
 subtype_vs_subytpe_small=$4
 
-if [ $cancer_type = "BRCA" ] || [ $cancer_type = "GBM" ]; then
-  continue
-else
+if [ $cancer_type != "BRCA" ] && [ $cancer_type != "GBM" ]; then
   echo Cancer type must be BRCA or GBM in run_machine_learning_experiments.sh [cancer_type]
   exit
 fi
