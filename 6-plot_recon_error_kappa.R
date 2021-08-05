@@ -20,6 +20,9 @@ source(file.path("util", "color_blind_friendly_palette.R"))
 library(ggplot2)
 library(dplyr)
 
+# set options
+cancer_type <- opt$cancer_type
+
 # define directories
 plot.dir <- "plots"
 rcn.res.dir <- file.path("results", "reconstructed_data")
