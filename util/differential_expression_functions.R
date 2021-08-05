@@ -571,24 +571,24 @@ SmallNNormWrapper <- function(array.dt, seq.dt, mix.list, zto = FALSE) {
   seq.half.dt <- seq.dt[, c(1, which(colnames(seq.dt) %in%
                                        mix.list$seq)), with = FALSE]
 
-  # remove any rows (genes) that all have count = 1, will cause issues with
+  # remove any rows (genes) that all have same values, will cause issues with
   # z-score
-  GetAllOnesRowIndex <- function(x){
+  GetAllSameRowIndex <- function(x){
     vals <- x[, 2:ncol(x), with = FALSE]
-    indx <- which(apply(vals, 1, function(x) all(x == 1)))
+    indx <- which(apply(vals, 1, all_same))
     return(indx)
   }
-
-  all1.indx <- unique(c(GetAllOnesRowIndex(seq.full.dt),
-                        GetAllOnesRowIndex(seq.half.dt)))
-  # if no rows are all(x == 1) (in previous GetAllOnesRowIndex), all1.indx is integer(0)
+  
+  all.same.indx <- unique(c(GetAllSameRowIndex(seq.full.dt),
+                            GetAllSameRowIndex(seq.half.dt)))
+  # if no rows are all same (in previous GetAllSameRowIndex), all.same.indx is integer(0)
   # subsetting data frames by -integer(0) results in no rows
   # so check that integer vector has length > 0 before subsetting
-  if (length(all.1.indx) > 0) {
-    array.full.dt <- array.full.dt[-all1.indx, ]
-    seq.full.dt <- seq.full.dt[-all1.indx, ]
-    array.half.dt <- array.half.dt[-all1.indx, ]
-    seq.half.dt <- seq.half.dt[-all1.indx, ]
+  if (length(all.same.indx) > 0) {
+    array.full.dt <- array.full.dt[-all.same.indx, ]
+    seq.full.dt <- seq.full.dt[-all.same.indx, ]
+    array.half.dt <- array.half.dt[-all.same.indx, ]
+    seq.half.dt <- seq.half.dt[-all.same.indx, ]
   }
 
   # initialize list to hold normalized data

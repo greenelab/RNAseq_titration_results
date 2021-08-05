@@ -85,19 +85,19 @@ seq.dt.list <- lapply(titrate.sample.list,
                       function(x) seq.data[, c(1, which(colnames(seq.data) %in% x))])
 seq.dt.list[["test"]] <-
   seq.data[, c(1, which(colnames(seq.data) %in% test.sample.names))]
-all1.list <- lapply(seq.dt.list[2:12],
-                    function(x){
-                      vals <- x[, 2:ncol(x)]
-                      indx <- which(apply(vals, 1, function(x) all(x == 1)))
-                      return(indx)
-                    } )
-all.1.indx <- unique(unlist(all1.list))
-# if no rows are all(x == 1) (in previous lapply), all.1.indx is integer(0)
+all.same.list <- lapply(seq.dt.list[2:12],
+                        function(x){
+                          vals <- x[, 2:ncol(x)]
+                          indx <- which(apply(vals, 1, all_same))
+                          return(indx)
+                        } )
+all.same.indx <- unique(unlist(all.same.list))
+# if no rows have all same value (in previous lapply), all.same.indx is integer(0)
 # subsetting data frames by -integer(0) results in no rows
 # so check that integer vector has length > 0 before subsetting
-if (length(all.1.indx) > 0) {
-  array.data <- array.data[-all.1.indx, ]
-  seq.data <- seq.data[-all.1.indx, ]  
+if (length(all.same.indx) > 0) {
+  array.data <- array.data[-all.same.indx, ]
+  seq.data <- seq.data[-all.same.indx, ]  
 }
 
 #### get datatables to mix -----------------------------------------------------
