@@ -1,3 +1,4 @@
+source(file.path("util", "normalization_functions.R"))
 source(file.path("util", "train_test_functions.R"))
 source(file.path("util", "color_blind_friendly_palette.R"))
 
