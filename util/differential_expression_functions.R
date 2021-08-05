@@ -580,11 +580,15 @@ SmallNNormWrapper <- function(array.dt, seq.dt, mix.list, zto = FALSE) {
 
   all1.indx <- unique(c(GetAllOnesRowIndex(seq.full.dt),
                         GetAllOnesRowIndex(seq.half.dt)))
-
-  array.full.dt <- array.full.dt[-all1.indx, ]
-  seq.full.dt <- seq.full.dt[-all1.indx, ]
-  array.half.dt <- array.half.dt[-all1.indx, ]
-  seq.half.dt <- seq.half.dt[-all1.indx, ]
+  # if no rows are all(x == 1) (in previous GetAllOnesRowIndex), all1.indx is integer(0)
+  # subsetting data frames by -integer(0) results in no rows
+  # so check that integer vector has length > 0 before subsetting
+  if (length(all.1.indx) > 0) {
+    array.full.dt <- array.full.dt[-all1.indx, ]
+    seq.full.dt <- seq.full.dt[-all1.indx, ]
+    array.half.dt <- array.half.dt[-all1.indx, ]
+    seq.half.dt <- seq.half.dt[-all1.indx, ]
+  }
 
   # initialize list to hold normalized data
   norm.list <- list()
