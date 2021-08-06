@@ -24,7 +24,7 @@ source("util/option_functions.R")
 check_options(opt)
 
 # load libraries
-suppressMessages(source("ggplot2"))
+suppressMessages(library(ggplot2))
 source(file.path("util", "differential_expression_functions.R"))
 
 # set options
