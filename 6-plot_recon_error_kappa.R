@@ -36,7 +36,7 @@ error.files <- list.files(rcn.res.dir, pattern = paste0(cancer_type, "_reconstru
 
 # define output files
 kap.plot.file.lead <- file.path(plot.dir, paste0(cancer_type, "_kappa_reconstructed_data_"))
-err.plot.file.lead <- file.path(plot.dir, paste0(cancer_type, "BRCA_reconstruction_error_"))
+err.plot.file.lead <- file.path(plot.dir, paste0(cancer_type, "_reconstruction_error_"))
 
 #### plot kappa stats ----------------------------------------------------------
 
