@@ -5,27 +5,53 @@
 # the data.
 # It should be run from the command line through the run_experiments.R script
 
+option_list <- list(
+  optparse::make_option("--cancer_type",
+                        default = NULL,
+                        help = "Cancer type"),
+  optparse::make_option("--seed1",
+                        default = NULL,
+                        help = "Random seed"),
+  optparse::make_option("--seed2",
+                        default = NULL,
+                        help = "Random seed")
+)
+
+opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
+source("util/option_functions.R")
+check_options(opt)
+
+# load libraries
 suppressMessages(source("load_packages.R"))
 source(file.path("util", "normalization_functions.R"))
 
-args <- commandArgs(trailingOnly = TRUE)
-filename.seed <- as.integer(args[1])
-initial.seed <- as.integer(args[2])
+# set options
+cancer_type <- opt$cancer_type
+
+# set seed
+filename.seed <- as.integer(opt$seed1)
+initial.seed <- as.integer(opt$seed2)
 set.seed(initial.seed)
 
+# define directories
 data.dir <- "data"
 norm.data.dir <- "normalized_data"
-seq.file <- "BRCARNASeq_matchedOnly_ordered.pcl"
-array.file <- "BRCAarray_matchedOnly_ordered.pcl"
-norm.test.object <-
-  paste0("BRCA_array_seq_test_data_normalized_list_", filename.seed, ".RDS")
-norm.train.object <-
-  paste0("BRCA_array_seq_train_titrate_normalized_list_", filename.seed, ".RDS")
-
 res.dir <- "results"
-train.test.file <-
-  paste0("BRCA_matchedSamples_PAM50Array_training_testing_split_labels_",
-         filename.seed, ".tsv")
+
+# name input files
+seq.file <- paste0(cancer_type, "RNASeq_matchedOnly_ordered.pcl")
+array.file <- paste0(cancer_type, "array_matchedOnly_ordered.pcl")
+
+# name output files
+norm.test.object <- paste0(cancer_type,
+                           "_array_seq_test_data_normalized_list_",
+                           filename.seed, ".RDS")
+norm.train.object <- paste0(cancer_type,
+                            "_array_seq_train_titrate_normalized_list_",
+                            filename.seed, ".RDS")
+train.test.file <- paste0(cancer_type,
+                          "_matchedSamples_subtypes_training_testing_split_labels_",
+                          filename.seed, ".tsv")
 train.test.labels <- file.path(res.dir, train.test.file)
 
 #### read in data --------------------------------------------------------------
@@ -66,8 +92,13 @@ all1.list <- lapply(seq.dt.list[2:12],
                       return(indx)
                     } )
 all.1.indx <- unique(unlist(all1.list))
-array.data <- array.data[-all.1.indx, ]
-seq.data <- seq.data[-all.1.indx, ]
+# if no rows are all(x == 1) (in previous lapply), all.1.indx is integer(0)
+# subsetting data frames by -integer(0) results in no rows
+# so check that integer vector has length > 0 before subsetting
+if (length(all.1.indx) > 0) {
+  array.data <- array.data[-all.1.indx, ]
+  seq.data <- seq.data[-all.1.indx, ]  
+}
 
 #### get datatables to mix -----------------------------------------------------
 

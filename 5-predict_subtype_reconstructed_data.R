@@ -6,30 +6,47 @@
 # confusionMatrix objects and a data.frame of Kappa statistics from these
 # predictions.
 # It should be run from the command line.
-# USAGE: Rscript 5-predict_subtype_reconstructed_data.R
+# USAGE: Rscript 5-predict_subtype_reconstructed_data.R --cancer_type
 
+option_list <- list(
+  optparse::make_option("--cancer_type",
+                        default = NULL,
+                        help = "Cancer type")
+)
+
+opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
+source("util/option_functions.R")
+check_options(opt)
+
+# load libraries
 suppressMessages(source("load_packages.R"))
 source(file.path("util", "train_test_functions.R"))
 
+# set options
+cancer_type <- opt$cancer_type
+
+# define directories
 mdl.dir <- "models"
 rcn.dir <- file.path("normalized_data", "reconstructed_data")
 res.dir <- "results"
 rcn.res.dir <- file.path(res.dir, "reconstructed_data")
 
+# define input files
 model.files <- list.files(mdl.dir, full.names = TRUE)
 supervised.model.files <- model.files[grep("3_models", model.files)]
-
 recon.files <- list.files(rcn.dir, full.names = TRUE)
 
-# get filename.seeds (identifiers for each of 10 replicates)
+# get filename.seeds (identifiers for each replicate)
 # from the reconstructed data files
 filename.seeds <- unique(substr(recon.files,
                                 (nchar(recon.files)-7),
                                 (nchar(recon.files)-4)))
 
-cm.file.lead <-
-  "BRCA_subtype_prediction_reconstructed_data_confusionMatrices_"
-kap.file.lead <- sub("confusionMatrices", "kappa", cm.file.lead)
+# define output files
+cm.file.lead <- paste0(cancer_type,
+                       "_subtype_prediction_reconstructed_data_confusionMatrices_")
+kap.file.lead <- paste0(cancer_type,
+                        "_subtype_prediction_reconstructed_data_kappa_")
 
 #### main ----------------------------------------------------------------------
 
@@ -58,8 +75,8 @@ for (seed in filename.seeds) {
   # need to read in corresponding sample.df
   sample.df.file <-
     file.path(res.dir,
-              paste0(
-                "BRCA_matchedSamples_PAM50Array_training_testing_split_labels_",
+              paste0(cancer_type,
+                "_matchedSamples_subtypes_training_testing_split_labels_",
                 seed, ".tsv"))
   sample.df <- data.table::fread(sample.df.file, data.table = F)
   sample.df$subtype <- as.factor(sample.df$subtype)

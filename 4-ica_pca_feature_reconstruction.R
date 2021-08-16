@@ -1,47 +1,71 @@
 # J. Taroni Aug 2016
-# The purpose of this script is to perform unsupervised learning on BRCA train-
-# ing data (output of 1-normalize_titrated_data.R), specifically ICA and PCA,
+# The purpose of this script is to perform unsupervised learning on TCGA train-
+# ing data (output of 1-normalize_titrated_data.R), PCA or ICA,
 # and to transform test data into the training data reduced dimensional space,
 # and back out ('reconstruction') and to then calculate the 'reconstruction
 # error' (MASE).
 #
 # It should be run from the command line.
-# USAGE: Rscript 4-ica_pca_feature_reconstruction.R <n.comp> <initial.seed>
-# n.comp refers to the number of components (PC/IC) that should be used
+# USAGE: Rscript 4-ica_pca_feature_reconstruction.R --cancer_type --n_components --seed
+# n_components refers to the number of components (PC/IC) that should be used
 # for reconstruction.
-#
 
+option_list <- list(
+  optparse::make_option("--cancer_type",
+                        default = NULL,
+                        help = "Cancer type"),
+  optparse::make_option("--n_components",
+                        default = 50,
+                        help = "Number of compenents [default: %default]"),
+  optparse::make_option("--seed",
+                        default = 346,
+                        help = "Random seed [default: %default]")
+)
+
+opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
+source("util/option_functions.R")
+check_options(opt)
+
+# load libraries
 suppressMessages(source("load_packages.R"))
 source(file.path("util", "train_test_functions.R"))
 source(file.path("util", "ICA_PCA_reconstruction_functions.R"))
 
-args <- commandArgs(trailingOnly = TRUE)
-n.comp <- as.integer(args[1])
-initial.seed <- as.integer(args[2])
-if (is.na(initial.seed)) {
-  message("\nInitial seed set to default: 346")
-  initial.seed <- 346
-} else {
-  message(paste("\nInitial seed set to:", initial.seed))
-}
+# set options
+cancer_type <- opt$cancer_type
+n.comp <- as.integer(opt$n_components)
 
+# set seed
+initial.seed <- as.integer(opt$seed)
+set.seed(initial.seed)
+message(paste("\nInitial seed set to:", initial.seed))
+
+# define directories
 res.dir <- "results"
 norm.dir <- "normalized_data"
 mdl.dir <- "models"
 rcn.dir <- file.path("normalized_data", "reconstructed_data")
 rcn.res.dir <- file.path(res.dir, "reconstructed_data")
+
+# define input files
 lf <- list.files(norm.dir, full.names = TRUE)
-train.files <- lf[grepl("BRCA_array_seq_train_titrate_normalized_list_", lf)]
-test.files <- lf[grepl("BRCA_array_seq_test_data_normalized_list_", lf)]
+train.files <- lf[grepl(paste0(cancer_type,
+                               "_array_seq_train_titrate_normalized_list_"), lf)]
+test.files <- lf[grepl(paste0(cancer_type,
+                              "_array_seq_test_data_normalized_list_"), lf)]
+
+# parse filename seeds
 filename.seeds <- substr(train.files,
                          (nchar(train.files)-7),
                          (nchar(train.files)-4))
-df.file.lead <- paste0("BRCA_reconstruction_error_", n.comp,
-                       "_components_")
-mdl.file.lead <- paste0("BRCA_array_seq_train_", n.comp,
-                        "_components_object_")
-rcn.file.lead <- paste0("BRCA_reconstructed_data_", n.comp,
-                        "_components_")
+
+# define output files
+df.file.lead <- paste0(cancer_type,
+                       "_reconstruction_error_", n.comp, "_components_")
+mdl.file.lead <- paste0(cancer_type,
+                        "_array_seq_train_", n.comp, "_components_object_")
+rcn.file.lead <- paste0(cancer_type,
+                        "_reconstructed_data_", n.comp, "_components_")
 
 #### main ----------------------------------------------------------------------
 platforms <- c("array", "seq")
@@ -52,9 +76,6 @@ for (seed in filename.seeds) {
   rep.count <- grep(seed, filename.seeds)
   message(paste("\n\n#### RECONSTRUCTION ROUND",
                 rep.count, "of", length(filename.seeds), "####\n\n"))
-
-  # set seed
-  set.seed(initial.seed)
 
   #### read in data ####
   message("Reading in data...")

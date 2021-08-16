@@ -40,10 +40,10 @@ GetDesignMat <- function(norm.dt, sample.df, subtype) {
   return(design.mat)
 }
 
-GetDesignMatrixList <- function(norm.list, sample.df, subtype = "Basal") {
+GetDesignMatrixList <- function(norm.list, sample.df, subtype) {
   # This function takes a list of normalized expression data and returns
   # a list of design matrices to be used to detect differentially expressed
-  # genes between BRCA subtype (by default: Basal) and all other subtypes with
+  # genes between one subtype and all other subtypes with
   # the limma package
   #
   # Args:
@@ -51,7 +51,7 @@ GetDesignMatrixList <- function(norm.list, sample.df, subtype = "Basal") {
   #              the list corresponds to % seq included in the expression data
   #   sample.df: a data.frame that maps the sample names to the subtype labels;
   #              'sample' and 'subtype' columns respectively
-  #   subtype: which subtype should be compared to all others? default is Basal
+  #   subtype: which subtype should be compared to all others?
   #
   #
   # Returns:
@@ -118,18 +118,8 @@ GetFiteBayes <- function(exprs, design.mat) {
 
   # detect subtype to be used for differential expression
   subtype <- colnames(design.mat)[which(colnames(design.mat) != "Other")]
-  if (subtype == "Her2") {
-    cont.eval <- "Her2vsOther= Her2-Other"
-  } else if (subtype == "LumA") {
-    cont.eval <- "LumAvsOther= LumA-Other"
-  } else if (subtype == "LumB") {
-    cont.eval <- "LumBvsOther= LumB-Other"
-  } else if (subtype == "Normal") {
-    cont.eval <- "NormalvsOther= Normal-Other"
-  } else {
-    cont.eval <- "BasalvsOther= Basal-Other"
-  }
-
+  cont.eval <- paste0(subtype, "vsOther= ", subtype, "-Other")
+  
   cont.matrix <-
     eval(parse(
       text = paste0(
@@ -452,14 +442,14 @@ GetSmallNSilverStandardJaccard <- function(top.table.list, cutoff = 0.05){
 
 }
 
-SmallNDEGWrapper <- function(norm.list, sample.df, subtype = "Basal") {
+SmallNDEGWrapper <- function(norm.list, sample.df, subtype) {
   # Perform differential expression analysis for the small n experiments
   # from a list of normalized data from SmallNNormWrapper
   #
   # Args:
   #   norm.list: a list of normalized expression data from SmallNNormWrapper
   #   sample.df: a data.frame mapping sample names to subtype labels
-  #   subtype: which subtype should be compared to all others? default is Basal
+  #   subtype: which subtype should be compared to all others?
   #
   # Returns:
   #    fit.list: a list of differential expression results for all 4 elements
@@ -495,14 +485,14 @@ SmallNDEGWrapper <- function(norm.list, sample.df, subtype = "Basal") {
 
 }
 
-GetSamplesforMixingSmallN <- function(n, sample.df, subtype = "Basal") {
+GetSamplesforMixingSmallN <- function(n, sample.df, subtype) {
   # This function is designed to identify sample names to be used in the "small
   # n" differential expression experiment
   #
   # Arg:
   #   n: number of samples (for each subtype - no. of replicates)
   #   sample.df: a data.frame mapping sample names to subtype labels
-  #   subtype: which subtype should be compared to all others? defaults to Basal
+  #   subtype: which subtype should be compared to all others
   #
   # Returns:
   #   A list comprised of the following:
@@ -590,11 +580,15 @@ SmallNNormWrapper <- function(array.dt, seq.dt, mix.list, zto = FALSE) {
 
   all1.indx <- unique(c(GetAllOnesRowIndex(seq.full.dt),
                         GetAllOnesRowIndex(seq.half.dt)))
-
-  array.full.dt <- array.full.dt[-all1.indx, ]
-  seq.full.dt <- seq.full.dt[-all1.indx, ]
-  array.half.dt <- array.half.dt[-all1.indx, ]
-  seq.half.dt <- seq.half.dt[-all1.indx, ]
+  # if no rows are all(x == 1) (in previous GetAllOnesRowIndex), all1.indx is integer(0)
+  # subsetting data frames by -integer(0) results in no rows
+  # so check that integer vector has length > 0 before subsetting
+  if (length(all.1.indx) > 0) {
+    array.full.dt <- array.full.dt[-all1.indx, ]
+    seq.full.dt <- seq.full.dt[-all1.indx, ]
+    array.half.dt <- array.half.dt[-all1.indx, ]
+    seq.half.dt <- seq.half.dt[-all1.indx, ]
+  }
 
   # initialize list to hold normalized data
   norm.list <- list()

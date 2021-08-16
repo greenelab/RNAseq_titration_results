@@ -4,19 +4,41 @@
 # through the classifier_repeat_wrapper.R script or alternatively
 # USAGE: Rscript 3-plot_subtype_kappa.R
 
+option_list <- list(
+  optparse::make_option("--cancer_type",
+                        default = NULL,
+                        help = "Cancer type")
+)
+
+opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
+source("util/option_functions.R")
+check_options(opt)
+
+# load libraries
+`%>%` <- dplyr::`%>%`
+suppressMessages(library(ggplot2))
+suppressMessages(library(data.table))
 source(file.path("util", "color_blind_friendly_palette.R"))
 
-`%>%` <- dplyr::`%>%`
-library(ggplot2)
-library(data.table)
+# set options
+cancer_type <- opt$cancer_type
 
+# define directories
 plot.dir <- "plots"
 res.dir <- "results"
-lf <- list.files(res.dir, full.names = TRUE)
-array.files <- lf[grepl("BRCA_train_3_models_array_kappa_", lf)]
-seq.files <- lf[grepl("BRCA_train_3_models_seq_kappa_", lf)]
 
-plot.file.lead <- "BRCA_train_3_models_kappa_"
+# list array and seq files from results directory
+lf <- list.files(res.dir, full.names = TRUE)
+array.files <- lf[grepl(paste0(cancer_type,
+                               "_train_3_models_array_kappa_"), lf)]
+seq.files <- lf[grepl(paste0(cancer_type,
+                             "_train_3_models_seq_kappa_"), lf)]
+
+# define output files
+plot.file.lead <- paste0(cancer_type, "_train_3_models_kappa_")
+summary.df.filename <- file.path(res.dir,
+                                 paste0(cancer_type,
+                                        "_train_3_models_summary_table.tsv"))
 
 #### read in data --------------------------------------------------------------
 
@@ -60,7 +82,7 @@ test.df$Classifier <- as.factor(test.df$Classifier)
 cls.methods <- unique(test.df$Classifier)
 for (cls in cls.methods) {
   plot.nm <- file.path(plot.dir,
-                       paste0(plot.file.lead,
+                       paste0(plot.file.lead, # includes cancer_type
                               stringr::str_replace_all(cls,
                                                        pattern = " ",
                                                        replacement = "_"),
@@ -74,7 +96,7 @@ for (cls in cls.methods) {
                  position = position_dodge(0.6)) +
     stat_summary(fun = median, geom = "point", aes(group = Platform),
                  position = position_dodge(0.7), size = 1) +
-    ggtitle(cls) +
+    ggtitle(paste0(cancer_type, ": ", cls)) +
     xlab("% RNA-seq samples") +
     theme_bw() +
     scale_colour_manual(values = cbPalette[2:3]) +
@@ -91,4 +113,4 @@ summary.df <- test.df %>%
                    SD = sd(Kappa),
                    .groups = "drop")
 readr::write_tsv(summary.df,
-                 file.path("results", "BRCA_train_3_models_summary_table.tsv"))
+                 summary.df.filename)
