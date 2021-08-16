@@ -110,7 +110,7 @@ for (seed in filename.seeds) {
       plt.kap.list[[rcn]] <- cm_kappa.list$kappa_statistics
 
       # remove reconstructed data and cm_kappa_list
-      rm(recon.list, cm_kappa_list)
+      rm(recon.list, cm_kappa.list)
       gc()
 
     }
