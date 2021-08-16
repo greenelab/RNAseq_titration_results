@@ -95,6 +95,11 @@ seq.matched <- seq.matched[order(seq.matched$gene), ]
 array.matched <- array.matched[, c(1, (order(colnames(array.matched)[-1]) + 1))]
 seq.matched <- seq.matched[, c(1, (order(colnames(seq.matched)[-1]) + 1))]
 
+# check reording sample names worked as expected
+if (any(colnames(array.matched) != colnames(seq.matched))) {
+  stop("Column name reordering did not work as expected in 0-expression_data_overlap_and_split.R")
+}
+
 # keep subtype labels for samples with expression data
 array.subtypes <- as.factor(array.subtypes[which(array.tumor.smpls %in%
                                                       colnames(array.matched))])
