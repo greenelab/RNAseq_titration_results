@@ -35,6 +35,7 @@ res.dir <- "results"
 # name input files
 seq.exprs.filename <- paste0(cancer_type, "RNASeq.pcl")
 array.exprs.filename <- paste0(cancer_type, "array.pcl")
+# for BRCA, this clinical info refers to array samples, which we overlap with seq samples
 clin.filename <- paste0(cancer_type, "Clin.tsv")
 
 # name output files
