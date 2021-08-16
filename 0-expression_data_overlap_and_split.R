@@ -35,6 +35,7 @@ res.dir <- "results"
 # name input files
 seq.exprs.filename <- paste0(cancer_type, "RNASeq.pcl")
 array.exprs.filename <- paste0(cancer_type, "array.pcl")
+# for BRCA, this clinical info refers to array samples, which we overlap with seq samples
 clin.filename <- paste0(cancer_type, "Clin.tsv")
 
 # name output files
@@ -93,6 +94,11 @@ seq.matched <- seq.matched[order(seq.matched$gene), ]
 # reorder samples on both platforms
 array.matched <- array.matched[, c(1, (order(colnames(array.matched)[-1]) + 1))]
 seq.matched <- seq.matched[, c(1, (order(colnames(seq.matched)[-1]) + 1))]
+
+# check reording sample names worked as expected
+if (any(colnames(array.matched) != colnames(seq.matched))) {
+  stop("Column name reordering did not work as expected in 0-expression_data_overlap_and_split.R")
+}
 
 # keep subtype labels for samples with expression data
 array.subtypes <- as.factor(array.subtypes[which(array.tumor.smpls %in%
