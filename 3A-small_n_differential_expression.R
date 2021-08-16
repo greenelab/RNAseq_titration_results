@@ -4,32 +4,53 @@
 # expression when there are a small number of samples on each platform
 # (50-50 split microarray and RNA-seq).
 #
-# USAGE: Rscript 3A-small_n_differential_expression.R
+# USAGE: Rscript 3A-small_n_differential_expression.R --cancer_type --subtype_vs_subtype
 
+option_list <- list(
+  optparse::make_option("--cancer_type",
+                        default = NULL,
+                        help = "Cancer type"),
+  optparse::make_option("--subtype_vs_subtype",
+                        default = NULL,
+                        help = "Subtypes used in head-to-head comparison (comma-separated without space e.g. Type1,Type2)"),
+  optparse::make_option("--seed",
+                        default = 3255,
+                        help = "Random seed")
+)
+
+opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
+source("util/option_functions.R")
+check_options(opt)
+
+# load libraries
 suppressMessages(source("load_packages.R"))
 source(file.path("util", "normalization_functions.R"))
 source(file.path("util", "differential_expression_functions.R"))
 source(file.path("util", "color_blind_friendly_palette.R"))
 
-args <- commandArgs(trailingOnly = TRUE)
-initial.seed <- as.integer(args[1])
-if (is.na(initial.seed)) {
-  message("\nInitial seed set to default: 3255")
-  initial.seed <- 3255
-} else {
-  message(paste("\nInitial seed set to:", initial.seed))
-}
-set.seed(initial.seed)
+# set options
+cancer_type <- opt$cancer_type
+subtype_vs_subtype <- opt$subtype_vs_subtype
+two_subtypes <- as.vector(stringr::str_split(subtype_vs_subtype, pattern = ",", simplify = TRUE))
 
+# set seed
+initial.seed <- opt$seed
+set.seed(initial.seed)
+message(paste("\nInitial seed set to:", initial.seed))
+
+# define directories
 data.dir <- "data"
 deg.dir <- file.path("results", "differential_expression")
 
-seq.file <- file.path(data.dir, "BRCARNASeq_matchedOnly_ordered.pcl")
-array.file <- file.path(data.dir, "BRCAarray_matchedOnly_ordered.pcl")
-
-smpl.file <-
-  file.path("results",
-            "BRCA_matchedSamples_PAM50Array_training_testing_split_labels_3061.tsv")
+# define input files
+seq.file <- file.path(data.dir,
+                      paste0(cancer_type, "RNASeq_matchedOnly_ordered.pcl"))
+array.file <- file.path(data.dir,
+                        paste0(cancer_type, "array_matchedOnly_ordered.pcl"))
+smpl.file <- file.path("results",
+                       list.files("results", # this finds the first example of a subtypes file from cancer_type
+                                  pattern = paste0(cancer_type, # and does not rely on knowing a seed
+                                                   "_matchedSamples_subtypes_training_testing_split_labels_"))[1])
 
 #### functions -----------------------------------------------------------------
 
@@ -51,14 +72,22 @@ seq.data <- data.table::fread(seq.file, data.table = F)
 array.data <- data.table::fread(array.file, data.table = F)
 sample.df <- read.delim(smpl.file)
 
+# check that subtypes are in sample.df
+for(subtype in two_subtypes) {
+  if (!(subtype %in% sample.df$subtype)) {
+    stop(paste("Subtype", subtype, "not found in sample file",
+               smpl.file, "in 3A-small_n_differential_expression.R."))
+  }
+}
+
 sample.names <- sample.df$sample
 
 #### main ----------------------------------------------------------------------
 
-# leave only Her2 and LumA samples to choose from & make data.table
-# remove all samples that are not Her2 or LumA
+# leave only subtypes of interest to choose from & make data.table
+# remove all samples that are not subtypes of interest
 samples.to.keep <-
-  sample.df$sample[which(sample.df$subtype %in% c("LumA", "Her2"))]
+  sample.df$sample[which(sample.df$subtype %in% two_subtypes)]
 
 array.dt <- data.table(array.data[,
                                   c(1, which(colnames(array.data) %in%
@@ -68,8 +97,14 @@ seq.dt <- data.table(seq.data[,
                                            samples.to.keep))])
 sample.df <- sample.df[which(sample.df$sample %in% samples.to.keep), ]
 
+smaller_subtype_size <- min(table(sample.df$subtype))
+
 # different sizes of n to test
 no.samples <- c(3, 4, 5, 6, 8, 10, 15, 25, 50)
+no.samples <- no.samples[which(no.samples <= smallest_subtype_size)]
+
+message(paste("Smaller subtype has", smaller_subtype_size, "samples,",
+              "so only using up to", max(no.samples), "samples in 3A-small_n_differential_expression.R"))
 
 # initialize list to hold jaccard index data.frames from the 10 trials
 jacc.df.list <- list()
@@ -82,7 +117,7 @@ for (trial.iter in 1:10) {
   sample.list <-
     lapply(no.samples,  # for each n (3...50)
            function(x) GetSamplesforMixingSmallN(x, sample.df,
-                                                 subtype = "Her2"))
+                                                 subtype = last(two_subtypes)))
 
   # initialize list to hold differential expression results (eBayes output)
   master.deg.list <- list()
@@ -96,11 +131,11 @@ for (trial.iter in 1:10) {
     # perform differential expression analysis
     master.deg.list[[as.character(no.samples[smpl.no.iter])]] <-
       SmallNDEGWrapper(norm.list = norm.list, sample.df = sample.df,
-                       subtype = "Her2")
+                       subtype = last(two_subtypes))
   }
 
   top.table.list <-
-    lapply(master.deg.list,  # for each n (3...5)
+    lapply(master.deg.list,  # for each n (3...50)
            function(x)  # for each normalization method
              lapply(x, function(y) GetAllGenesTopTable(y)))  # extract DEGs
 
@@ -112,13 +147,17 @@ for (trial.iter in 1:10) {
 }
 
 # combine jaccard similarity data.frames into one data.frame
-
+subtypes_combination <- stringr::str_c(two_subtypes, collapse = "v")
+subtypes_combination_nice <- stringr::str_c(two_subtypes, collapse = " vs. ")
 
 jacc.df <- data.table::rbindlist(jacc.df.list)
 
 write.table(jacc.df,
             file = file.path("results", "differential_expression",
-                             "small_n_Her2vLumA_50-50_jaccard_results.tsv"),
+                             paste0(cancer_type,
+                                    "_small_n_",
+                                    subtypes_combination,
+                                    "_50-50_jaccard_results.tsv")),
             sep = "\t", quote = FALSE, row.names = FALSE)
 
 # line plot is saved as a PDF
@@ -129,11 +168,11 @@ ggplot(jacc.df, aes(x = no.samples, y = jaccard, color = platform)) +
   stat_summary(fun.data = DataSummary, aes(group = platform),
                position = position_dodge(0.2), size = 0.2) +
   theme_bw() +
-  ggtitle("Her2 vs. LumA FDR < 10%") +
+  ggtitle(paste(subtypes_combination_nice, "FDR < 10%")) +
   ylab("Jaccard similarity to standard") +
   xlab("Number of samples (n)") +
   scale_colour_manual(values = cbPalette[c(2, 3)]) +
   theme(text = element_text(size = 18))
 ggsave(filename = file.path("plots",
-                            "small_n_Her2vLumA_50-50_jaccard_lineplots.pdf"),
+                            paste0(cancer_type, "_small_n_", subtypes_combination, "_50-50_jaccard_lineplots.pdf")),
        plot = last_plot(), width = 5, height = 7)

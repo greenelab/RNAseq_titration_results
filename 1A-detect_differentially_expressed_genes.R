@@ -1,50 +1,86 @@
 # J. Taroni Jan 2017
 # The purpose of this analysis is to identify differentially expressed genes
-# between one BRCA subtype, specified by the user (default: Basal), and all
+# between one subtype, specified by the user, and all
 # other subtypes using the limma package for varying amounts of RNA-seq data
 # (0-100%, 10% added at a time; termed 'RNA-seq titration') and normalization
 # methods. It takes RNA-seq and microarray data from matched samples as input,
 # and performs RNA-seq titration and differential expression analysis.
 #
-# USAGE: Rscript 1A-detect_differentially_expressed_genes.R
+# USAGE: Rscript 1A-detect_differentially_expressed_genes.R --cancer_type --subtype_vs_others --subtype_vs_subtype --seed
 
+option_list <- list(
+  optparse::make_option("--cancer_type",
+                        default = NULL,
+                        help = "Cancer type"),
+  optparse::make_option("--subtype_vs_others",
+                        default = NULL,
+                        help = "Subtype used for comparison against all others"),
+  optparse::make_option("--subtype_vs_subtype",
+                        default = NULL,
+                        help = "Subtypes used in head-to-head comparison (comma-separated without space e.g. Type1,Type2)"),
+  optparse::make_option("--seed",
+                        default = 98,
+                        help = "Random seed [default: %default]")
+)
+
+opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
+source("util/option_functions.R")
+check_options(opt)
+
+# load libraries
 suppressMessages(source("load_packages.R"))
 source(file.path("util", "normalization_functions.R"))
 source(file.path("util", "differential_expression_functions.R"))
 
-args <- commandArgs(trailingOnly = TRUE)
-initial.seed <- as.integer(args[1])
-if (is.na(initial.seed)) {
-  message("\nInitial seed set to default: 98")
-  initial.seed <- 98
-} else {
-  message(paste("\nInitial seed set to:", initial.seed))
-}
-set.seed(initial.seed)
+# set options
+cancer_type <- opt$cancer_type
+subtype_vs_others <- opt$subtype_vs_others
+subtype_vs_subtype <- opt$subtype_vs_subtype
+# really this could be any number of subtypes
+two_subtypes <- as.vector(stringr::str_split(subtype_vs_subtype, pattern = ",", simplify = TRUE))
 
+# set seed
+initial.seed <- opt$seed
+set.seed(initial.seed)
+message(paste("\nInitial seed set to:", initial.seed))
+
+# define directories
 data.dir <- "data"
 deg.dir <- file.path("results", "differential_expression")
 
-seq.file <- file.path(data.dir, "BRCARNASeq_matchedOnly_ordered.pcl")
-array.file <- file.path(data.dir, "BRCAarray_matchedOnly_ordered.pcl")
-smpl.file <-
-  file.path("results",
-            "BRCA_matchedSamples_PAM50Array_training_testing_split_labels_3061.tsv")
+# define input files
+seq.file <- file.path(data.dir, paste0(cancer_type, "RNASeq_matchedOnly_ordered.pcl"))
+array.file <- file.path(data.dir, paste0(cancer_type, "array_matchedOnly_ordered.pcl"))
+smpl.file <- file.path("results",
+                       list.files("results", # this finds the first example of a subtypes file from cancer_type
+                                  pattern = paste0(cancer_type, # and does not rely on knowing a seed
+                                                   "_matchedSamples_subtypes_training_testing_split_labels_"))[1])
 
-basal.rds <-
-  file.path(deg.dir,
-            "BRCA_titration_differential_exp_eBayes_fits_BasalvOther.RDS")
-her2.rds <-
-  file.path(deg.dir,
-            "BRCA_titration_differential_exp_eBayes_fits_Her2vLumA.RDS")
+# define output files
+subtype_vs_others.rds <- file.path(deg.dir,
+                                   paste0(cancer_type,
+                                          "_titration_differential_exp_eBayes_fits_",
+                                          subtype_vs_others, "vOther.RDS"))
+two_subtypes.rds <- file.path(deg.dir,
+                              paste0(cancer_type,
+                                     "_titration_differential_exp_eBayes_fits_",
+                                     stringr::str_c(two_subtypes, collapse = "v"), ".RDS"))
 norm.rds <- file.path("normalized_data",
-                      "BRCA_titration_no_ZTO_transform_with_UN.RDS")
+                      paste0(cancer_type, "_titration_no_ZTO_transform_with_UN.RDS"))
 
 #### read in data --------------------------------------------------------------
 
 seq.data <- data.table::fread(seq.file, data.table = F)
 array.data <- data.table::fread(array.file, data.table = F)
 sample.df <- read.delim(smpl.file)
+
+# check that subtypes are in sample.df
+for(subtype in c(subtype_vs_others, two_subtypes)) {
+  if (!(subtype %in% sample.df$subtype)) {
+    stop(paste("Subtype", subtype, "not found in sample file",
+               smpl.file, "in 1A-detect_differentially_expressed_genes.R."))
+  }
+}
 
 sample.names <- sample.df$sample
 
@@ -72,8 +108,13 @@ all1.list <- lapply(seq.dt.list[2:11],
                       return(indx)
                     } )
 all.1.indx <- unique(unlist(all1.list))
-array.data <- array.data[-all.1.indx, ]
-seq.data <- seq.data[-all.1.indx, ]
+# if no rows are all(x == 1) (in previous lapply), all.1.indx is integer(0)
+# subsetting data frames by -integer(0) results in no rows
+# so check that integer vector has length > 0 before subsetting
+if (length(all.1.indx) > 0) {
+  array.data <- array.data[-all.1.indx, ]
+  seq.data <- seq.data[-all.1.indx, ]  
+}
 
 # get a list that contains an array data.table and seq data.table for each
 # each level of 'titration'
@@ -125,20 +166,20 @@ norm.titrate.list[["100"]] <-
 # save normalized data
 saveRDS(norm.titrate.list, file = norm.rds)
 
-#### Basal v. Other  -----------------------------------------------------------
+#### Subtype v. Others  --------------------------------------------------------
 # design matrices
 design.mat.list <- GetDesignMatrixList(norm.titrate.list, sample.df,
-                                       subtype = "Basal")
+                                       subtype = subtype_vs_others)
 # differential expression
 fit.results.list <- GetFiteBayesList(norm.list = norm.titrate.list,
                                      design.list = design.mat.list)
 # save fit results to RDS
-saveRDS(fit.results.list, file = basal.rds)
+saveRDS(fit.results.list, file = subtype_vs_others.rds)
 
-#### Her2 v. LumA --------------------------------------------------------------
-# remove all samples that are not Her2 or LumA
+#### Subtype v. Subtype --------------------------------------------------------
+# remove all samples that are not in these subtypes
 samples.to.keep <-
-  sample.df$sample[which(sample.df$subtype %in% c("LumA", "Her2"))]
+  sample.df$sample[which(sample.df$subtype %in% two_subtypes)]
 
 pruned.norm.list <-
   lapply(norm.titrate.list,
@@ -149,11 +190,12 @@ pruned.norm.list <-
                                           with = FALSE]))
 
 # get design matrices
-her2.design.list <- GetDesignMatrixList(pruned.norm.list,
-                                        sample.df, subtype = "Her2")
+last_subtype.design.list <- GetDesignMatrixList(pruned.norm.list,
+                                                sample.df,
+                                                subtype = last(two_subtypes))
 # differential expression
-her2.fit.results.list <- GetFiteBayesList(norm.list = pruned.norm.list,
-                                          design.list = her2.design.list)
+last_subtype.fit.results.list <- GetFiteBayesList(norm.list = pruned.norm.list,
+                                                  design.list = last_subtype.design.list)
 
 # save fit results to file
-saveRDS(her2.fit.results.list, file = her2.rds)
+saveRDS(last_subtype.fit.results.list, file = two_subtypes.rds)
