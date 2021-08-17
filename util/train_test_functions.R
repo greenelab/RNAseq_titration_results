@@ -389,26 +389,16 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
     # 2. kappa data frame (kappa.df)
 
     # create kappa.df from norm.list
-    norm_meth_vector <- c()
-    pred_meth_vector <- c()
-    seq_pct_vector <- c()
-    kappa_vector <- c()
-    for(norm_meth in names(norm.list)){
-      for(pred_meth in names(norm.list[[norm_meth]])){
-        for(seq_pct in names(norm.list[[norm_meth]][[pred_meth]])){
-          kappa <- as.numeric(norm.list[[norm_meth]][[pred_meth]][[seq_pct]][["overall"]][["Kappa"]])
-          norm_meth_vector <- c(norm_meth_vector, norm_meth)
-          pred_meth_vector <- c(pred_meth_vector, pred_meth)
-          seq_pct_vector <- c(seq_pct_vector, seq_pct)
-          kappa_vector <- c(kappa_vector, kappa)
-
-        }
-      }
-    }
-    kappa.df <- data.frame(kappa = kappa_vector,
-                           perc.seq = seq_pct_vector,
-                           classifier = pred_meth_vector,
-                           norm.method = norm_meth_vector)
+    # level 3 of norm.list is confusion matrix associated with %seq, classifier, and normalization method
+    # purrr::modify_depth applies a function to confusion matrix to return kappa
+    # list can then be melted and columns renamed
+    kappa.df <- purrr::modify_depth(norm.list, 3,
+                                    function(x) x$overall["Kappa"]) %>%
+      reshape2::melt() %>%
+      dplyr::rename("kappa" = "value",
+                    "perc.seq" = "L3",
+                    "classifier" = "L2",
+                    "norm.method" = "L1")
 
     # create list and return
     return(list("confusion_matrix_objects" = norm.list,
