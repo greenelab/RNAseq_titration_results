@@ -575,7 +575,7 @@ SmallNNormWrapper <- function(array.dt, seq.dt, mix.list, zto = FALSE) {
   # z-score
   GetAllSameRowIndex <- function(x){
     vals <- x[, 2:ncol(x), with = FALSE]
-    indx <- which(apply(vals, 1, all_same))
+    indx <- which(apply(vals, 1, check_all_same))
     return(indx)
   }
   

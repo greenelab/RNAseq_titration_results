@@ -104,7 +104,7 @@ seq.dt.list <-
 all.same.list <- lapply(seq.dt.list[2:11],
                     function(x){
                       vals <- x[, 2:ncol(x)]
-                      indx <- which(apply(vals, 1, all_same))
+                      indx <- which(apply(vals, 1, check_all_same))
                       return(indx)
                     } )
 all.same.indx <- unique(unlist(all.same.list))
