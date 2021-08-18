@@ -136,7 +136,7 @@ restr.train.list$tdm$`100` <- NULL
 train.kappa.df <- PredictWrapper(train.model.list = train.model.list,
                                  pred.list = restr.train.list,
                                  sample.df = sample.train.test,
-                                 return.kap = TRUE)
+                                 only.kap = TRUE)
 
 write.table(train.kappa.df, file = train.kappa.file, sep = "\t",
             row.names = FALSE, quote = FALSE)
@@ -147,7 +147,7 @@ write.table(train.kappa.df, file = train.kappa.file, sep = "\t",
 array.kappa.df <- PredictWrapper(train.model.list = train.model.list,
                                  pred.list = norm.test.list$array,
                                  sample.df = sample.train.test,
-                                 return.kap = TRUE)
+                                 only.kap = TRUE)
 
 write.table(array.kappa.df, file = array.kappa.file, sep = "\t",
             row.names = FALSE, quote = FALSE)
@@ -166,7 +166,7 @@ norm.test.list$seq$tdm$`100` <- NULL
 seq.kappa.df <- PredictWrapper(train.model.list = train.model.list,
                                pred.list = norm.test.list$seq,
                                sample.df = sample.train.test,
-                               return.kap = TRUE)
+                               only.kap = TRUE)
 
 write.table(seq.kappa.df, file = seq.kappa.file, sep = "\t",
             row.names = FALSE, quote = FALSE)

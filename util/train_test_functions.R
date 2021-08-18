@@ -1,5 +1,5 @@
 GetCM <- function(model, dt.mat, subtype,
-                  model.type = NULL, return.kappa = TRUE){
+                  model.type = NULL, return.only.kappa = TRUE){
   # This function takes a model, a normalized gene expression matrix,
   # and performs prediction and returns the Kappa statistic based on the
   # observed subtype labels supplied
@@ -10,14 +10,14 @@ GetCM <- function(model, dt.mat, subtype,
   #   dt.mat: a matrix where genes are columns and rows are samples
   #   subtype: a vector of the true subtype labels
   #   model.type: what kind of predictive model will be used?
-  #   return.kappa: logical, should the Kappa statistic associated with
-  #                 the prediction be returned (TRUE) or should the entire
-  #                 confusionMatrix be returned (FALSE)?
+  #   return.only.kappa: logical, should the Kappa statistic associated with
+  #                      the prediction be returned (TRUE) or should the entire
+  #                      confusionMatrix be returned (FALSE)?
   #
   # Returns:
-  #   if return.kappa = TRUE
+  #   if return.only.kappa = TRUE
   #     kap: the Kappa statistic associated with the prediction
-  #   if return.kappa != TRUE
+  #   if return.only.kappa != TRUE
   #     cm: the confusionMatrix (caret) associated with the prediction
   #
   if (model.type == "glmnet") {
@@ -29,9 +29,9 @@ GetCM <- function(model, dt.mat, subtype,
     cm <- confusionMatrix(tbl)
   }
 
-  # should we return the Kappa statistic (return.kappa = TRUE), or the
+  # should we return only the Kappa statistic (return.only.kappa = TRUE), or the
   # full confusionMatrix for the prediction?
-  if (return.kappa) {
+  if (return.only.kappa) {
     kap <- as.numeric(cm$overall["Kappa"])
     return(kap)
   } else {
@@ -40,7 +40,7 @@ GetCM <- function(model, dt.mat, subtype,
 }
 
 PredictCM <- function(model, dt, sample.df,
-                      model.type = NULL, return.kappa = TRUE){
+                      model.type = NULL, return.only.kappa = TRUE){
   # This function takes a model, a normalized gene expression matrix,
   # and performs prediction and returns the total accuracy based on the
   # observed subtype labels supplied
@@ -53,14 +53,14 @@ PredictCM <- function(model, dt, sample.df,
   #              output of 0-expression_data_overlap_and_split.R
   #   model.type: is the model from glmnet (class: cv.glmnet) or from caret
   #               class
-  #   return.kappa: logical, should the Kappa statistic associated with
-  #                 the prediction be returned (TRUE) or should the entire
-  #                 confusionMatrix be returned (FALSE)?
+  #   return.only.kappa: logical, should the Kappa statistic associated with
+  #                      the prediction be returned (TRUE) or should the entire
+  #                      confusionMatrix be returned (FALSE)?
   #
   # Returns:
-  #   if return.kappa = TRUE
+  #   if return.only.kappa = TRUE
   #     kap: the Kappa statistic associated with the prediction
-  #   if return.kappa != TRUE
+  #   if return.only.kappa != TRUE
   #     cm: the confusionMatrix (caret) associated with the prediction
   #
   require(caret)
@@ -79,7 +79,7 @@ PredictCM <- function(model, dt, sample.df,
     dt.mat <- apply(dt.mat, 2, as.numeric)
   }
 
-  pred.cm <- GetCM(model, dt.mat, subtype, model.type, return.kappa)
+  pred.cm <- GetCM(model, dt.mat, subtype, model.type, return.only.kappa)
   return(pred.cm)
 }
 
@@ -248,7 +248,7 @@ RestructureTrainedList <- function(train.list){
 }
 
 PredictWrapper <- function(train.model.list, pred.list, sample.df,
-                           return.kap = TRUE, run.parallel = TRUE) {
+                           only.kap = TRUE, run.parallel = TRUE) {
   # This function is a wrapper for performing subtype prediction on
   # normalized expression data.tables (training data, holdout data, or
   # reconstructed data) using the models trained on training data
@@ -262,16 +262,18 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
   #   sample.df: the data frame that maps sample name/header to subtype and
   #              train/test set labels
   #              output of 0-expression_data_overlap_and_split.R
-  #   return.kap: logical; should the entire confusionMatrix (FALSE) or just
-  #               the Kappa statistic associated with the prediction be
-  #               returned?
+  #   only.kap: logical; (TRUE) should only the Kappa statistics associated with
+  #             the predictions be returned? Or a list of all confusionMatrix
+  #             objects and the associated Kappa statistics (FALSE)
+  #
   #   run.parallel: logical; should predictions be run in parallel?
   #
   # Returns:
-  #   if return.kap = TRUE
+  #   if only.kap = TRUE
   #     kappa.df: a data.frame of Kappa statistics
   #   else
-  #     norm.list: a list of confusionMatrix objects (if return.kap = FALSE)
+  #     a list of all confusionMatrix objects ($confusion_matrix_objects) and
+  #     and the associated Kappa statistics ($kappa_statistics)
 
 
   # since parallelizing -- other requirements are captured in PredictCM
@@ -282,7 +284,7 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
                                       pred.data.list,
                                       sample.dataframe,
                                       mdl.type,
-                                      rtrn.kappa = TRUE) {
+                                      only.kappa = TRUE) {
 
     return.list <-
       foreach(seq.iter = seq_along(model.list)) %dopar% {
@@ -311,7 +313,7 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
                     dt = pred.dt,
                     sample.df = sample.dataframe,
                     model.type = mdl.type,
-                    return.kappa = rtrn.kappa)
+                    return.only.kappa = only.kappa)
 
         }
 
@@ -359,7 +361,7 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
                                 pred.data.list = input.list,
                                 sample.dataframe = sample.df,
                                 mdl.type = mdl,
-                                rtrn.kappa = return.kap)
+                                only.kappa = only.kap)
 
       }
 
@@ -376,14 +378,31 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
     names(norm.list[[nrm.it]]) <- model.names
   }
 
-  # if returning Kappa -- melt the list into a data.frame and return
+  # if only returning Kappa -- melt the list into a data.frame and return
   # the data.frame
-  if (return.kap) {
+  if (only.kap) {
     kappa.df <- reshape2::melt(norm.list)
     colnames(kappa.df) <- c("kappa", "perc.seq", "classifier", "norm.method")
     return(kappa.df)
-  } else {  # otherwise, return the list of confusionMatrix objects
-    return(norm.list)
+  } else {  # otherwise, return two objects:
+    # 1. the list of confusionMatrix objects (norm.list)
+    # 2. kappa data frame (kappa.df)
+
+    # create kappa.df from norm.list
+    # level 3 of norm.list is confusion matrix associated with %seq, classifier, and normalization method
+    # purrr::modify_depth applies a function to confusion matrix to return kappa
+    # list can then be melted and columns renamed
+    kappa.df <- purrr::modify_depth(norm.list, 3,
+                                    function(x) x$overall["Kappa"]) %>%
+      reshape2::melt() %>%
+      dplyr::rename("kappa" = "value",
+                    "perc.seq" = "L3",
+                    "classifier" = "L2",
+                    "norm.method" = "L1")
+
+    # create list and return
+    return(list("confusion_matrix_objects" = norm.list,
+                "kappa_statistics" = kappa.df))
   }
 
 }
