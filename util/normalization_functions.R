@@ -344,6 +344,24 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
   return(norm.list)
 }
 
+check_all_same <- function(x, my_tolerance = 1e-9){
+  # This function returns TRUE if all the elements of the vector are the same
+  # within a numerical tolerance levels
+  # Thank you: https://stackoverflow.com/a/4752834
+  #
+  # Args:
+  #   x: a numeric vector
+  #   my_tolerance: how close must two numbers be for them to be considered equal?
+  #
+  # Returns:
+  #   TRUE or FALSE
+  if (is.numeric(x) & is.numeric(my_tolerance)) {
+    return(all(abs(max(x) - min(x)) < my_tolerance))  
+  } else {
+    stop("Vector and tolerance given to check_all_same() must be numeric.")
+  }
+}
+
 #### cross-platform functions --------------------------------------------------
 
 GetTitratedSampleNames <- function(sample.set, p){
