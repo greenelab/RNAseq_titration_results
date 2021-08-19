@@ -72,6 +72,10 @@ else
   wget -O $data/gbm_clinical_table_S7.xlsx $gbm_clinical_link
 fi
 
+# check md5 sums of downloaded files
+echo Checking md5 sums of downloaded files...
+md5sum --check check_sums.tsv && echo All files downloaded match expected md5 sums!
+
 # process GBM data via script
 echo Processing GBM data using R script prepare_GBM_data.R ...
 Rscript prepare_GBM_data.R \
