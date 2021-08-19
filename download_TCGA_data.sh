@@ -73,7 +73,7 @@ else
 fi
 
 # check md5 sums of downloaded files
-echo Checking md5 sums of downloaded files...
+echo Checking md5 sums of downloaded files ...
 md5sum --check check_sums.tsv && echo All files downloaded match expected md5 sums!
 
 # process GBM data via script
