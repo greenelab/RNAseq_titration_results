@@ -102,10 +102,10 @@ if (any(colnames(array.matched) != colnames(seq.matched))) {
 
 # keep subtype labels for samples with expression data
 array.subtypes <- as.factor(array.subtypes[which(array.tumor.smpls %in%
-                                                      colnames(array.matched))])
+                                                   colnames(array.matched))])
 
 array.tumor.smpls <- array.tumor.smpls[which(array.tumor.smpls %in%
-                                                  colnames(array.matched))]
+                                               colnames(array.matched))]
 
 # remove "unmatched" / "raw" expression data
 rm(array.data, seq.data)
@@ -165,5 +165,5 @@ lbl.df <- cbind(colnames(array.matched)[2:ncol(array.matched)],
 colnames(lbl.df) <- c("sample", "split", "subtype")
 
 write.table(lbl.df,
-            file = here::here(res.dir, train.test.labels),
+            file = file.path(res.dir, train.test.labels),
             quote = FALSE, sep = "\t", row.names = FALSE)
