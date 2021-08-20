@@ -1,6 +1,6 @@
-source(file.path("util", "normalization_functions.R"))
-source(file.path("util", "train_test_functions.R"))
-source(file.path("util", "color_blind_friendly_palette.R"))
+source(here::here("util", "normalization_functions.R"))
+source(here::here("util", "train_test_functions.R"))
+source(here::here("util", "color_blind_friendly_palette.R"))
 
 GetDesignMat <- function(norm.dt, sample.df, subtype) {
   # This function takes a data.table of expression data (1st column is gene ids;
@@ -120,7 +120,7 @@ GetFiteBayes <- function(exprs, design.mat) {
   # detect subtype to be used for differential expression
   subtype <- colnames(design.mat)[which(colnames(design.mat) != "Other")]
   cont.eval <- paste0(subtype, "vsOther= ", subtype, "-Other")
-  
+
   cont.matrix <-
     eval(parse(
       text = paste0(
@@ -578,7 +578,7 @@ SmallNNormWrapper <- function(array.dt, seq.dt, mix.list, zto = FALSE) {
     indx <- which(apply(vals, 1, check_all_same))
     return(indx)
   }
-  
+
   all.same.indx <- unique(c(GetAllSameRowIndex(seq.full.dt),
                             GetAllSameRowIndex(seq.half.dt)))
   # if no rows are all same (in previous GetAllSameRowIndex), all.same.indx is integer(0)

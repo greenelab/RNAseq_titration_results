@@ -19,14 +19,14 @@ option_list <- list(
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
-source("util/option_functions.R")
+source(here::here("util/option_functions.R"))
 check_options(opt)
 
 # load libraries
-suppressMessages(source("load_packages.R"))
-source(file.path("util", "normalization_functions.R"))
-source(file.path("util", "differential_expression_functions.R"))
-source(file.path("util", "color_blind_friendly_palette.R"))
+suppressMessages(source(here::here("load_packages.R")))
+source(here::here("util", "normalization_functions.R"))
+source(here::here("util", "differential_expression_functions.R"))
+source(here::here("util", "color_blind_friendly_palette.R"))
 
 # set options
 cancer_type <- opt$cancer_type
@@ -39,16 +39,18 @@ set.seed(initial.seed)
 message(paste("\nInitial seed set to:", initial.seed))
 
 # define directories
-data.dir <- "data"
-deg.dir <- file.path("results", "differential_expression")
+data.dir <- here::here("data")
+res.dir <- here::here("results")
+deg.dir <- file.path(res.dir, "differential_expression")
+
 
 # define input files
 seq.file <- file.path(data.dir,
                       paste0(cancer_type, "RNASeq_matchedOnly_ordered.pcl"))
 array.file <- file.path(data.dir,
                         paste0(cancer_type, "array_matchedOnly_ordered.pcl"))
-smpl.file <- file.path("results",
-                       list.files("results", # this finds the first example of a subtypes file from cancer_type
+smpl.file <- file.path(res.dir,
+                       list.files(res.dir, # this finds the first example of a subtypes file from cancer_type
                                   pattern = paste0(cancer_type, # and does not rely on knowing a seed
                                                    "_matchedSamples_subtypes_training_testing_split_labels_"))[1])
 
@@ -153,7 +155,7 @@ subtypes_combination_nice <- stringr::str_c(two_subtypes, collapse = " vs. ")
 jacc.df <- data.table::rbindlist(jacc.df.list)
 
 write.table(jacc.df,
-            file = file.path("results", "differential_expression",
+            file = file.path(deg.dir,
                              paste0(cancer_type,
                                     "_small_n_",
                                     subtypes_combination,
@@ -173,6 +175,6 @@ ggplot(jacc.df, aes(x = no.samples, y = jaccard, color = platform)) +
   xlab("Number of samples (n)") +
   scale_colour_manual(values = cbPalette[c(2, 3)]) +
   theme(text = element_text(size = 18))
-ggsave(filename = file.path("plots",
-                            paste0(cancer_type, "_small_n_", subtypes_combination, "_50-50_jaccard_lineplots.pdf")),
+ggsave(filename = here::here("plots",
+                             paste0(cancer_type, "_small_n_", subtypes_combination, "_50-50_jaccard_lineplots.pdf")),
        plot = last_plot(), width = 5, height = 7)
