@@ -7,6 +7,5 @@ d4486dde14da14b4f8887a7415e2866f	data/BRCARNASeqClin.tsv
 a4591b2dcee39591f59e5e25a6ce75fa	data/TCGA-CDR-SupplementalTableS1.xlsx
 02e72c33071307ff6570621480d3c90b	data/EBPlusPlusAdjustPANCAN_IlluminaHiSeq_RNASeqV2.geneExp.tsv
 76a0454f911aeb17276725abb760ce89	data/GSE83130/GSE83130/GSE83130.tsv
-87935b2a870781e24fdc1a9ec916cb0f	data/GSE83130/aggregated_metadata.json
 1d8834a51282396e07e3ce9a5417d024	data/gbm_clinical_table_S7.xlsx
 e5df57691b44c47b8c916116b5ac7acf	data/PanCan-General_Open_GDC-Manifest_2.txt
