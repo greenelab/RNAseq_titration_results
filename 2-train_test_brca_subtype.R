@@ -23,7 +23,7 @@ check_options(opt)
 
 # load libraries
 suppressMessages(source(here::here("load_packages.R")))
-source(fhere::here("util", "train_test_functions.R"))
+source(here::here("util", "train_test_functions.R"))
 
 # set options
 cancer_type <- opt$cancer_type
