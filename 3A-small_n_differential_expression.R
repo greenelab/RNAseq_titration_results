@@ -99,7 +99,7 @@ seq.dt <- data.table(seq.data[,
                                            samples.to.keep))])
 sample.df <- sample.df[which(sample.df$sample %in% samples.to.keep), ]
 
-smaller_subtype_size <- min(table(sample.df$subtype))
+smaller_subtype_size <- min(table(droplevels(sample.df$subtype)))
 
 # different sizes of n to test
 no.samples <- c(3, 4, 5, 6, 8, 10, 15, 25, 50)
