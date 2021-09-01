@@ -88,7 +88,7 @@ Rscript prepare_GBM_data.R \
   --clinical_input $data/gbm_clinical_table_S7.xlsx \
   --clinical_output $data/GBMClin.tsv
 
-# retrieve BRCA and GBM mutations in PIK3CA, PTEN, and TP53 from TCGA MC3
+# retrieve BRCA and GBM mutations in PIK3CA and TP53 from TCGA MC3
 # output is stored in data/mutations.* TSV and MAF files
 python3 retrieve_MC3_mutations.py
 
