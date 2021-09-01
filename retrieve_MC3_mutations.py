@@ -84,7 +84,8 @@ for line in mc3:
 
       output_tsv.write("\t".join([tcga_id, cancer_type_abbrevs[cancer_type], tcga_id_raw, tcga_id_raw_normal, hugo_symbol, chromosome, start_position, variant_class]) + "\n")
       output_maf.write("\t".join(record) + "\n")
-  
+
+mc3.close()
 output_tsv.close()
 output_maf.close()
 
