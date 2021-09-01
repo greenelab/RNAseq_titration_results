@@ -16,7 +16,7 @@ mc3_filename = os.path.join(data_dir, "mc3.v0.2.8.PUBLIC.maf.gz")
 cancer_type_abbrevs = {"Breast invasive carcinoma": "BRCA",
                        "Glioblastoma multiforme": "GBM"}
 cancer_types_of_interest = cancer_type_abbrevs.keys()
-genes_of_interest = ["PIK3CA", "PTEN", "TP53"]
+genes_of_interest = ["PIK3CA", "TP53"]
 
 ############################################################
 # Tissue source sites define the cancer type of the sample #
@@ -38,7 +38,7 @@ tcga_tss_codes.close()
 # Retrieve mutations from MC3 #
 ###############################
 
-# simple mutation dictionary {cancer_type: {tcga_id: ["PTEN", "TP53"]}}
+# simple mutation dictionary {cancer_type: {tcga_id: ["PIK3CA", "TP53"]}}
 # this will be used at end to create simple 0/1 mutation status data frame
 mutation_dict = {x: {} for x in cancer_types_of_interest}
 
@@ -95,7 +95,7 @@ for cancer_type in cancer_types_of_interest:
   simple_output_filename = os.path.join(data_dir,
                                         "mutations." + cancer_type_abbrevs[cancer_type] + ".tsv")
   simple_output = open(simple_output_filename, "w")
-  simple_output_header = "\t".join(["tcga_id", "PIK3CA_mutation", "PTEN_mutation", "TP53_mutation"]) + "\n"
+  simple_output_header = "\t".join(["tcga_id", "PIK3CA", "TP53"]) + "\n"
 
   simple_output.write(simple_output_header)
 
