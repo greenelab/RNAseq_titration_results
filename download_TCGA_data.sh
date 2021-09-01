@@ -88,6 +88,18 @@ Rscript prepare_GBM_data.R \
   --clinical_input $data/gbm_clinical_table_S7.xlsx \
   --clinical_output $data/GBMClin.tsv
 
+# combine clinical and mutation data into one data frame
+Rscript combine_clinical_data.R \
+  --cancer_type BRCA \
+  --clinical_input $data/BRCAClin.tsv \
+  --mutation_input $data/mutations.BRCA.tsv \
+  --combined_output $data/combined_clinical_data.BRCA.tsv
+Rscript combine_clinical_data.R \
+  --cancer_type GBM \
+  --clinical_input $data/GBMClin.tsv \
+  --mutation_input $data/mutations.GBM.tsv \
+  --combined_output $data/combined_clinical_data.GBM.tsv
+
 # retrieve BRCA and GBM mutations in PIK3CA and TP53 from TCGA MC3
 # output is stored in data/mutations.* TSV and MAF files
 python3 retrieve_MC3_mutations.py
