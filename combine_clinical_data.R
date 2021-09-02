@@ -1,6 +1,5 @@
 # Script combines clinical data from all cancer types to one data frame
-# Clinical data includes: subtype, TP53 mutation status, and PIK3CA mutation status
-
+# Clinical data includes: subtype and TP53/PIK3CA mutation status
 # Steven Foltz August 2021
 
 option_list <- list(
@@ -23,7 +22,7 @@ option_list <- list(
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
-source("util/option_functions.R")
+source(here::here("util/option_functions.R"))
 check_options(opt)
 
 # load libraries
@@ -48,8 +47,10 @@ mutation_df <- read_tsv(mutation_input_filepath) %>%
 # Combine clinical and mutation data
 ################################################################################
 
+# combine data frames with full_join() to get the whole venn diagram, as it were
+# start join with clinical_df because later scripts expect column name = Sample
 combined_df <- clinical_df %>%
-  left_join(mutation_df,
+  full_join(mutation_df,
             by = c("Sample" = "tcga_id"))
 
 ################################################################################
