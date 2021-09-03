@@ -30,9 +30,9 @@ suppressMessages(library(tidyverse))
 
 # set options
 cancer_type <- opt$cancer_type
-clinical_input_filepath <- here::here(opt$clinical_input)
-mutation_input_filepath <- here::here(opt$mutation_input)
-combined_output_filepath <- here::here(opt$combined_output)
+clinical_input_filepath <- opt$clinical_input
+mutation_input_filepath <- opt$mutation_input
+combined_output_filepath <- opt$combined_output
 
 ################################################################################
 # Read in clinical and mutation data
