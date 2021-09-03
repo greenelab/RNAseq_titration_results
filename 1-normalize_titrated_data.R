@@ -18,12 +18,12 @@ option_list <- list(
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
-source("util/option_functions.R")
+source(here::here("util/option_functions.R"))
 check_options(opt)
 
 # load libraries
-suppressMessages(source("load_packages.R"))
-source(file.path("util", "normalization_functions.R"))
+suppressMessages(source(here::here("load_packages.R")))
+source(here::here("util", "normalization_functions.R"))
 
 # set options
 cancer_type <- opt$cancer_type
@@ -34,9 +34,9 @@ initial.seed <- as.integer(opt$seed2)
 set.seed(initial.seed)
 
 # define directories
-data.dir <- "data"
-norm.data.dir <- "normalized_data"
-res.dir <- "results"
+data.dir <- here::here("data")
+norm.data.dir <- here::here("normalized_data")
+res.dir <- here::here("results")
 
 # name input files
 seq.file <- paste0(cancer_type, "RNASeq_matchedOnly_ordered.pcl")
@@ -97,7 +97,7 @@ all.same.indx <- unique(unlist(all.same.list))
 # so check that integer vector has length > 0 before subsetting
 if (length(all.same.indx) > 0) {
   array.data <- array.data[-all.same.indx, ]
-  seq.data <- seq.data[-all.same.indx, ]  
+  seq.data <- seq.data[-all.same.indx, ]
 }
 
 #### get datatables to mix -----------------------------------------------------
@@ -106,8 +106,7 @@ if (length(all.same.indx) > 0) {
 # array data.table and seq data.table for each level of 'titration'
 array.train <-
   data.table(array.data[,
-                        c(1,
-                          which(colnames(array.data) %in% train.sample.names))])
+                        c(1, which(colnames(array.data) %in% train.sample.names))])
 seq.train <-
   data.table(seq.data[,
                       c(1, which(colnames(seq.data) %in% train.sample.names))])
@@ -151,8 +150,7 @@ saveRDS(norm.titrate.list, file = file.path(norm.data.dir, norm.train.object))
 #### normalize test data -------------------------------------------------------
 array.test <-
   data.table(array.data[,
-                        c(1,
-                          which(colnames(array.data) %in% test.sample.names))])
+                        c(1, which(colnames(array.data) %in% test.sample.names))])
 seq.test <-
   data.table(seq.data[, c(1, which(colnames(seq.data) %in% test.sample.names))])
 

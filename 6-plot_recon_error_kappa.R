@@ -12,11 +12,11 @@ option_list <- list(
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
-source("util/option_functions.R")
+source(here::here("util/option_functions.R"))
 check_options(opt)
 
 # load libraries
-source(file.path("util", "color_blind_friendly_palette.R"))
+source(here::here("util", "color_blind_friendly_palette.R"))
 library(ggplot2)
 library(dplyr)
 
@@ -24,8 +24,8 @@ library(dplyr)
 cancer_type <- opt$cancer_type
 
 # define directories
-plot.dir <- "plots"
-rcn.res.dir <- file.path("results", "reconstructed_data")
+plot.dir <- here::here("plots")
+rcn.res.dir <- here::here("results", "reconstructed_data")
 
 # define input files
 # pattern = "kappa" captures a downstream output file if this script is rerun
@@ -108,7 +108,8 @@ kappa.summary.df <-
                    .groups = "drop")
 readr::write_tsv(kappa.summary.df,
                  file.path(rcn.res.dir,
-                           paste0(cancer_type, "_kappa_reconstructed_data_summary_table.tsv")))
+                           paste0(cancer_type,
+                                  "_kappa_reconstructed_data_summary_table.tsv")))
 
 rm(kappa.master.df)
 
@@ -167,5 +168,5 @@ for (norm in norm.methods) {
     xlab("% RNA-seq") +
     ylab("Mean Value (per gene)") +
     ggtitle(paste0(cancer_type, ": ", toupper(norm))) +
-  ggsave(plot.nm, plot = last_plot(), height = 8.5, width = 8.5)
+    ggsave(plot.nm, plot = last_plot(), height = 8.5, width = 8.5)
 }
