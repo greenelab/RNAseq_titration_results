@@ -1,8 +1,8 @@
 # J. Taroni Jul 2016
-# The purpose of this script is to plot Kappa statistics from subtype
-# predictions on BRCA hold-out data. It should be run from the command line
+# The purpose of this script is to plot Kappa statistics from category
+# predictions on hold-out data. It should be run from the command line
 # through the classifier_repeat_wrapper.R script or alternatively
-# USAGE: Rscript 3-plot_subtype_kappa.R
+# USAGE: Rscript 3-plot_category_kappa.R
 
 option_list <- list(
   optparse::make_option("--cancer_type",

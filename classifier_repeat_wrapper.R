@@ -41,6 +41,6 @@ for(seed in seeds){
   rep.count <- rep.count + 1
 }
 
-system(paste("Rscript 3-plot_subtype_kappa.R",
+system(paste("Rscript 3-plot_category_kappa.R",
              "--cancer_type", cancer_type,
              "--predictor", predictor))

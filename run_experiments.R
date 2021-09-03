@@ -49,7 +49,7 @@ system(paste("Rscript 1-normalize_titrated_data.R",
              "--seed2", seeds[2]))
 
 message("\nTraining and testing models...")
-system(paste("Rscript 2-train_test_brca_subtype.R",
+system(paste("Rscript 2-train_test_category.R",
              "--cancer_type", cancer_type,
              "--predictor", predictor,
              "--seed1", seeds[1],
