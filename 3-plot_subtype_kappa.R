@@ -7,7 +7,10 @@
 option_list <- list(
   optparse::make_option("--cancer_type",
                         default = NULL,
-                        help = "Cancer type")
+                        help = "Cancer type"),
+  optparse::make_option("--predictor",
+                        default = NULL,
+                        help = "Predictor used")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
@@ -22,6 +25,8 @@ source(here::here("util", "color_blind_friendly_palette.R"))
 
 # set options
 cancer_type <- opt$cancer_type
+predictor <- opt$predictor
+file_identifier <- str_c(cancer_type, predictor, sep = "_")
 
 # define directories
 plot.dir <- here::here("plots")
@@ -29,15 +34,15 @@ res.dir <- here::here("results")
 
 # list array and seq files from results directory
 lf <- list.files(res.dir, full.names = TRUE)
-array.files <- lf[grepl(paste0(cancer_type,
+array.files <- lf[grepl(paste0(file_identifier,
                                "_train_3_models_array_kappa_"), lf)]
-seq.files <- lf[grepl(paste0(cancer_type,
+seq.files <- lf[grepl(paste0(file_identifier,
                              "_train_3_models_seq_kappa_"), lf)]
 
 # define output files
-plot.file.lead <- paste0(cancer_type, "_train_3_models_kappa_")
+plot.file.lead <- paste0(file_identifier, "_train_3_models_kappa_")
 summary.df.filename <- file.path(res.dir,
-                                 paste0(cancer_type,
+                                 paste0(file_identifier,
                                         "_train_3_models_summary_table.tsv"))
 
 #### read in data --------------------------------------------------------------
@@ -82,7 +87,7 @@ test.df$Classifier <- as.factor(test.df$Classifier)
 cls.methods <- unique(test.df$Classifier)
 for (cls in cls.methods) {
   plot.nm <- file.path(plot.dir,
-                       paste0(plot.file.lead, # includes cancer_type
+                       paste0(plot.file.lead, # includes file_identifier
                               stringr::str_replace_all(cls,
                                                        pattern = " ",
                                                        replacement = "_"),

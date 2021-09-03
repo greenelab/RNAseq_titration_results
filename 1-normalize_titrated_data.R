@@ -9,6 +9,9 @@ option_list <- list(
   optparse::make_option("--cancer_type",
                         default = NULL,
                         help = "Cancer type"),
+  optparse::make_option("--predictor",
+                        default = NULL,
+                        help = "Predictor used"),
   optparse::make_option("--seed1",
                         default = NULL,
                         help = "Random seed"),
@@ -27,6 +30,8 @@ source(here::here("util", "normalization_functions.R"))
 
 # set options
 cancer_type <- opt$cancer_type
+predictor <- opt$predictor
+file_identifier <- str_c(cancer_type, predictor, sep = "_")
 
 # set seed
 filename.seed <- as.integer(opt$seed1)
@@ -41,24 +46,23 @@ res.dir <- here::here("results")
 # name input files
 seq.file <- paste0(cancer_type, "RNASeq_matchedOnly_ordered.pcl")
 array.file <- paste0(cancer_type, "array_matchedOnly_ordered.pcl")
+train.test.file <- paste0(file_identifier,
+                          "_matchedSamples_training_testing_split_labels_",
+                          filename.seed, ".tsv")
 
 # name output files
-norm.test.object <- paste0(cancer_type,
+norm.test.object <- paste0(file_identifier,
                            "_array_seq_test_data_normalized_list_",
                            filename.seed, ".RDS")
-norm.train.object <- paste0(cancer_type,
+norm.train.object <- paste0(file_identifier,
                             "_array_seq_train_titrate_normalized_list_",
                             filename.seed, ".RDS")
-train.test.file <- paste0(cancer_type,
-                          "_matchedSamples_subtypes_training_testing_split_labels_",
-                          filename.seed, ".tsv")
-train.test.labels <- file.path(res.dir, train.test.file)
 
 #### read in data --------------------------------------------------------------
 
 seq.data <- fread(file.path(data.dir, seq.file), data.table = FALSE)
 array.data <- fread(file.path(data.dir, array.file), data.table = FALSE)
-sample.train.test <- read.delim(train.test.labels)
+sample.train.test <- read.delim(file.path(res.dir, train.test.labels))
 
 #### split samples, titrate ----------------------------------------------------
 

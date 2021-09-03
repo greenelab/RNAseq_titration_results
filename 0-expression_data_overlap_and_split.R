@@ -1,7 +1,7 @@
 # J. Taroni Jun 2016
 # The purpose of this script is to read in TGCA array and sequencing data,
 # to preprocess leaving only overlapping genes and samples with complete
-# subtype and category information, and to split the data into training and testing sets
+# category information, and to split the data into training and testing sets
 # It should be run from the command line through the run_experiments.R script
 
 option_list <- list(
@@ -26,6 +26,7 @@ suppressMessages(source(here::here("load_packages.R")))
 # set options
 cancer_type <- opt$cancer_type
 predictor <- opt$predictor
+file_identifier <- str_c(cancer_type, predictor, sep = "_")
 
 # set seed
 initial.seed <- as.integer(opt$seed1)
@@ -42,11 +43,10 @@ array.exprs.filename <- paste0(cancer_type, "array.pcl")
 clin.filename <- paste0(cancer_type, "Clin.tsv")
 
 # name output files
-output_identifier <- str_c(cancer_type, predictor, sep = "_")
-category.distribtion.plot <- paste0(output_identifier,
+category.distribtion.plot <- paste0(file_identifier,
                                     "_dist_split_stacked_bar_",
                                     initial.seed, ".pdf")
-train.test.labels <- paste0(output_identifier,
+train.test.labels <- paste0(file_identifier,
                             "_matchedSamples_training_testing_split_labels_",
                             initial.seed, ".tsv")
 
@@ -67,6 +67,7 @@ if (cancer_type == "BRCA") { # rename from PAM50
 # filter clinical data to keep tumor samples with complete data
 # if the predictor is subtype, we only select subtype (twice, but once)
 # if the predictor is a gene, we select subtype and the gene
+# this ensures downstream mutation predictions will have subtype available as covariate
 clinical <- clinical %>%
   select(Sample, Type, "subtype", predictor) %>%
   rename("category" = predictor) %>%
@@ -80,7 +81,6 @@ colnames(array.data)[1] <- colnames(seq.data)[1] <- "gene"
 array.tumor.smpls <- clinical$Sample
 array.tumor.smpls <- substr(array.tumor.smpls, 1, 15)
 
-array.subtypes <- clinical$subtype
 array.category <- clinical$category
 
 # filter array data only to include tumor samples
@@ -113,9 +113,7 @@ if (any(colnames(array.matched) != colnames(seq.matched))) {
   stop("Column name reordering did not work as expected in 0-expression_data_overlap_and_split.R")
 }
 
-# keep subtype and category labels for samples with expression data
-array.subtypes <- as.factor(array.subtypes[which(array.tumor.smpls %in%
-                                                   colnames(array.matched))])
+# keep category labels for samples with expression data
 array.category <- as.factor(array.category[which(array.tumor.smpls %in%
                                                    colnames(array.matched))])
 
@@ -138,8 +136,7 @@ write.table(seq.matched, file = seq.output.nm,
 
 #### split data into balanced training and testing sets ------------------------
 
-# order array subtypes / category to match the expression data order
-array.subtypes <- array.subtypes[order(array.tumor.smpls)]
+# order array category to match the expression data order
 array.category <- array.category[order(array.tumor.smpls)]
 
 split.seed <- sample(1:10000, 1)
@@ -178,9 +175,8 @@ lbl <- rep("test", length(array.tumor.smpls))
 lbl[train.index] <- "train"
 lbl.df <- cbind(colnames(array.matched)[2:ncol(array.matched)],
                 lbl,
-                as.character(array.subtypes),
                 as.character(array.category))
-colnames(lbl.df) <- c("sample", "split", "subtype", "category")
+colnames(lbl.df) <- c("sample", "split", "category")
 
 write.table(lbl.df,
             file = file.path(res.dir, train.test.labels),

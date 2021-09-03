@@ -9,6 +9,9 @@ option_list <- list(
   optparse::make_option("--cancer_type",
                         default = NULL,
                         help = "Cancer type"),
+  optparse::make_option("--predictor",
+                        default = NULL,
+                        help = "Predictor used"),
   optparse::make_option("--seed1",
                         default = NULL,
                         help = "Random seed"),
@@ -27,6 +30,8 @@ source(here::here("util", "train_test_functions.R"))
 
 # set options
 cancer_type <- opt$cancer_type
+predictor <- opt$predictor
+file_identifier <- str_c(cancer_type, predictor, sep = "_")
 
 # set seed
 filename.seed <- opt$seed1
@@ -39,45 +44,46 @@ mdl.dir <- here::here("models")
 res.dir <- here::here("results")
 
 # define input files
-norm.test.object <- paste0(cancer_type,
+norm.test.object <- paste0(file_identifier,
                            "_array_seq_test_data_normalized_list_",
                            filename.seed, ".RDS")
-norm.train.object <- paste0(cancer_type,
+norm.train.object <- paste0(file_identifier,
                             "_array_seq_train_titrate_normalized_list_",
                             filename.seed, ".RDS")
-train.test.labels <- file.path(res.dir,
-                               paste0(cancer_type,
-                                      "_matchedSamples_subtypes_training_testing_split_labels_",
-                                      filename.seed, ".tsv"))
+train.test.labels <- paste0(file_identifier,
+                            "_matchedSamples_training_testing_split_labels_",
+                            filename.seed, ".tsv")
 
 # define output files
-trained.models.object <- paste0(cancer_type,
+trained.models.object <- paste0(file_identifier,
                                 "_train_3_models_",
                                 filename.seed, ".RDS")
 train.kappa.file <- file.path(res.dir,
-                              paste0(cancer_type,
+                              paste0(file_identifier,
                                      "_train_3_models_training_set_total_kappa_",
                                      filename.seed, ".tsv"))
 array.kappa.file <- file.path(res.dir,
-                              paste0(cancer_type,
+                              paste0(file_identifier,
                                      "_train_3_models_array_kappa_",
                                      filename.seed, ".tsv"))
 seq.kappa.file <- file.path(res.dir,
-                            paste0(cancer_type,
+                            paste0(file_identifier,
                                    "_train_3_models_seq_kappa_",
                                    filename.seed, ".tsv"))
 
 #### load data -----------------------------------------------------------------
 
-sample.train.test <- fread(train.test.labels, data.table = FALSE)
-sample.train.test$subtype <- as.factor(sample.train.test$subtype)
+sample.train.test <- fread(file.path(res.dir, train.test.labels), data.table = FALSE)
 norm.titrate.list <- readRDS(file.path(norm.data.dir, norm.train.object))
 norm.test.list <- readRDS(file.path(norm.data.dir, norm.test.object))
 
-# subtype levels for each perc of seq data
-subtype.norm.list <- lapply(norm.titrate.list,
-                            function(x) GetOrderedSubtypeLabels(x$z,
-                                                                sample.train.test))
+# set each category as a factor
+sample.train.test$category <- as.factor(sample.train.test$category)
+
+# category levels for each perc of seq data
+category.norm.list <- lapply(norm.titrate.list,
+                             function(x) GetOrderedCategoryLabels(x$z,
+                                                                  sample.train.test))
 
 # restructure normalized list so that it's organized by normalization method
 restr.train.list <- RestructureNormList(norm.titrate.list)
@@ -88,7 +94,7 @@ rm(norm.titrate.list)
 folds.seed <- sample(1:10000, 1)
 message(paste("Random seed for createFolds:", folds.seed), appendLF = TRUE)
 set.seed(folds.seed)
-folds.list <- lapply(subtype.norm.list, function(x) createFolds(x, k = 5))
+folds.list <- lapply(category.norm.list, function(x) createFolds(x, k = 5))
 
 # parallel backend
 cl <- makeCluster(detectCores()-1)
@@ -99,9 +105,9 @@ message(paste("Random seed for resampling:", resample.seed), appendLF=TRUE)
 
 train.model.list <-
   foreach(n = 1:length(restr.train.list)) %do% {  # foreach norm method
-    foreach(m = 1:length(subtype.norm.list)) %dopar% {  # foreach % seq level
+    foreach(m = 1:length(category.norm.list)) %dopar% {  # foreach % seq level
       TrainThreeModels(dt = restr.train.list[[n]][[m]],
-                       subtype =  subtype.norm.list[[m]],
+                       category = category.norm.list[[m]],
                        seed = resample.seed,
                        folds.list = folds.list[[m]])
 
