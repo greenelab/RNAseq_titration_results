@@ -47,10 +47,10 @@ mutation_df <- read_tsv(mutation_input_filepath) %>%
 # Combine clinical and mutation data
 ################################################################################
 
-# combine data frames with full_join() to get the whole venn diagram, as it were
+# combine data frames with left_join() to get the left side of venn diagram
 # start join with clinical_df because later scripts expect column name = Sample
 combined_df <- clinical_df %>%
-  full_join(mutation_df,
+  left_join(mutation_df,
             by = c("Sample" = "tcga_id"))
 
 ################################################################################
