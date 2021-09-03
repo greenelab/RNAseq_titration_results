@@ -8,6 +8,9 @@ option_list <- list(
   optparse::make_option("--cancer_type",
                         default = NULL,
                         help = "Cancer type"),
+  optparse::make_option("--predictor",
+                        default = NULL,
+                        help = "Predictor used"),
   optparse::make_option("--n_repeats",
                         default = 10,
                         help = "Number of times experiment is repeated [default: %default]")
@@ -19,6 +22,7 @@ check_options(opt)
 
 # set options
 cancer_type <- opt$cancer_type
+predictor <- opt$predictor
 n.repeats <- opt$n_repeats
 message(paste("\nNumber of repeats set to", n.repeats))
 
@@ -30,8 +34,13 @@ seeds <- sample(1:10000, n.repeats)
 rep.count <- 1
 for(seed in seeds){
   message(paste("\n\n#### REPEAT NUMBER", rep.count, "####\n\n"))
-  system(paste("Rscript run_experiments.R", "--cancer_type", cancer_type, "--seed", seed))
+  system(paste("Rscript run_experiments.R",
+               "--cancer_type", cancer_type,
+               "--predictor", predictor,
+               "--seed", seed))
   rep.count <- rep.count + 1
 }
 
-system(paste("Rscript 3-plot_subtype_kappa.R --cancer_type", cancer_type))
+system(paste("Rscript 3-plot_subtype_kappa.R",
+             "--cancer_type", cancer_type,
+             "--predictor", predictor))
