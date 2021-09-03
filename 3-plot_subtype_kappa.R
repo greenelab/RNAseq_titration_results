@@ -11,21 +11,21 @@ option_list <- list(
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
-source("util/option_functions.R")
+source(here::here("util/option_functions.R"))
 check_options(opt)
 
 # load libraries
 `%>%` <- dplyr::`%>%`
 suppressMessages(library(ggplot2))
 suppressMessages(library(data.table))
-source(file.path("util", "color_blind_friendly_palette.R"))
+source(here::here("util", "color_blind_friendly_palette.R"))
 
 # set options
 cancer_type <- opt$cancer_type
 
 # define directories
-plot.dir <- "plots"
-res.dir <- "results"
+plot.dir <- here::here("plots")
+res.dir <- here::here("results")
 
 # list array and seq files from results directory
 lf <- list.files(res.dir, full.names = TRUE)

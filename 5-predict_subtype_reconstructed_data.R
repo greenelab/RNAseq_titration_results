@@ -15,20 +15,21 @@ option_list <- list(
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
-source("util/option_functions.R")
+source(here::here("util/option_functions.R"))
 check_options(opt)
 
 # load libraries
-suppressMessages(source("load_packages.R"))
-source(file.path("util", "train_test_functions.R"))
+suppressMessages(source(here::here("load_packages.R")))
+source(here::here("util", "train_test_functions.R"))
 
 # set options
 cancer_type <- opt$cancer_type
 
 # define directories
-mdl.dir <- "models"
-rcn.dir <- file.path("normalized_data", "reconstructed_data")
-res.dir <- "results"
+mdl.dir <- here::here("models")
+norm.dir <- here::here("normalized_data")
+res.dir <- here::here("results")
+rcn.dir <- file.path(norm.dir, "reconstructed_data")
 rcn.res.dir <- file.path(res.dir, "reconstructed_data")
 
 # define input files
@@ -68,16 +69,15 @@ for (seed in filename.seeds) {
                 rep.count, "of", length(filename.seeds), "####\n\n"))
 
   # read in supervised models (LASSO, linear SVM, random forest)
-  train.rds <-
-    supervised.model.files[grep(seed, supervised.model.files)]
+  train.rds <- supervised.model.files[grep(seed, supervised.model.files)]
   train.list <- readRDS(train.rds)
 
   # need to read in corresponding sample.df
   sample.df.file <-
     file.path(res.dir,
               paste0(cancer_type,
-                "_matchedSamples_subtypes_training_testing_split_labels_",
-                seed, ".tsv"))
+                     "_matchedSamples_subtypes_training_testing_split_labels_",
+                     seed, ".tsv"))
   sample.df <- data.table::fread(sample.df.file, data.table = F)
   sample.df$subtype <- as.factor(sample.df$subtype)
 
