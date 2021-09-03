@@ -2,7 +2,7 @@
 # This script is a wrapper for running the BRCA subtype pipeline repeatedly with
 # different random seeds.
 # It should be run from the command line.
-# USAGE: Rscript classifier_repeat_wrapper.R --cancer_type [BRCA|GBM] --n_repeats (default: 10)
+# USAGE: Rscript classifier_repeat_wrapper.R --cancer_type [BRCA|GBM] --predictor [subtype|TP53|PIK3CA] --n_repeats (default: 10)
 
 option_list <- list(
   optparse::make_option("--cancer_type",

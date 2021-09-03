@@ -2,7 +2,7 @@
 # The purpose of this script is to run the BRCA subtype classifier pipeline
 # for RNA-seq 'titration.'
 # It should be run from the command line.
-# USAGE: Rscript run_experiments.R --cancer_type [BRCA|GBM] --seed integer
+# USAGE: Rscript run_experiments.R --cancer_type [BRCA|GBM] --predictor [subtype|TP53|PIK3CA] --seed integer
 # It also may be run through the classifier_repeat_wrapper.R
 
 option_list <- list(
