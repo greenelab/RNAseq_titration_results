@@ -18,12 +18,12 @@ option_list <- list(
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
-source("util/option_functions.R")
+source(here::here("util/option_functions.R"))
 check_options(opt)
 
 # load libraries
-suppressMessages(source("load_packages.R"))
-source(file.path("util", "train_test_functions.R"))
+suppressMessages(source(here::here("load_packages.R")))
+source(here::here("util", "train_test_functions.R"))
 
 # set options
 cancer_type <- opt$cancer_type
@@ -34,9 +34,9 @@ initial.seed <- opt$seed3
 set.seed(initial.seed)
 
 # define directories
-norm.data.dir <- "normalized_data"
-mdl.dir <- "models"
-res.dir <- "results"
+norm.data.dir <- here::here("normalized_data")
+mdl.dir <- here::here("models")
+res.dir <- here::here("results")
 
 # define input files
 norm.test.object <- paste0(cancer_type,
@@ -104,7 +104,7 @@ train.model.list <-
                        subtype =  subtype.norm.list[[m]],
                        seed = resample.seed,
                        folds.list = folds.list[[m]])
-      
+
     }
   }
 
@@ -113,12 +113,13 @@ stopCluster(cl)
 
 # get names
 names(train.model.list) <- names(restr.train.list)
-train.model.list <- mapply(function(x, y){
-  names(x) <- names(y)
-  return(x)
-}, x = train.model.list,
-y = restr.train.list,
-SIMPLIFY = TRUE)
+train.model.list <- mapply(
+  function(x, y){
+    names(x) <- names(y)
+    return(x)
+  }, x = train.model.list,
+  y = restr.train.list,
+  SIMPLIFY = TRUE)
 
 # restructure trained model list so from top to bottom: norm method -> model
 # type -> % seq level (0 - 100)

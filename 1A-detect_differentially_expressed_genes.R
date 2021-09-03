@@ -24,19 +24,18 @@ option_list <- list(
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
-source("util/option_functions.R")
+source(here::here("util/option_functions.R"))
 check_options(opt)
 
 # load libraries
-suppressMessages(source("load_packages.R"))
-source(file.path("util", "normalization_functions.R"))
-source(file.path("util", "differential_expression_functions.R"))
+suppressMessages(source(here::here("load_packages.R")))
+source(here::here("util", "normalization_functions.R"))
+source(here::here("util", "differential_expression_functions.R"))
 
 # set options
 cancer_type <- opt$cancer_type
 subtype_vs_others <- opt$subtype_vs_others
 subtype_vs_subtype <- opt$subtype_vs_subtype
-# really this could be any number of subtypes
 two_subtypes <- as.vector(stringr::str_split(subtype_vs_subtype, pattern = ",", simplify = TRUE))
 
 # set seed
@@ -45,14 +44,16 @@ set.seed(initial.seed)
 message(paste("\nInitial seed set to:", initial.seed))
 
 # define directories
-data.dir <- "data"
-deg.dir <- file.path("results", "differential_expression")
+data.dir <- here::here("data")
+res.dir <- here::here("results")
+norm.dir <- here::here("normalized_data")
+deg.dir <- file.path(res.dir, "differential_expression")
 
 # define input files
 seq.file <- file.path(data.dir, paste0(cancer_type, "RNASeq_matchedOnly_ordered.pcl"))
 array.file <- file.path(data.dir, paste0(cancer_type, "array_matchedOnly_ordered.pcl"))
-smpl.file <- file.path("results",
-                       list.files("results", # this finds the first example of a subtypes file from cancer_type
+smpl.file <- file.path(res.dir,
+                       list.files(res.dir, # this finds the first example of a subtypes file from cancer_type
                                   pattern = paste0(cancer_type, # and does not rely on knowing a seed
                                                    "_matchedSamples_subtypes_training_testing_split_labels_"))[1])
 
@@ -65,7 +66,7 @@ two_subtypes.rds <- file.path(deg.dir,
                               paste0(cancer_type,
                                      "_titration_differential_exp_eBayes_fits_",
                                      stringr::str_c(two_subtypes, collapse = "v"), ".RDS"))
-norm.rds <- file.path("normalized_data",
+norm.rds <- file.path(norm.dir,
                       paste0(cancer_type, "_titration_no_ZTO_transform_with_UN.RDS"))
 
 #### read in data --------------------------------------------------------------
@@ -102,18 +103,18 @@ seq.dt.list <-
   lapply(titrate.sample.list,
          function(x) seq.data[, c(1, which(colnames(seq.data) %in% x))])
 all.same.list <- lapply(seq.dt.list[2:11],
-                    function(x){
-                      vals <- x[, 2:ncol(x)]
-                      indx <- which(apply(vals, 1, check_all_same))
-                      return(indx)
-                    } )
+                        function(x){
+                          vals <- x[, 2:ncol(x)]
+                          indx <- which(apply(vals, 1, check_all_same))
+                          return(indx)
+                        } )
 all.same.indx <- unique(unlist(all.same.list))
 # if no rows are all same (in previous lapply), all.same.indx is integer(0)
 # subsetting data frames by -integer(0) results in no rows
 # so check that integer vector has length > 0 before subsetting
 if (length(all.same.indx) > 0) {
   array.data <- array.data[-all.same.indx, ]
-  seq.data <- seq.data[-all.same.indx, ]  
+  seq.data <- seq.data[-all.same.indx, ]
 }
 
 # get a list that contains an array data.table and seq data.table for each

@@ -14,11 +14,11 @@ option_list <- list(
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
-source("util/option_functions.R")
+source(here::here("util/option_functions.R"))
 check_options(opt)
 
 # load libraries
-suppressMessages(source("load_packages.R"))
+suppressMessages(source(here::here("load_packages.R")))
 
 # set options
 cancer_type <- opt$cancer_type
@@ -28,9 +28,9 @@ initial.seed <- as.integer(opt$seed1)
 set.seed(initial.seed)
 
 # define directories
-data.dir <- "data"
-plot.dir <- "plots"
-res.dir <- "results"
+data.dir <- here::here("data")
+plot.dir <- here::here("plots")
+res.dir <- here::here("results")
 
 # name input files
 seq.exprs.filename <- paste0(cancer_type, "RNASeq.pcl")
@@ -102,10 +102,10 @@ if (any(colnames(array.matched) != colnames(seq.matched))) {
 
 # keep subtype labels for samples with expression data
 array.subtypes <- as.factor(array.subtypes[which(array.tumor.smpls %in%
-                                                      colnames(array.matched))])
+                                                   colnames(array.matched))])
 
 array.tumor.smpls <- array.tumor.smpls[which(array.tumor.smpls %in%
-                                                  colnames(array.matched))]
+                                               colnames(array.matched))]
 
 # remove "unmatched" / "raw" expression data
 rm(array.data, seq.data)

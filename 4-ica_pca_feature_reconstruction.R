@@ -23,13 +23,13 @@ option_list <- list(
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
-source("util/option_functions.R")
+source(here::here("util/option_functions.R"))
 check_options(opt)
 
 # load libraries
-suppressMessages(source("load_packages.R"))
-source(file.path("util", "train_test_functions.R"))
-source(file.path("util", "ICA_PCA_reconstruction_functions.R"))
+suppressMessages(source(here::here("load_packages.R")))
+source(here::here("util", "train_test_functions.R"))
+source(here::here("util", "ICA_PCA_reconstruction_functions.R"))
 
 # set options
 cancer_type <- opt$cancer_type
@@ -41,10 +41,10 @@ set.seed(initial.seed)
 message(paste("\nInitial seed set to:", initial.seed))
 
 # define directories
-res.dir <- "results"
-norm.dir <- "normalized_data"
-mdl.dir <- "models"
-rcn.dir <- file.path("normalized_data", "reconstructed_data")
+res.dir <- here::here("results")
+norm.dir <- here::here("normalized_data")
+mdl.dir <- here::here("models")
+rcn.dir <- file.path(norm.dir, "reconstructed_data")
 rcn.res.dir <- file.path(res.dir, "reconstructed_data")
 
 # define input files
