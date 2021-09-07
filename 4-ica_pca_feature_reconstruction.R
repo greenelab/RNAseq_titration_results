@@ -6,7 +6,7 @@
 # error' (MASE).
 #
 # It should be run from the command line.
-# USAGE: Rscript 4-ica_pca_feature_reconstruction.R --cancer_type --n_components --seed
+# USAGE: Rscript 4-ica_pca_feature_reconstruction.R --cancer_type --predictor --n_components --seed
 # n_components refers to the number of components (PC/IC) that should be used
 # for reconstruction.
 
@@ -14,6 +14,9 @@ option_list <- list(
   optparse::make_option("--cancer_type",
                         default = NULL,
                         help = "Cancer type"),
+  optparse::make_option("--predictor",
+                        default = NULL,
+                        help = "Predictor used"),
   optparse::make_option("--n_components",
                         default = 50,
                         help = "Number of compenents [default: %default]"),
@@ -33,6 +36,8 @@ source(here::here("util", "ICA_PCA_reconstruction_functions.R"))
 
 # set options
 cancer_type <- opt$cancer_type
+predictor <- opt$predictor
+file_identifier <- str_c(cancer_type, predictor, sep = "_")
 n.comp <- as.integer(opt$n_components)
 
 # set seed
@@ -49,9 +54,9 @@ rcn.res.dir <- file.path(res.dir, "reconstructed_data")
 
 # define input files
 lf <- list.files(norm.dir, full.names = TRUE)
-train.files <- lf[grepl(paste0(cancer_type,
+train.files <- lf[grepl(paste0(file_identifier,
                                "_array_seq_train_titrate_normalized_list_"), lf)]
-test.files <- lf[grepl(paste0(cancer_type,
+test.files <- lf[grepl(paste0(file_identifier,
                               "_array_seq_test_data_normalized_list_"), lf)]
 
 # parse filename seeds
@@ -60,11 +65,11 @@ filename.seeds <- substr(train.files,
                          (nchar(train.files)-4))
 
 # define output files
-df.file.lead <- paste0(cancer_type,
+df.file.lead <- paste0(file_identifier,
                        "_reconstruction_error_", n.comp, "_components_")
-mdl.file.lead <- paste0(cancer_type,
+mdl.file.lead <- paste0(file_identifier,
                         "_array_seq_train_", n.comp, "_components_object_")
-rcn.file.lead <- paste0(cancer_type,
+rcn.file.lead <- paste0(file_identifier,
                         "_reconstructed_data_", n.comp, "_components_")
 
 #### main ----------------------------------------------------------------------

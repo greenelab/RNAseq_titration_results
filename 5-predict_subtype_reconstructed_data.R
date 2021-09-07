@@ -1,17 +1,20 @@
 # J. Taroni Oct 2016
-# The purpose of this script is to perform PAM50 subtype prediction
+# The purpose of this script is to perform category prediction
 # (from 2-train_test_brca_subtype.R) on test/holdout data that has been
 # reconstructed using the components from PCA on training data (the
 # output of 4-ica_pca_feature_reconstruction.R). It outputs a list of
 # confusionMatrix objects and a data.frame of Kappa statistics from these
 # predictions.
 # It should be run from the command line.
-# USAGE: Rscript 5-predict_subtype_reconstructed_data.R --cancer_type
+# USAGE: Rscript 5-predict_subtype_reconstructed_data.R --cancer_type --predictor
 
 option_list <- list(
   optparse::make_option("--cancer_type",
                         default = NULL,
-                        help = "Cancer type")
+                        help = "Cancer type"),
+  optparse::make_option("--predictor",
+                        default = NULL,
+                        help = "Predictor used")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
@@ -24,6 +27,8 @@ source(here::here("util", "train_test_functions.R"))
 
 # set options
 cancer_type <- opt$cancer_type
+predictor <- opt$predictor
+file_identifier <- str_c(cancer_type, predictor, sep = "_")
 
 # define directories
 mdl.dir <- here::here("models")
@@ -44,9 +49,9 @@ filename.seeds <- unique(substr(recon.files,
                                 (nchar(recon.files)-4)))
 
 # define output files
-cm.file.lead <- paste0(cancer_type,
+cm.file.lead <- paste0(file_identifier,
                        "_subtype_prediction_reconstructed_data_confusionMatrices_")
-kap.file.lead <- paste0(cancer_type,
+kap.file.lead <- paste0(file_identifier,
                         "_subtype_prediction_reconstructed_data_kappa_")
 
 #### main ----------------------------------------------------------------------
@@ -75,7 +80,7 @@ for (seed in filename.seeds) {
   # need to read in corresponding sample.df
   sample.df.file <-
     file.path(res.dir,
-              paste0(cancer_type,
+              paste0(file_identifier,
                      "_matchedSamples_subtypes_training_testing_split_labels_",
                      seed, ".tsv"))
   sample.df <- data.table::fread(sample.df.file, data.table = F)
