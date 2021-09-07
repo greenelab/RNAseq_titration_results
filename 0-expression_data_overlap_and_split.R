@@ -70,7 +70,7 @@ if (cancer_type == "BRCA") { # rename from PAM50
 # this ensures downstream mutation predictions will have subtype available as covariate
 clinical <- clinical %>%
   select(Sample, Type, "subtype", all_of(predictor)) %>%
-  rename("category" = predictor) %>%
+  rename("category" = all_of(predictor)) %>%
   filter(Type == "tumor") %>%
   tidyr::drop_na()
 
