@@ -40,7 +40,7 @@ res.dir <- here::here("results")
 # name input files
 seq.exprs.filename <- paste0(cancer_type, "RNASeq.pcl")
 array.exprs.filename <- paste0(cancer_type, "array.pcl")
-clin.filename <- paste0(cancer_type, "Clin.tsv")
+clin.filename <- paste0("combined_clinical_data.", cancer_type, ".tsv")
 
 # name output files
 category.distribtion.plot <- paste0(file_identifier,
