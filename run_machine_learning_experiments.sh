@@ -10,7 +10,7 @@ if [ $cancer_type != "BRCA" ] && [ $cancer_type != "GBM" ]; then
   exit
 fi
 
-if [ $predictor != "subtype" ] && [ $predictor != "TP53" ] & [ $predictor != "PIK3CA"]; then
+if [ $predictor != "subtype" ] && [ $predictor != "TP53" ] && [ $predictor != "PIK3CA"]; then
   echo Predictor must be subtype, TP53, or PIK3CA in run_machine_learning_experiments.sh [cancer_type] [predictor]
   exit
 fi
