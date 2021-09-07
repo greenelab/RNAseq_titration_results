@@ -62,7 +62,7 @@ norm.train.object <- paste0(file_identifier,
 
 seq.data <- fread(file.path(data.dir, seq.file), data.table = FALSE)
 array.data <- fread(file.path(data.dir, array.file), data.table = FALSE)
-sample.train.test <- read.delim(file.path(res.dir, train.test.labels))
+sample.train.test <- fread(file.path(res.dir, train.test.file), data.table = FALSE)
 
 #### split samples, titrate ----------------------------------------------------
 
