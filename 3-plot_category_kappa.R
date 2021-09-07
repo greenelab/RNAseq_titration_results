@@ -18,9 +18,7 @@ source(here::here("util/option_functions.R"))
 check_options(opt)
 
 # load libraries
-`%>%` <- dplyr::`%>%`
-suppressMessages(library(ggplot2))
-suppressMessages(library(data.table))
+suppressMessages(source(here::here("load_packages.R")))
 source(here::here("util", "color_blind_friendly_palette.R"))
 
 # set options
