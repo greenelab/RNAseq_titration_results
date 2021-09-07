@@ -19,6 +19,6 @@ fi
 Rscript classifier_repeat_wrapper.R --cancer_type $cancer_type --predictor $predictor --n_repeats 10
 
 # Run the unsupervised analyses
-Rscript 4-ica_pca_feature_reconstruction.R --cancer_type $cancer_type --n_components 50
-Rscript 5-predict_subtype_reconstructed_data.R --cancer_type $cancer_type
-Rscript 6-plot_recon_error_kappa.R --cancer_type $cancer_type
+Rscript 4-ica_pca_feature_reconstruction.R --cancer_type $cancer_type --predictor $predictor --n_components 50
+Rscript 5-predict_category_reconstructed_data.R --cancer_type $cancer_type --predictor $predictor
+Rscript 6-plot_recon_error_kappa.R --cancer_type $cancer_type --predictor $predictor

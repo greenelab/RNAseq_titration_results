@@ -120,7 +120,7 @@ for (seed in filename.seeds) {
       }
 
       # perform the reconstruction experiment, which will return reconstructed
-      # holdout out data in data.table format suitable for subtype prediction
+      # holdout out data in data.table format suitable for category prediction
       # and calculate the reconstruction error (MASE) to be returned as a
       # data.frame
       results <- ReconstructionWrapper(train.list = train.comp.list,

@@ -1,12 +1,12 @@
 # J. Taroni Oct 2016
 # The purpose of this script is to perform category prediction
-# (from 2-train_test_brca_subtype.R) on test/holdout data that has been
+# (from 2-train_test_brca_category.R) on test/holdout data that has been
 # reconstructed using the components from PCA on training data (the
 # output of 4-ica_pca_feature_reconstruction.R). It outputs a list of
 # confusionMatrix objects and a data.frame of Kappa statistics from these
 # predictions.
 # It should be run from the command line.
-# USAGE: Rscript 5-predict_subtype_reconstructed_data.R --cancer_type --predictor
+# USAGE: Rscript 5-predict_category_reconstructed_data.R --cancer_type --predictor
 
 option_list <- list(
   optparse::make_option("--cancer_type",
@@ -50,9 +50,9 @@ filename.seeds <- unique(substr(recon.files,
 
 # define output files
 cm.file.lead <- paste0(file_identifier,
-                       "_subtype_prediction_reconstructed_data_confusionMatrices_")
+                       "_prediction_reconstructed_data_confusionMatrices_")
 kap.file.lead <- paste0(file_identifier,
-                        "_subtype_prediction_reconstructed_data_kappa_")
+                        "_prediction_reconstructed_data_kappa_")
 
 #### main ----------------------------------------------------------------------
 
@@ -70,7 +70,7 @@ for (seed in filename.seeds) {
   }
 
   rep.count <- grep(seed, filename.seeds)
-  message(paste("\n\n#### SUBTYPE PREDICTION",
+  message(paste("\n\n#### CATEGORY PREDICTION",
                 rep.count, "of", length(filename.seeds), "####\n\n"))
 
   # read in supervised models (LASSO, linear SVM, random forest)
@@ -81,10 +81,10 @@ for (seed in filename.seeds) {
   sample.df.file <-
     file.path(res.dir,
               paste0(file_identifier,
-                     "_matchedSamples_subtypes_training_testing_split_labels_",
+                     "_matchedSamples_training_testing_split_labels_",
                      seed, ".tsv"))
   sample.df <- data.table::fread(sample.df.file, data.table = F)
-  sample.df$subtype <- as.factor(sample.df$subtype)
+  sample.df$category <- as.factor(sample.df$category)
 
   # initialize list to hold confusionMatrices & kappa statistics
   kappa.list <- list()
