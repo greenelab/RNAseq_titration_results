@@ -7,13 +7,13 @@
 
 option_list <- list(
   optparse::make_option("--cancer_type",
-                        default = NA,
+                        default = NA_character_,
                         help = "Cancer type"),
   optparse::make_option("--predictor",
-                        default = NA,
+                        default = NA_character_,
                         help = "Predictor used"),
   optparse::make_option("--seed",
-                        default = NA,
+                        default = NA_integer_,
                         help = "Random seed")
 )
 
