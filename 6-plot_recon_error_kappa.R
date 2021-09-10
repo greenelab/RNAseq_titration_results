@@ -19,7 +19,7 @@ source(here::here("util/option_functions.R"))
 check_options(opt)
 
 # load libraries
-library(tidyverse)
+suppressMessages(library(tidyverse))
 source(here::here("util", "color_blind_friendly_palette.R"))
 
 # set options
