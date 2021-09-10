@@ -9,13 +9,13 @@
 
 option_list <- list(
   optparse::make_option("--cancer_type",
-                        default = NULL,
+                        default = NA,
                         help = "Cancer type"),
   optparse::make_option("--subtype_vs_others",
-                        default = NULL,
+                        default = NA,
                         help = "Subtype used for comparison against all others"),
   optparse::make_option("--subtype_vs_subtype",
-                        default = NULL,
+                        default = NA,
                         help = "Subtypes used in head-to-head comparison (comma-separated without space e.g. Type1,Type2)")
 )
 

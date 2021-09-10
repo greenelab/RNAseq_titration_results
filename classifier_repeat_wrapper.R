@@ -6,10 +6,10 @@
 
 option_list <- list(
   optparse::make_option("--cancer_type",
-                        default = NULL,
+                        default = NA,
                         help = "Cancer type"),
   optparse::make_option("--predictor",
-                        default = NULL,
+                        default = NA,
                         help = "Predictor used"),
   optparse::make_option("--n_repeats",
                         default = 10,
