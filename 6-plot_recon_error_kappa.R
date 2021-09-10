@@ -1,14 +1,17 @@
 # J. Taroni Oct 2016
 # This script plots reconstruction errors (MASE and RMSE) from
 # 4-ica_pca_feature_reconstruction.R and the Kappa statistics associated with
-# predictions on reconstructed data from 5-predict_subtype_reconstructed_data.R
+# predictions on reconstructed data from 5-predict_category_reconstructed_data.R
 # as violin plots, respectively.
-# USAGE: Rscript 6-plot_recon_error_kappa.R --cancer_type
+# USAGE: Rscript 6-plot_recon_error_kappa.R --cancer_type --predictor
 
 option_list <- list(
   optparse::make_option("--cancer_type",
                         default = NULL,
-                        help = "Cancer type")
+                        help = "Cancer type"),
+  optparse::make_option("--predictor",
+                        default = NULL,
+                        help = "Predictor used")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
@@ -16,12 +19,13 @@ source(here::here("util/option_functions.R"))
 check_options(opt)
 
 # load libraries
+library(tidyverse)
 source(here::here("util", "color_blind_friendly_palette.R"))
-library(ggplot2)
-library(dplyr)
 
 # set options
 cancer_type <- opt$cancer_type
+predictor <- opt$predictor
+file_identifier <- str_c(cancer_type, predictor, sep = "_")
 
 # define directories
 plot.dir <- here::here("plots")
@@ -31,12 +35,12 @@ rcn.res.dir <- here::here("results", "reconstructed_data")
 # pattern = "kappa" captures a downstream output file if this script is rerun
 # pattern = "kappa_[0-9]+.tsv" captures the intended filenames including seeds between 1:10000
 kappa.df.files <- list.files(rcn.res.dir, pattern = "kappa_[0-9]+.tsv", full.names = TRUE)
-error.files <- list.files(rcn.res.dir, pattern = paste0(cancer_type, "_reconstruction_error"),
+error.files <- list.files(rcn.res.dir, pattern = paste0(file_identifier, "_reconstruction_error"),
                           full.names = TRUE)
 
 # define output files
-kap.plot.file.lead <- file.path(plot.dir, paste0(cancer_type, "_kappa_reconstructed_data_"))
-err.plot.file.lead <- file.path(plot.dir, paste0(cancer_type, "_reconstruction_error_"))
+kap.plot.file.lead <- file.path(plot.dir, paste0(file_identifier, "_kappa_reconstructed_data_"))
+err.plot.file.lead <- file.path(plot.dir, paste0(file_identifier, "_reconstruction_error_"))
 
 #### plot kappa stats ----------------------------------------------------------
 
@@ -108,7 +112,7 @@ kappa.summary.df <-
                    .groups = "drop")
 readr::write_tsv(kappa.summary.df,
                  file.path(rcn.res.dir,
-                           paste0(cancer_type,
+                           paste0(file_identifier,
                                   "_kappa_reconstructed_data_summary_table.tsv")))
 
 rm(kappa.master.df)

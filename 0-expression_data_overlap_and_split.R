@@ -1,13 +1,16 @@
 # J. Taroni Jun 2016
 # The purpose of this script is to read in TGCA array and sequencing data,
 # to preprocess leaving only overlapping genes and samples with complete
-# subtype information, and to split the data into training and testing sets
+# category information, and to split the data into training and testing sets
 # It should be run from the command line through the run_experiments.R script
 
 option_list <- list(
   optparse::make_option("--cancer_type",
                         default = NULL,
                         help = "Cancer type"),
+  optparse::make_option("--predictor",
+                        default = NULL,
+                        help = "Predictor used"),
   optparse::make_option("--seed1",
                         default = NULL,
                         help = "Random seed")
@@ -22,6 +25,8 @@ suppressMessages(source(here::here("load_packages.R")))
 
 # set options
 cancer_type <- opt$cancer_type
+predictor <- opt$predictor
+file_identifier <- str_c(cancer_type, predictor, sep = "_")
 
 # set seed
 initial.seed <- as.integer(opt$seed1)
@@ -35,15 +40,14 @@ res.dir <- here::here("results")
 # name input files
 seq.exprs.filename <- paste0(cancer_type, "RNASeq.pcl")
 array.exprs.filename <- paste0(cancer_type, "array.pcl")
-# for BRCA, this clinical info refers to array samples, which we overlap with seq samples
-clin.filename <- paste0(cancer_type, "Clin.tsv")
+clin.filename <- paste0("combined_clinical_data.", cancer_type, ".tsv")
 
 # name output files
-subtype.distribtion.plot <- paste0(cancer_type,
-                                   "_subtypes_dist_split_stacked_bar_",
-                                   initial.seed, ".pdf")
-train.test.labels <- paste0(cancer_type,
-                            "_matchedSamples_subtypes_training_testing_split_labels_",
+category.distribtion.plot <- paste0(file_identifier,
+                                    "_dist_split_stacked_bar_",
+                                    initial.seed, ".pdf")
+train.test.labels <- paste0(file_identifier,
+                            "_matchedSamples_training_testing_split_labels_",
                             initial.seed, ".tsv")
 
 #### read in expression and clinical data --------------------------------------
@@ -56,19 +60,28 @@ array.data <- fread(file.path(data.dir, array.exprs.filename),
 clinical <- fread(file.path(data.dir, clin.filename),
                   data.table = FALSE)
 
-# change first column name to "gene"
-colnames(array.data)[1] <- colnames(seq.data)[1] <- "gene"
-
-# remove tumor-adjacent samples from the array data set
-array.tumor.smpls <-
-  clinical$Sample[which(clinical$Type == "tumor")]
-array.tumor.smpls <- substr(array.tumor.smpls, 1, 15)
-
 if (cancer_type == "BRCA") { # rename from PAM50
   colnames(clinical)[4] <- "subtype"
 }
 
-array.subtypes <- clinical$subtype[which(clinical$Type == "tumor")]
+# filter clinical data to keep tumor samples with complete data
+# if the predictor is subtype, we only select subtype (twice, but once)
+# if the predictor is a gene, we select subtype and the gene
+# this ensures downstream mutation predictions will have subtype available as covariate
+clinical <- clinical %>%
+  select(Sample, Type, "subtype", all_of(predictor)) %>%
+  rename("category" = all_of(predictor)) %>%
+  filter(Type == "tumor") %>%
+  tidyr::drop_na()
+
+# change first column name to "gene"
+colnames(array.data)[1] <- colnames(seq.data)[1] <- "gene"
+
+# remove tumor-adjacent samples from the array data set
+array.tumor.smpls <- clinical$Sample
+array.tumor.smpls <- substr(array.tumor.smpls, 1, 15)
+
+array.category <- clinical$category
 
 # filter array data only to include tumor samples
 array.data <- array.data[, c(1, which(colnames(array.data) %in%
@@ -100,8 +113,8 @@ if (any(colnames(array.matched) != colnames(seq.matched))) {
   stop("Column name reordering did not work as expected in 0-expression_data_overlap_and_split.R")
 }
 
-# keep subtype labels for samples with expression data
-array.subtypes <- as.factor(array.subtypes[which(array.tumor.smpls %in%
+# keep category labels for samples with expression data
+array.category <- as.factor(array.category[which(array.tumor.smpls %in%
                                                    colnames(array.matched))])
 
 array.tumor.smpls <- array.tumor.smpls[which(array.tumor.smpls %in%
@@ -123,32 +136,32 @@ write.table(seq.matched, file = seq.output.nm,
 
 #### split data into balanced training and testing sets ------------------------
 
-# order array subtypes to match the expression data order
-array.subtypes <- array.subtypes[order(array.tumor.smpls)]
+# order array category to match the expression data order
+array.category <- array.category[order(array.tumor.smpls)]
 
 split.seed <- sample(1:10000, 1)
 message(paste("\nRandom seed for splitting into testing and training:",
               split.seed), appendLF = TRUE)
 
 set.seed(split.seed)
-train.index <- unlist(createDataPartition(array.subtypes, times = 1, p = (2/3)))
+train.index <- unlist(createDataPartition(array.category, times = 1, p = (2/3)))
 
-#### plot subtype distributions ------------------------------------------------
-whole.df <- cbind(as.character(array.subtypes),
-                  rep("whole", length(array.subtypes)))
-train.df <- cbind(as.character(array.subtypes[train.index]),
+#### plot category distributions ------------------------------------------------
+whole.df <- cbind(as.character(array.category),
+                  rep("whole", length(array.category)))
+train.df <- cbind(as.character(array.category[train.index]),
                   rep("train (2/3)", length(train.index)))
-test.df <- cbind(as.character(array.subtypes[-train.index]),
+test.df <- cbind(as.character(array.category[-train.index]),
                  rep("test (1/3)",
-                     (length(array.subtypes)-length(train.index))))
+                     length(array.category)-length(train.index)))
 mstr.df <- rbind(whole.df, train.df, test.df)
 
-colnames(mstr.df) <- c("subtype", "split")
+colnames(mstr.df) <- c("category", "split")
 cbPalette <- c("#000000", "#E69F00", "#56B4E9",
                "#009E73", "#F0E442","#0072B2", "#D55E00", "#CC79A7")
 
-plot.nm <- file.path(plot.dir, subtype.distribtion.plot)
-ggplot(as.data.frame(mstr.df), aes(x = split, fill = subtype)) +
+plot.nm <- file.path(plot.dir, category.distribtion.plot)
+ggplot(as.data.frame(mstr.df), aes(x = split, fill = category)) +
   geom_bar() +
   theme_classic() +
   scale_fill_manual(values = cbPalette) +
@@ -161,8 +174,9 @@ ggplot(as.data.frame(mstr.df), aes(x = split, fill = subtype)) +
 lbl <- rep("test", length(array.tumor.smpls))
 lbl[train.index] <- "train"
 lbl.df <- cbind(colnames(array.matched)[2:ncol(array.matched)],
-                lbl, as.character(array.subtypes))
-colnames(lbl.df) <- c("sample", "split", "subtype")
+                lbl,
+                as.character(array.category))
+colnames(lbl.df) <- c("sample", "split", "category")
 
 write.table(lbl.df,
             file = file.path(res.dir, train.test.labels),

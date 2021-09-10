@@ -1,14 +1,14 @@
-GetCM <- function(model, dt.mat, subtype,
+GetCM <- function(model, dt.mat, category,
                   model.type = NULL, return.only.kappa = TRUE){
   # This function takes a model, a normalized gene expression matrix,
   # and performs prediction and returns the Kappa statistic based on the
-  # observed subtype labels supplied
+  # observed category labels supplied
   #
   # Args:
   #   model: a predictive model of the class train (output of train() in the
   #   caret package)
   #   dt.mat: a matrix where genes are columns and rows are samples
-  #   subtype: a vector of the true subtype labels
+  #   category: a vector of the true category labels
   #   model.type: what kind of predictive model will be used?
   #   return.only.kappa: logical, should the Kappa statistic associated with
   #                      the prediction be returned (TRUE) or should the entire
@@ -22,10 +22,10 @@ GetCM <- function(model, dt.mat, subtype,
   #
   if (model.type == "glmnet") {
     prd <- predict(model, dt.mat, s=model$lambda.1se, type="class")
-    cm <- confusionMatrix(as.factor(as.vector(prd)), subtype)
+    cm <- confusionMatrix(as.factor(as.vector(prd)), category)
   } else {
     prd <- predict(model, dt.mat)
-    tbl <- table(prd, subtype)
+    tbl <- table(prd, category)
     cm <- confusionMatrix(tbl)
   }
 
@@ -43,12 +43,12 @@ PredictCM <- function(model, dt, sample.df,
                       model.type = NULL, return.only.kappa = TRUE){
   # This function takes a model, a normalized gene expression matrix,
   # and performs prediction and returns the total accuracy based on the
-  # observed subtype labels supplied
+  # observed category labels supplied
   #
   # Args:
   #   model: a predictive model of the class train OR class cv.glmnet
   #   dt: a data table where the columns are the samples and the rows are genes
-  #   sample.df: the data frame that maps sample name/header to subtype and
+  #   sample.df: the data frame that maps sample name/header to category and
   #              train/test set labels
   #              output of 0-expression_data_overlap_and_split.R
   #   model.type: is the model from glmnet (class: cv.glmnet) or from caret
@@ -69,7 +69,7 @@ PredictCM <- function(model, dt, sample.df,
   require(kernlab)
   require(data.table)
 
-  subtype <- GetOrderedSubtypeLabels(dt, sample.df)
+  category <- GetOrderedCategoryLabels(dt, sample.df)
   #dt.mat <- t(dt[, 2:ncol(dt), with = F])
   dt.mat <- t(dt[, -1, with = F])
   colnames(dt.mat) <- paste0("c", seq(1:ncol(dt.mat)))
@@ -79,23 +79,23 @@ PredictCM <- function(model, dt, sample.df,
     dt.mat <- apply(dt.mat, 2, as.numeric)
   }
 
-  pred.cm <- GetCM(model, dt.mat, subtype, model.type, return.only.kappa)
+  pred.cm <- GetCM(model, dt.mat, category, model.type, return.only.kappa)
   return(pred.cm)
 }
 
-GetOrderedSubtypeLabels <- function(exp.dt, sample.df){
+GetOrderedCategoryLabels <- function(exp.dt, sample.df){
   # This function takes a data.table of gene expression and a data.frame that
-  # maps sample names to subtype labels
+  # maps sample names to category labels
   #
   # Args:
   #   exp.dt: a data table where the columns are the samples and the rows
   #           are genes
-  #   sample.df: the data frame that maps sample name/header to subtype and
+  #   sample.df: the data frame that maps sample name/header to category and
   #              train/test set labels
   #              output of 0-expression_data_overlap_and_split.R
   #
   # Returns:
-  #   subtype.labels: corresponding subtype labels ordered to match the columns/
+  #   category.labels: corresponding category labels ordered to match the columns/
   #                   sample name order
   #
   exp.samples <- colnames(exp.dt)[2:ncol(exp.dt)]
@@ -103,13 +103,13 @@ GetOrderedSubtypeLabels <- function(exp.dt, sample.df){
   for (i in 1:length(exp.samples)) {
     indx[i] <- which(sample.df$sample == exp.samples[i])
   }
-  subtype.labels <- sample.df$subtype[indx]
-  return(subtype.labels)
+  category.labels <- sample.df$category[indx]
+  return(category.labels)
 }
 
-TrainThreeModels <- function(dt, subtype, seed, folds.list){
+TrainThreeModels <- function(dt, category, seed, folds.list){
   # This function takes a data.table of gene expression and sample
-  # subtype labels in the same order as the columns. Seed and a list of folds
+  # category labels in the same order as the columns. Seed and a list of folds
   # from createFolds are included for reproducibility purposes. Returns a list
   # of 3 predictive models - LASSO (glmnet), random forest (caret/ranger),
   # and linear SVM (caret/kernlab)
@@ -117,7 +117,7 @@ TrainThreeModels <- function(dt, subtype, seed, folds.list){
   # Args:
   #   dt: a data.table where the columns are the samples and the rows
   #       are genes
-  #   subtype: sample subtype labels in the same order as the columns
+  #   category: sample category labels in the same order as the columns
   #   seed: integer to be used to set seed and general seed list to supply to
   #         caret::train for parallel processing
   #   folds.list: a list with indices for each fold, from caret::createFolds
@@ -147,7 +147,7 @@ TrainThreeModels <- function(dt, subtype, seed, folds.list){
 
     fold.vector <- vector()  # foldids for cv.glmnet so the folds are the same
     # as caret models
-    for (i in 1:length(subtype)) {
+    for (i in 1:length(category)) {
       fold.vector[i] <- which(unlist(lapply(folds.list, function(x) i %in% x)))
     }
 
@@ -159,20 +159,20 @@ TrainThreeModels <- function(dt, subtype, seed, folds.list){
 
     # LASSO
     train.list[["glmnet"]] <- cv.glmnet(t_dt,
-                                        subtype,
+                                        category,
                                         family = "multinomial",
                                         foldid = fold.vector, # fold 'labels'
                                         parallel = T,
                                         type.measure="class")
     # Random Forest
     train.list[["rf"]] <- train(t_dt,
-                                subtype,
+                                category,
                                 method = "ranger",
                                 trControl = fit.control,
                                 tuneLength = 3)
     # Linear SVM
     train.list[["svm"]] <- train(t_dt,
-                                 subtype,
+                                 category,
                                  method = "svmLinear",
                                  trControl = fit.control,
                                  tuneLength = 3)
@@ -249,17 +249,17 @@ RestructureTrainedList <- function(train.list){
 
 PredictWrapper <- function(train.model.list, pred.list, sample.df,
                            only.kap = TRUE, run.parallel = TRUE) {
-  # This function is a wrapper for performing subtype prediction on
+  # This function is a wrapper for performing category prediction on
   # normalized expression data.tables (training data, holdout data, or
   # reconstructed data) using the models trained on training data
-  # in the supervised analysis (train.list from 2-train_test_brca_subtype.R).
+  # in the supervised analysis (train.list from 2-train_test_category.R).
   #
   # Args:
   #   train.model.list: a list of predictive models
   #                     (LASSO, linear SVM, random forest)
   #   pred.list: list of normalized expression data.tables, labels for this
   #              data are going to be predicted
-  #   sample.df: the data frame that maps sample name/header to subtype and
+  #   sample.df: the data frame that maps sample name/header to category and
   #              train/test set labels
   #              output of 0-expression_data_overlap_and_split.R
   #   only.kap: logical; (TRUE) should only the Kappa statistics associated with
@@ -336,7 +336,7 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
     parallel::clusterExport(cl,
                             c("PredictCM",
                               "GetCM",
-                              "GetOrderedSubtypeLabels"))
+                              "GetOrderedCategoryLabels"))
   }
 
   norm.methods <- names(train.model.list)

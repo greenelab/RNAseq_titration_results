@@ -15,13 +15,18 @@ check_options <- function(opt) {
       my_errors[[option]] <- stringr::str_c("\nOption given for --", option,
                                             " is missing and must be specified.")
     } else if (option == "cancer_type") {
-      
       if (!(opt[[option]] %in% c("BRCA", "GBM"))) { # cancer type must be BRCA or GBM
         my_errors[[option]] <- stringr::str_c("\nCancer type given for --", option,
                                              " (", opt[[option]], ") ",
-                                             " must be BRCA or GBM.")  
+                                             " must be BRCA or GBM.")
       }
-    } else if (option == "subtype_vs_subtype") {
+    } else if (option == "predictor") {
+      if (!(opt[[option]] %in% c("subtype", "TP53", "PIK3CA"))) { # predictor must be subtype or TP53 or PIK3CA
+        my_errors[[option]] <- stringr::str_c("\nPredictor given for --", option,
+                                              " (", opt[[option]], ") ",
+                                              " must be subtype, TP53, or PIK3CA.")
+      }
+    }  else if (option == "subtype_vs_subtype") {
       two_subtypes <- as.vector(stringr::str_split(opt[[option]], pattern = ",", simplify = TRUE))
       if (length(two_subtypes) != 2) {
         my_errors[[option]] <- stringr::str_c("\nSubtypes given for --", option,
