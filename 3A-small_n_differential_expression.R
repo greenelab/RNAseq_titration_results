@@ -99,14 +99,14 @@ seq.dt <- data.table(seq.data[,
                                            samples.to.keep))])
 sample.df <- sample.df[which(sample.df$sample %in% samples.to.keep), ]
 
-smaller_subtype_size <- min(table(sample.df$subtype))
+smaller_subtype_size <- min(table(droplevels(sample.df$subtype)))
 
 # different sizes of n to test
 no.samples <- c(3, 4, 5, 6, 8, 10, 15, 25, 50)
-no.samples <- no.samples[which(no.samples <= smallest_subtype_size)]
+no.samples <- no.samples[which(no.samples <= smaller_subtype_size)]
 
 message(paste("Smaller subtype has", smaller_subtype_size, "samples,",
-              "so only using up to", max(no.samples), "samples in 3A-small_n_differential_expression.R"))
+              "so using up to", max(no.samples), "samples in 3A-small_n_differential_expression.R"))
 
 # initialize list to hold jaccard index data.frames from the 10 trials
 jacc.df.list <- list()
