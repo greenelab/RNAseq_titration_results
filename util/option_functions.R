@@ -11,7 +11,7 @@ check_options <- function(opt) {
 
   for(option in names(opt)){
 
-    if (is.null(opt[[option]])) { # all required options should default to NULL
+    if (is.na(opt[[option]])) { # all required options should default to NA_character_ or NA_integer_
       my_errors[[option]] <- stringr::str_c("\nOption given for --", option,
                                             " is missing and must be specified.")
     } else if (option == "cancer_type") {

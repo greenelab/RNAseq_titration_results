@@ -6,13 +6,13 @@
 
 option_list <- list(
   optparse::make_option("--cancer_type",
-                        default = NULL,
+                        default = NA_character_,
                         help = "Cancer type"),
   optparse::make_option("--predictor",
-                        default = NULL,
+                        default = NA_character_,
                         help = "Predictor used"),
   optparse::make_option("--seed1",
-                        default = NULL,
+                        default = NA_integer_,
                         help = "Random seed")
 )
 
@@ -59,10 +59,6 @@ array.data <- fread(file.path(data.dir, array.exprs.filename),
                     data.table = FALSE)
 clinical <- fread(file.path(data.dir, clin.filename),
                   data.table = FALSE)
-
-if (cancer_type == "BRCA") { # rename from PAM50
-  colnames(clinical)[4] <- "subtype"
-}
 
 # filter clinical data to keep tumor samples with complete data
 # if the predictor is subtype, we only select subtype (twice, but once)
