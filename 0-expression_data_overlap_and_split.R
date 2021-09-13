@@ -60,10 +60,6 @@ array.data <- fread(file.path(data.dir, array.exprs.filename),
 clinical <- fread(file.path(data.dir, clin.filename),
                   data.table = FALSE)
 
-if (cancer_type == "BRCA") { # rename from PAM50
-  colnames(clinical)[4] <- "subtype"
-}
-
 # filter clinical data to keep tumor samples with complete data
 # if the predictor is subtype, we only select subtype (twice, but once)
 # if the predictor is a gene, we select subtype and the gene
