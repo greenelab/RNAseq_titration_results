@@ -38,6 +38,8 @@ file_identifier <- ifelse(null_model,
 # set seed
 initial.seed <- as.integer(opt$seed1)
 set.seed(initial.seed)
+# set seed for spliting into train/test here, before null_model scramble
+split.seed <- sample(1:10000, 1)
 
 # define directories
 data.dir <- here::here("data")
@@ -116,6 +118,14 @@ if (any(colnames(array.matched) != colnames(seq.matched))) {
   stop("Column name reordering did not work as expected in 0-expression_data_overlap_and_split.R")
 }
 
+# if null_model, scramble expression values within sample
+# this also scrambles the gene names in column 1
+# sample() has default values replace = FALSE, so each value in column is sampled exactly once
+if (null_model) {
+  array.matched <- apply(array.matched, 2, sample)
+  seq.matched <- apply(seq.matched, 2, sample)
+}
+
 # keep category labels for samples with expression data
 array.category <- as.factor(array.category[which(array.tumor.smpls %in%
                                                    colnames(array.matched))])
@@ -142,7 +152,6 @@ write.table(seq.matched, file = seq.output.nm,
 # order array category to match the expression data order
 array.category <- array.category[order(array.tumor.smpls)]
 
-split.seed <- sample(1:10000, 1)
 message(paste("\nRandom seed for splitting into testing and training:",
               split.seed), appendLF = TRUE)
 
