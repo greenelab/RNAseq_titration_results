@@ -35,6 +35,7 @@ source(here::here("util", "train_test_functions.R"))
 # set options
 cancer_type <- opt$cancer_type
 predictor <- opt$predictor
+null_model <- opt$null_model
 file_identifier <- ifelse(null_model,
                           str_c(cancer_type, predictor, "null", sep = "_"),
                           str_c(cancer_type, predictor, sep = "_"))
