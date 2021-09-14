@@ -55,7 +55,7 @@ supervised.model.files <- list.files(mdl.dir,
 #recon.files <- list.files(rcn.dir, full.names = TRUE)
 recon.files <- list.files(rcn.dir,
                           pattern = paste0(file_identifier,
-                                           "_reconstruction_error_"),
+                                           "_reconstructed_data_"),
                           full.names = TRUE)
 
 # get filename.seeds (identifiers for each replicate)
