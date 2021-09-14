@@ -10,13 +10,18 @@ if [ $cancer_type != "BRCA" ] && [ $cancer_type != "GBM" ]; then
   exit
 fi
 
-if [ $predictor != "subtype" ] && [ $predictor != "TP53" ] && [ $predictor != "PIK3CA"]; then
+if [ $predictor != "subtype" ] && [ $predictor != "TP53" ] && [ $predictor != "PIK3CA" ]; then
   echo Predictor must be subtype, TP53, or PIK3CA in run_machine_learning_experiments.sh [cancer_type] [predictor]
   exit
 fi
 
 # Run ten repeats of the supervised analysis
-Rscript classifier_repeat_wrapper.R --cancer_type $cancer_type --predictor $predictor --n_repeats 10
+if [ $predictor == "TP53" ] || [ $predictor == "PIK3CA" ]; then
+  Rscript classifier_repeat_wrapper.R --cancer_type $cancer_type --predictor $predictor --n_repeats 10
+  Rscript classifier_repeat_wrapper.R --cancer_type $cancer_type --predictor $predictor --n_repeats 10 --null_model
+else
+  Rscript classifier_repeat_wrapper.R --cancer_type $cancer_type --predictor $predictor --n_repeats 10
+fi
 
 # Run the unsupervised analyses
 Rscript 4-ica_pca_feature_reconstruction.R --cancer_type $cancer_type --predictor $predictor --n_components 50
