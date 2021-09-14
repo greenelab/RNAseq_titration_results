@@ -13,7 +13,11 @@ option_list <- list(
                         help = "Predictor used"),
   optparse::make_option("--seed1",
                         default = NA_integer_,
-                        help = "Random seed")
+                        help = "Random seed"),
+  optparse::make_option("--null_model",
+                        action = "store_true",
+                        default = FALSE,
+                        help = "Scramble gene expression values within sample for null model prediction")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
@@ -26,7 +30,10 @@ suppressMessages(source(here::here("load_packages.R")))
 # set options
 cancer_type <- opt$cancer_type
 predictor <- opt$predictor
-file_identifier <- str_c(cancer_type, predictor, sep = "_")
+null_model <- opt$null_model
+file_identifier <- ifelse(null_model,
+                          str_c(cancer_type, predictor, "null", sep = "_"),
+                          str_c(cancer_type, predictor, sep = "_"))
 
 # set seed
 initial.seed <- as.integer(opt$seed1)

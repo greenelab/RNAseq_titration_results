@@ -14,7 +14,11 @@ option_list <- list(
                         help = "Cancer type"),
   optparse::make_option("--predictor",
                         default = NA_character_,
-                        help = "Predictor used")
+                        help = "Predictor used"),
+  optparse::make_option("--null_model",
+                        action = "store_true",
+                        default = FALSE,
+                        help = "Scramble gene expression values within sample for null model prediction")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
@@ -28,7 +32,9 @@ source(here::here("util", "train_test_functions.R"))
 # set options
 cancer_type <- opt$cancer_type
 predictor <- opt$predictor
-file_identifier <- str_c(cancer_type, predictor, sep = "_")
+file_identifier <- ifelse(null_model,
+                          str_c(cancer_type, predictor, "null", sep = "_"),
+                          str_c(cancer_type, predictor, sep = "_"))
 
 # define directories
 mdl.dir <- here::here("models")
@@ -38,9 +44,18 @@ rcn.dir <- file.path(norm.dir, "reconstructed_data")
 rcn.res.dir <- file.path(res.dir, "reconstructed_data")
 
 # define input files
-model.files <- list.files(mdl.dir, full.names = TRUE)
-supervised.model.files <- model.files[grep("3_models", model.files)]
-recon.files <- list.files(rcn.dir, full.names = TRUE)
+#model.files <- list.files(mdl.dir, full.names = TRUE)
+#supervised.model.files <- model.files[grepl(paste0(file_identifier,
+#                                                   "_train_3_models"), model.files)]
+supervised.model.files <- list.files(mdl.dir,
+                                     pattern = paste0(file_identifier,
+                                                      "_train_3_models"),
+                                     full.names = TRUE)
+#recon.files <- list.files(rcn.dir, full.names = TRUE)
+recon.files <- list.files(rcn.dir,
+                          pattern = paste0(file_identifier,
+                                           "_reconstruction_error_")
+                          full.names = TRUE)
 
 # get filename.seeds (identifiers for each replicate)
 # from the reconstructed data files

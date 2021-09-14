@@ -22,7 +22,11 @@ option_list <- list(
                         help = "Number of compenents [default: %default]"),
   optparse::make_option("--seed",
                         default = 346,
-                        help = "Random seed [default: %default]")
+                        help = "Random seed [default: %default]"),
+  optparse::make_option("--null_model",
+                        action = "store_true",
+                        default = FALSE,
+                        help = "Scramble gene expression values within sample for null model prediction")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
@@ -37,7 +41,9 @@ source(here::here("util", "ICA_PCA_reconstruction_functions.R"))
 # set options
 cancer_type <- opt$cancer_type
 predictor <- opt$predictor
-file_identifier <- str_c(cancer_type, predictor, sep = "_")
+file_identifier <- ifelse(null_model,
+                          str_c(cancer_type, predictor, "null", sep = "_"),
+                          str_c(cancer_type, predictor, sep = "_"))
 n.comp <- as.integer(opt$n_components)
 
 # set seed
