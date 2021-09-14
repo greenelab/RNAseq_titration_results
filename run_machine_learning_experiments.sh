@@ -16,6 +16,7 @@ if [ $predictor != "subtype" ] && [ $predictor != "TP53" ] && [ $predictor != "P
 fi
 
 # Run ten repeats of the supervised analysis
+# if the predictor is a gene, also generate null models
 if [ $predictor == "TP53" ] || [ $predictor == "PIK3CA" ]; then
   Rscript classifier_repeat_wrapper.R --cancer_type $cancer_type --predictor $predictor --n_repeats 10
   Rscript classifier_repeat_wrapper.R --cancer_type $cancer_type --predictor $predictor --n_repeats 10 --null_model

@@ -13,7 +13,11 @@ option_list <- list(
                         help = "Predictor used"),
   optparse::make_option("--n_repeats",
                         default = 10,
-                        help = "Number of times experiment is repeated [default: %default]")
+                        help = "Number of times experiment is repeated [default: %default]"),
+  optparse::make_option("--null_model",
+                        action = "store_true",
+                        default = FALSE,
+                        help = "Scramble gene expression values within sample for null model prediction")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
@@ -24,6 +28,13 @@ check_options(opt)
 cancer_type <- opt$cancer_type
 predictor <- opt$predictor
 n.repeats <- opt$n_repeats
+null_model <- opt$null_model
+
+message(paste("\nPredicting", predictor,
+              "in", cancer_type,
+              ifelse(null_model,
+                     "(null model) ...",
+                     "...")))
 message(paste("\nNumber of repeats set to", n.repeats))
 
 initial.seed <- 12
@@ -37,10 +48,16 @@ for(seed in seeds){
   system(paste("Rscript run_experiments.R",
                "--cancer_type", cancer_type,
                "--predictor", predictor,
-               "--seed", seed))
+               "--seed", seed,
+               ifelse(null_model,
+                      "--null_model",
+                      "")))
   rep.count <- rep.count + 1
 }
 
 system(paste("Rscript 3-plot_category_kappa.R",
              "--cancer_type", cancer_type,
-             "--predictor", predictor))
+             "--predictor", predictor,
+             ifelse(null_model,
+                    "--null_model",
+                    "")))

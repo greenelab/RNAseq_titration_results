@@ -14,7 +14,11 @@ option_list <- list(
                         help = "Predictor used"),
   optparse::make_option("--seed",
                         default = NA_integer_,
-                        help = "Random seed")
+                        help = "Random seed"),
+  optparse::make_option("--null_model",
+                        action = "store_true",
+                        default = FALSE,
+                        help = "Scramble gene expression values within sample for null model prediction")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
@@ -24,6 +28,7 @@ check_options(opt)
 # set options
 cancer_type <- opt$cancer_type
 predictor <- opt$predictor
+null_model <- opt$null_model
 
 # set seed
 initial.seed <- opt$seed
@@ -39,18 +44,27 @@ message("Getting overlap and splitting into training and testing sets...")
 system(paste("Rscript 0-expression_data_overlap_and_split.R",
              "--cancer_type", cancer_type,
              "--predictor", predictor,
-             "--seed1", seeds[1]))
+             "--seed1", seeds[1],
+             ifelse(null_model,
+                    "--null_model",
+                    "")))
 
 message("\nNormalizing data...")
 system(paste("Rscript 1-normalize_titrated_data.R",
              "--cancer_type", cancer_type,
              "--predictor", predictor,
              "--seed1", seeds[1],
-             "--seed2", seeds[2]))
+             "--seed2", seeds[2],
+             ifelse(null_model,
+                    "--null_model",
+                    "")))
 
 message("\nTraining and testing models...")
 system(paste("Rscript 2-train_test_category.R",
              "--cancer_type", cancer_type,
              "--predictor", predictor,
              "--seed1", seeds[1],
-             "--seed3", seeds[3]))
+             "--seed3", seeds[3],
+             ifelse(null_model,
+                    "--null_model",
+                    "")))
