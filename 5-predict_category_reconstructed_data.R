@@ -45,14 +45,10 @@ rcn.dir <- file.path(norm.dir, "reconstructed_data")
 rcn.res.dir <- file.path(res.dir, "reconstructed_data")
 
 # define input files
-#model.files <- list.files(mdl.dir, full.names = TRUE)
-#supervised.model.files <- model.files[grepl(paste0(file_identifier,
-#                                                   "_train_3_models"), model.files)]
 supervised.model.files <- list.files(mdl.dir,
                                      pattern = paste0(file_identifier,
                                                       "_train_3_models"),
                                      full.names = TRUE)
-#recon.files <- list.files(rcn.dir, full.names = TRUE)
 recon.files <- list.files(rcn.dir,
                           pattern = paste0(file_identifier,
                                            "_reconstructed_data_"),
