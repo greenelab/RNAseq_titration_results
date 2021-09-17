@@ -79,6 +79,20 @@ clinical <- clinical %>%
   filter(Type == "tumor") %>%
   tidyr::drop_na()
 
+# if null_model is specified and predicting subtype, permute subtype labels
+# if null_model is specified and predicting mutation status,
+#   permute mutation labels WITHIN subtype
+if (null_model) {
+  if (predictor == "subtype") { # here, subtype = category
+    clinical$category <- sample(clinical$category)    
+  } else { # if predictor not subtype, then must be mutation
+    clinical <- clinical %>% # subtype = subtype, category = TP53 or PIK3CA
+      group_by(subtype) %>% # sample within subtype
+      mutate(category = sample(category)) %>%
+      ungroup()
+  }
+}
+
 # change first column name to "gene"
 colnames(array.data)[1] <- colnames(seq.data)[1] <- "gene"
 
@@ -116,14 +130,6 @@ seq.matched <- seq.matched[, c(1, (order(colnames(seq.matched)[-1]) + 1))]
 # check reording sample names worked as expected
 if (any(colnames(array.matched) != colnames(seq.matched))) {
   stop("Column name reordering did not work as expected in 0-expression_data_overlap_and_split.R")
-}
-
-# if null_model, scramble expression values within sample
-# this also scrambles the gene names in column 1
-# sample() has default values replace = FALSE, so each value in column is sampled exactly once
-if (null_model) {
-  array.matched <- apply(array.matched, 2, sample)
-  seq.matched <- apply(seq.matched, 2, sample)
 }
 
 # keep category labels for samples with expression data
