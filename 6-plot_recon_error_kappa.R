@@ -3,7 +3,7 @@
 # 4-ica_pca_feature_reconstruction.R and the Kappa statistics associated with
 # predictions on reconstructed data from 5-predict_category_reconstructed_data.R
 # as violin plots, respectively.
-# USAGE: Rscript 6-plot_recon_error_kappa.R --cancer_type --predictor
+# USAGE: Rscript 6-plot_recon_error_kappa.R --cancer_type --predictor --null_model
 
 option_list <- list(
   optparse::make_option("--cancer_type",

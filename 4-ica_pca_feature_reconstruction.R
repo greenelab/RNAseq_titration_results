@@ -6,7 +6,7 @@
 # error' (MASE).
 #
 # It should be run from the command line.
-# USAGE: Rscript 4-ica_pca_feature_reconstruction.R --cancer_type --predictor --n_components --seed
+# USAGE: Rscript 4-ica_pca_feature_reconstruction.R --cancer_type --predictor --n_components --seed --null_model
 # n_components refers to the number of components (PC/IC) that should be used
 # for reconstruction.
 

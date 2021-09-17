@@ -2,7 +2,7 @@
 # The purpose of this script is to run the BRCA subtype classifier pipeline
 # for RNA-seq 'titration.'
 # It should be run from the command line.
-# USAGE: Rscript run_experiments.R --cancer_type [BRCA|GBM] --predictor [subtype|TP53|PIK3CA] --seed integer
+# USAGE: Rscript run_experiments.R --cancer_type [BRCA|GBM] --predictor [subtype|TP53|PIK3CA] --seed integer --null_model
 # It also may be run through the classifier_repeat_wrapper.R
 
 option_list <- list(
@@ -18,7 +18,7 @@ option_list <- list(
   optparse::make_option("--null_model",
                         action = "store_true",
                         default = FALSE,
-                        help = "Scramble gene expression values within sample for null model prediction")
+                        help = "Permute dependent variable (within subtype if predictor is a gene)")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))

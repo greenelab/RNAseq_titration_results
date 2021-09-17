@@ -6,7 +6,7 @@
 # confusionMatrix objects and a data.frame of Kappa statistics from these
 # predictions.
 # It should be run from the command line.
-# USAGE: Rscript 5-predict_category_reconstructed_data.R --cancer_type --predictor
+# USAGE: Rscript 5-predict_category_reconstructed_data.R --cancer_type --predictor --null_model
 
 option_list <- list(
   optparse::make_option("--cancer_type",
