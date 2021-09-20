@@ -168,17 +168,20 @@ if (predictor != "subtype") {
 
 #### permute category labels for null model ------------------------------------
 # this comes after createDataPartition() to ensure same samples go to train/test
-# it may mess up the precise partitioning but train/test sets must be consistent
+# grouping by split ensure labels remain balanced within train and test
 # if null_model is specified and predicting subtype, permute subtype labels
 # if null_model is specified and predicting mutation status,
 #   permute mutation labels WITHIN subtype
 
 if (null_model) {
   if (predictor == "subtype") { # here, subtype = category
-    lbl.df$category <- sample(lbl$category)    
+    lbl.df <- lbl.df %>%
+      group_by(split) %>%
+      mutate(category = sample(category)) %>%
+      ungroup()
   } else { # if predictor not subtype, then must be mutation
     lbl.df <- lbl.df %>% # subtype = subtype, category = TP53 or PIK3CA 0/1
-      group_by(subtype) %>% # sample within subtype
+      group_by(split, subtype) %>% # sample within subtype
       mutate(category = sample(category)) %>%
       ungroup()
   }
