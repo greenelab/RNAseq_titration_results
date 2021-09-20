@@ -13,7 +13,11 @@ option_list <- list(
                         help = "Predictor used"),
   optparse::make_option("--seed1",
                         default = NA_integer_,
-                        help = "Random seed")
+                        help = "Random seed"),
+  optparse::make_option("--null_model",
+                        action = "store_true",
+                        default = FALSE,
+                        help = "Permute dependent variable (within subtype if predictor is a gene)")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
@@ -26,11 +30,16 @@ suppressMessages(source(here::here("load_packages.R")))
 # set options
 cancer_type <- opt$cancer_type
 predictor <- opt$predictor
-file_identifier <- str_c(cancer_type, predictor, sep = "_")
+null_model <- opt$null_model
+file_identifier <- ifelse(null_model,
+                          str_c(cancer_type, predictor, "null", sep = "_"),
+                          str_c(cancer_type, predictor, sep = "_"))
 
 # set seed
 initial.seed <- as.integer(opt$seed1)
 set.seed(initial.seed)
+# set seed for spliting into train/test here, before null_model scramble
+split.seed <- sample(1:10000, 1)
 
 # define directories
 data.dir <- here::here("data")
@@ -69,6 +78,20 @@ clinical <- clinical %>%
   rename("category" = all_of(predictor)) %>%
   filter(Type == "tumor") %>%
   tidyr::drop_na()
+
+# if null_model is specified and predicting subtype, permute subtype labels
+# if null_model is specified and predicting mutation status,
+#   permute mutation labels WITHIN subtype
+if (null_model) {
+  if (predictor == "subtype") { # here, subtype = category
+    clinical$category <- sample(clinical$category)    
+  } else { # if predictor not subtype, then must be mutation
+    clinical <- clinical %>% # subtype = subtype, category = TP53 or PIK3CA
+      group_by(subtype) %>% # sample within subtype
+      mutate(category = sample(category)) %>%
+      ungroup()
+  }
+}
 
 # change first column name to "gene"
 colnames(array.data)[1] <- colnames(seq.data)[1] <- "gene"
@@ -135,7 +158,6 @@ write.table(seq.matched, file = seq.output.nm,
 # order array category to match the expression data order
 array.category <- array.category[order(array.tumor.smpls)]
 
-split.seed <- sample(1:10000, 1)
 message(paste("\nRandom seed for splitting into testing and training:",
               split.seed), appendLF = TRUE)
 
