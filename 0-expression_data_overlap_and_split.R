@@ -195,8 +195,16 @@ write.table(lbl.df,
 cbPalette <- c("#000000", "#E69F00", "#56B4E9",
                "#009E73", "#F0E442","#0072B2", "#D55E00", "#CC79A7")
 
+plot.df <- lbl.df %>%
+  mutate(split = "whole") %>%
+  bind_rows(lbl.df %>%
+              mutate(case_when(split == "train" ~ "train (2/3)",
+                               split == "test" ~ "test (1/3)")))
+
+print(plot.df %>% count(split))
+
 plot.nm <- file.path(plot.dir, category.distribtion.plot)
-ggplot(lbl.df, aes(x = split, fill = category)) +
+ggplot(plot.df, aes(x = split, fill = category)) +
   geom_bar() +
   theme_classic() +
   scale_fill_manual(values = cbPalette) +
