@@ -200,8 +200,6 @@ plot.df <- lbl.df %>%
                            split == "test" ~ "test (1/3)")) %>%
   bind_rows(lbl.df %>% mutate(split = "whole"))
 
-print(plot.df %>% count(split))
-
 plot.nm <- file.path(plot.dir, category.distribtion.plot)
 ggplot(plot.df, aes(x = split, fill = category)) +
   geom_bar() +
