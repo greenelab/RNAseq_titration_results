@@ -177,12 +177,14 @@ if (null_model) {
   if (predictor == "subtype") { # here, subtype = category
     lbl.df <- lbl.df %>%
       group_by(split) %>%
-      mutate(category = sample(category)) %>%
+      mutate(category = case_when(split == "train" ~ sample(category),
+                                  split == "test" ~ category)) %>%
       ungroup()
   } else { # if predictor not subtype, then must be mutation
     lbl.df <- lbl.df %>% # subtype = subtype, category = TP53 or PIK3CA 0/1
       group_by(split, subtype) %>% # sample within subtype
-      mutate(category = sample(category)) %>%
+      mutate(category = case_when(split == "train" ~ sample(category),
+                                  split == "test" ~ category)) %>%
       ungroup()
   }
 }
