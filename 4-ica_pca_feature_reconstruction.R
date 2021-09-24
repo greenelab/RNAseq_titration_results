@@ -6,7 +6,7 @@
 # error' (MASE).
 #
 # It should be run from the command line.
-# USAGE: Rscript 4-ica_pca_feature_reconstruction.R --cancer_type --predictor --n_components --seed
+# USAGE: Rscript 4-ica_pca_feature_reconstruction.R --cancer_type --predictor --n_components --seed --null_model
 # n_components refers to the number of components (PC/IC) that should be used
 # for reconstruction.
 
@@ -22,7 +22,11 @@ option_list <- list(
                         help = "Number of compenents [default: %default]"),
   optparse::make_option("--seed",
                         default = 346,
-                        help = "Random seed [default: %default]")
+                        help = "Random seed [default: %default]"),
+  optparse::make_option("--null_model",
+                        action = "store_true",
+                        default = FALSE,
+                        help = "Refer to models with permuted dependent variable (within subtype if predictor is a gene)")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
@@ -37,7 +41,10 @@ source(here::here("util", "ICA_PCA_reconstruction_functions.R"))
 # set options
 cancer_type <- opt$cancer_type
 predictor <- opt$predictor
-file_identifier <- str_c(cancer_type, predictor, sep = "_")
+null_model <- opt$null_model
+file_identifier <- ifelse(null_model,
+                          str_c(cancer_type, predictor, "null", sep = "_"),
+                          str_c(cancer_type, predictor, sep = "_"))
 n.comp <- as.integer(opt$n_components)
 
 # set seed

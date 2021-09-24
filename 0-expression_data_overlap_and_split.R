@@ -13,7 +13,11 @@ option_list <- list(
                         help = "Predictor used"),
   optparse::make_option("--seed1",
                         default = NA_integer_,
-                        help = "Random seed")
+                        help = "Random seed"),
+  optparse::make_option("--null_model",
+                        action = "store_true",
+                        default = FALSE,
+                        help = "Permute dependent variable (within subtype if predictor is a gene)")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
@@ -26,11 +30,16 @@ suppressMessages(source(here::here("load_packages.R")))
 # set options
 cancer_type <- opt$cancer_type
 predictor <- opt$predictor
-file_identifier <- str_c(cancer_type, predictor, sep = "_")
+null_model <- opt$null_model
+file_identifier <- ifelse(null_model,
+                          str_c(cancer_type, predictor, "null", sep = "_"),
+                          str_c(cancer_type, predictor, sep = "_"))
 
 # set seed
 initial.seed <- as.integer(opt$seed1)
 set.seed(initial.seed)
+# set seed for spliting into train/test here, before null_model scramble
+split.seed <- sample(1:10000, 1)
 
 # define directories
 data.dir <- here::here("data")
@@ -135,45 +144,69 @@ write.table(seq.matched, file = seq.output.nm,
 # order array category to match the expression data order
 array.category <- array.category[order(array.tumor.smpls)]
 
-split.seed <- sample(1:10000, 1)
 message(paste("\nRandom seed for splitting into testing and training:",
               split.seed), appendLF = TRUE)
 
 set.seed(split.seed)
 train.index <- unlist(createDataPartition(array.category, times = 1, p = (2/3)))
 
-#### plot category distributions ------------------------------------------------
-whole.df <- cbind(as.character(array.category),
-                  rep("whole", length(array.category)))
-train.df <- cbind(as.character(array.category[train.index]),
-                  rep("train (2/3)", length(train.index)))
-test.df <- cbind(as.character(array.category[-train.index]),
-                 rep("test (1/3)",
-                     length(array.category)-length(train.index)))
-mstr.df <- rbind(whole.df, train.df, test.df)
+#### write training/test labels to file ----------------------------------------
 
-colnames(mstr.df) <- c("category", "split")
+lbl <- rep("test", length(array.tumor.smpls))
+lbl[train.index] <- "train"
+lbl.df <- tibble(sample = colnames(array.matched)[2:ncol(array.matched)],
+                 split = lbl,
+                 category = as.character(array.category))
+
+# add back subtype if predicting gene
+if (predictor != "subtype") {
+  lbl.df <- lbl.df %>% 
+    left_join(clinical %>%
+                select(Sample, subtype),
+              by = c("sample" = "Sample"))
+}
+
+#### permute category labels for null model ------------------------------------
+# this comes after createDataPartition() to ensure same samples go to train/test
+# grouping by split ensure labels remain balanced within train and test
+# if null_model is specified and predicting subtype, permute subtype labels
+# if null_model is specified and predicting mutation status,
+#   permute mutation labels WITHIN subtype
+
+if (null_model) {
+  if (predictor == "subtype") { # here, subtype = category
+    lbl.df <- lbl.df %>%
+      group_by(split) %>%
+      mutate(category = case_when(split == "train" ~ sample(category),
+                                  split == "test" ~ category)) %>%
+      ungroup()
+  } else { # if predictor not subtype, then must be mutation
+    lbl.df <- lbl.df %>% # subtype = subtype, category = TP53 or PIK3CA 0/1
+      group_by(split, subtype) %>% # sample within subtype
+      mutate(category = case_when(split == "train" ~ sample(category),
+                                  split == "test" ~ category)) %>%
+      ungroup()
+  }
+}
+
+write.table(lbl.df,
+            file = file.path(res.dir, train.test.labels),
+            quote = FALSE, sep = "\t", row.names = FALSE)
+
+#### plot category distributions ------------------------------------------------
 cbPalette <- c("#000000", "#E69F00", "#56B4E9",
                "#009E73", "#F0E442","#0072B2", "#D55E00", "#CC79A7")
 
+plot.df <- lbl.df %>%
+  mutate(split = case_when(split == "train" ~ "train (2/3)",
+                           split == "test" ~ "test (1/3)")) %>%
+  bind_rows(lbl.df %>% mutate(split = "whole"))
+
 plot.nm <- file.path(plot.dir, category.distribtion.plot)
-ggplot(as.data.frame(mstr.df), aes(x = split, fill = category)) +
+ggplot(plot.df, aes(x = split, fill = category)) +
   geom_bar() +
   theme_classic() +
   scale_fill_manual(values = cbPalette) +
   ggsave(plot.nm,
          height = 6,
          width = 6)
-
-#### write training/test labels to file ----------------------------------------
-
-lbl <- rep("test", length(array.tumor.smpls))
-lbl[train.index] <- "train"
-lbl.df <- cbind(colnames(array.matched)[2:ncol(array.matched)],
-                lbl,
-                as.character(array.category))
-colnames(lbl.df) <- c("sample", "split", "category")
-
-write.table(lbl.df,
-            file = file.path(res.dir, train.test.labels),
-            quote = FALSE, sep = "\t", row.names = FALSE)
