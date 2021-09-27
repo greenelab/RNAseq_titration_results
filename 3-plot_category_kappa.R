@@ -120,7 +120,7 @@ summary.df <- test.df %>%
   dplyr::group_by(Classifier, Normalization, Platform, Perc.Seq) %>%
   dplyr::summarise(Median = median(Kappa),
                    Mean = mean(Kappa),
-                   SD = sd(Kappa),
-                   .groups = "drop")
+                   SD = sd(Kappa)) %>%
+  ungroup()
 readr::write_tsv(summary.df,
                  summary.df.filename)
