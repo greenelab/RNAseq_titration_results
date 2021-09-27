@@ -121,6 +121,6 @@ summary.df <- test.df %>%
   dplyr::summarise(Median = median(Kappa),
                    Mean = mean(Kappa),
                    SD = sd(Kappa)) %>%
-  ungroup()
+  dplyr::ungroup()
 readr::write_tsv(summary.df,
                  summary.df.filename)
