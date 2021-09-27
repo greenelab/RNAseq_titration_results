@@ -154,8 +154,7 @@ error.master.df$comp.method <- as.factor(error.master.df$comp.method)
 error.mean.df <- error.master.df %>%
   dplyr::group_by(gene, perc.seq, norm.method, comp.method,
                   platform) %>%
-  dplyr::summarise(mean_mase = mean(MASE),
-                   .groups = "drop") %>%
+  dplyr::summarise(mean_mase = mean(MASE)) %>%
   ungroup()
 rm(error.master.df)
 colnames(error.mean.df) <- c("Gene", "Perc_seq", "Normalization",
