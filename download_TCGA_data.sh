@@ -11,9 +11,6 @@ mkdir -p $data
 # downlaod BRCA array and seq data from URLs
 wget -nc -i brca_data_urls.txt '--directory-prefix='$data
 
-# modify BRCA clinical file column PAM50 to be subtype
-sed -i 's/PAM50/subtype/' $data/BRCAClin.tsv
-
 # Obtain TCGA data freeze manifest file
 # See here for more info: https://gdc.cancer.gov/about-data/publications/pancanatlas
 manifest_url="https://gdc.cancer.gov/files/public/file/PanCan-General_Open_GDC-Manifest_2.txt"
@@ -79,6 +76,9 @@ fi
 echo Checking md5 sums of downloaded files ...
 md5sum --check check_sums.tsv
 echo All files downloaded match expected md5 sums!
+
+# modify BRCA clinical file column PAM50 to be subtype
+sed -i 's/PAM50/subtype/' $data/BRCAClin.tsv
 
 # process GBM data via script
 echo Processing GBM data using R script prepare_GBM_data.R ...
