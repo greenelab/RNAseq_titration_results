@@ -81,7 +81,7 @@ echo All files downloaded match expected md5 sums!
 sed -i 's/PAM50/subtype/' $data/BRCAClin.tsv
 
 # process GBM data via script
-echo Processing GBM data using R script prepare_GBM_data.R ...
+echo Processing GBM data ...
 Rscript prepare_GBM_data.R \
   --seq_input $data/EBPlusPlusAdjustPANCAN_IlluminaHiSeq_RNASeqV2.geneExp.tsv \
   --array_input $data/GSE83130/GSE83130/GSE83130.tsv \
