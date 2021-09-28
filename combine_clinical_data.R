@@ -37,12 +37,12 @@ combined_output_filepath <- opt$combined_output
 ################################################################################
 # Read in clinical and mutation data
 ################################################################################
-clinical_df <- read_tsv(clinical_input_filepath,
-                        col_types = cols()) %>% # suppress column type screen output
+clinical_df <- read_tsv(clinical_input_filepath, # treat all columns equally
+                        col_types = cols(.default = col_character())) %>%
   mutate(Sample = substr(Sample, 1, 15)) # remove extra parts of TCGA ID
 
-mutation_df <- read_tsv(mutation_input_filepath,
-                        col_types = cols()) %>% # suppress column type screen output
+mutation_df <- read_tsv(mutation_input_filepath, # treat all columns equally
+                        col_types = cols(.default = col_character())) %>%
   mutate(tcga_id = substr(tcga_id, 1, 15)) # remove extra parts of TCGA ID
 
 ################################################################################
