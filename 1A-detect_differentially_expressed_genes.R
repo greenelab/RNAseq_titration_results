@@ -56,7 +56,7 @@ array.file <- file.path(data.dir, paste0(file_identifier, "array_matchedOnly_ord
 smpl.file <- file.path(res.dir,
                        list.files(res.dir, # this finds the first example of a subtypes file from cancer_type
                                   pattern = paste0(file_identifier, # and does not rely on knowing a seed
-                                                   "_matchedSamples_subtypes_training_testing_split_labels_"))[1])
+                                                   "_matchedSamples_training_testing_split_labels_"))[1])
 
 # define output files
 subtype_vs_others.rds <- file.path(deg.dir,
