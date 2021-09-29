@@ -37,6 +37,7 @@ cancer_type <- opt$cancer_type
 subtype_vs_others <- opt$subtype_vs_others
 subtype_vs_subtype <- opt$subtype_vs_subtype
 two_subtypes <- as.vector(stringr::str_split(subtype_vs_subtype, pattern = ",", simplify = TRUE))
+file_identifier <- str_c(cancer_type, "subtype", sep = "_") # we are only working with subtype models here
 
 # set seed
 initial.seed <- opt$seed
