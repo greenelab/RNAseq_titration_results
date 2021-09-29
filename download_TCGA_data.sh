@@ -11,9 +11,6 @@ mkdir -p $data
 # downlaod BRCA array and seq data from URLs
 wget -nc -i brca_data_urls.txt '--directory-prefix='$data
 
-# modify BRCA clinical file column PAM50 to be subtype
-sed -i 's/PAM50/subtype/' $data/BRCAClin.tsv
-
 # Obtain TCGA data freeze manifest file
 # See here for more info: https://gdc.cancer.gov/about-data/publications/pancanatlas
 manifest_url="https://gdc.cancer.gov/files/public/file/PanCan-General_Open_GDC-Manifest_2.txt"
@@ -80,8 +77,11 @@ echo Checking md5 sums of downloaded files ...
 md5sum --check check_sums.tsv
 echo All files downloaded match expected md5 sums!
 
+# modify BRCA clinical file column PAM50 to be subtype
+sed -i 's/PAM50/subtype/' $data/BRCAClin.tsv
+
 # process GBM data via script
-echo Processing GBM data using R script prepare_GBM_data.R ...
+echo Processing GBM data ...
 Rscript prepare_GBM_data.R \
   --seq_input $data/EBPlusPlusAdjustPANCAN_IlluminaHiSeq_RNASeqV2.geneExp.tsv \
   --array_input $data/GSE83130/GSE83130/GSE83130.tsv \
@@ -93,17 +93,17 @@ Rscript prepare_GBM_data.R \
 
 # retrieve BRCA and GBM mutations in PIK3CA and TP53 from TCGA MC3
 # output is stored in data/mutations.* TSV and MAF files
-echo Retrieving mutation data from MC3 for BRCA and GBM...
+echo Retrieving mutation data from MC3 for BRCA and GBM ...
 python3 retrieve_MC3_mutations.py
 
 # combine clinical and mutation data into one data frame
-echo Combining clinical and mutation data for BRCA...
+echo Combining clinical and mutation data for BRCA ...
 Rscript combine_clinical_data.R \
   --cancer_type BRCA \
   --clinical_input $data/BRCAClin.tsv \
   --mutation_input $data/mutations.BRCA.tsv \
   --combined_output $data/combined_clinical_data.BRCA.tsv
-echo Combining clinical and mutation data for GBM...
+echo Combining clinical and mutation data for GBM ...
 Rscript combine_clinical_data.R \
   --cancer_type GBM \
   --clinical_input $data/GBMClin.tsv \
@@ -131,4 +131,3 @@ Rscript combine_clinical_data.R \
 #  gdc-client download --manifest gdc_legacy_archive_brca_manifest.txt --dir $brca_array_dir
 #fi
 ################################################################################
-
