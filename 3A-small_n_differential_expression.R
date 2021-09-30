@@ -47,7 +47,7 @@ deg.dir <- file.path(res.dir, "differential_expression")
 
 # define input files
 seq.file <- file.path(data.dir,
-                      paste0(cancer_typer, "RNASeq_matchedOnly_ordered.pcl"))
+                      paste0(cancer_type, "RNASeq_matchedOnly_ordered.pcl"))
 array.file <- file.path(data.dir,
                         paste0(cancer_type, "array_matchedOnly_ordered.pcl"))
 smpl.file <- file.path(res.dir,

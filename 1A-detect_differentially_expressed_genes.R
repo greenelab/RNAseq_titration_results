@@ -80,7 +80,7 @@ sample.df <- read.delim(smpl.file)
 
 # check that subtypes are in sample.df
 for(subtype in c(subtype_vs_others, two_subtypes)) {
-  if (!(subtype %in% sample.df$subtype)) {
+  if (!(subtype %in% sample.df$category)) {
     stop(paste("Subtype", subtype, "not found in sample file",
                smpl.file, "in 1A-detect_differentially_expressed_genes.R."))
   }
