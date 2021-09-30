@@ -183,7 +183,7 @@ saveRDS(fit.results.list, file = subtype_vs_others.rds)
 #### Subtype v. Subtype --------------------------------------------------------
 # remove all samples that are not in these subtypes
 samples.to.keep <-
-  sample.df$sample[which(sample.df$subtype %in% two_subtypes)]
+  sample.df$sample[which(sample.df$category %in% two_subtypes)]
 
 pruned.norm.list <-
   lapply(norm.titrate.list,

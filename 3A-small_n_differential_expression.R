@@ -77,7 +77,7 @@ sample.df <- read.delim(smpl.file)
 
 # check that subtypes are in sample.df
 for(subtype in two_subtypes) {
-  if (!(subtype %in% sample.df$subtype)) {
+  if (!(subtype %in% sample.df$category)) {
     stop(paste("Subtype", subtype, "not found in sample file",
                smpl.file, "in 3A-small_n_differential_expression.R."))
   }
@@ -90,7 +90,7 @@ sample.names <- sample.df$sample
 # leave only subtypes of interest to choose from & make data.table
 # remove all samples that are not subtypes of interest
 samples.to.keep <-
-  sample.df$sample[which(sample.df$subtype %in% two_subtypes)]
+  sample.df$sample[which(sample.df$category %in% two_subtypes)]
 
 array.dt <- data.table(array.data[,
                                   c(1, which(colnames(array.data) %in%
@@ -100,7 +100,7 @@ seq.dt <- data.table(seq.data[,
                                            samples.to.keep))])
 sample.df <- sample.df[which(sample.df$sample %in% samples.to.keep), ]
 
-smaller_subtype_size <- min(table(droplevels(sample.df$subtype)))
+smaller_subtype_size <- min(table(droplevels(sample.df$category)))
 
 # different sizes of n to test
 no.samples <- c(3, 4, 5, 6, 8, 10, 15, 25, 50)
