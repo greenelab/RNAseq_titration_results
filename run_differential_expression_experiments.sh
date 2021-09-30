@@ -10,7 +10,7 @@ set -euo pipefail
 cancer_type=$1
 subtype_vs_others=$2
 subtype_vs_subtype=$3
-subtype_vs_subytpe_small=$4
+subtype_vs_subtype_small=$4
 
 if [ $cancer_type != "BRCA" ] && [ $cancer_type != "GBM" ]; then
   echo Cancer type must be BRCA or GBM in run_differential_expression_experiments.sh [cancer_type]
