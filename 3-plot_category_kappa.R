@@ -14,7 +14,7 @@ option_list <- list(
   optparse::make_option("--null_model",
                         action = "store_true",
                         default = FALSE,
-                        help = "Refer to models with permuted dependent variable (within subtype if predictor is a gene)")
+                        help = "Use null model as baseline for plotting delta kappa")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
@@ -29,9 +29,7 @@ source(here::here("util", "color_blind_friendly_palette.R"))
 cancer_type <- opt$cancer_type
 predictor <- opt$predictor
 null_model <- opt$null_model
-file_identifier <- ifelse(null_model,
-                          str_c(cancer_type, predictor, "null", sep = "_"),
-                          str_c(cancer_type, predictor, sep = "_"))
+file_identifier <- str_c(cancer_type, predictor, sep = "_")
 
 # define directories
 plot.dir <- here::here("plots")
@@ -43,12 +41,35 @@ array.files <- lf[grepl(paste0(file_identifier,
                                "_train_3_models_array_kappa_"), lf)]
 seq.files <- lf[grepl(paste0(file_identifier,
                              "_train_3_models_seq_kappa_"), lf)]
+if (null_model) {
+  null_array.files <- lf[grepl(paste0(file_identifier,
+                                      "null_train_3_models_array_kappa_"), lf)]
+  null_seq.files <- lf[grepl(paste0(file_identifier,
+                                    "null_train_3_models_seq_kappa_"), lf)]
+  
+  # check that we have ordered pairs of regular and null files for array and seq
+  array_seeds <- stringr::str_sub(array.files, -8, -5)
+  null_array_seeds <- stringr::str_sub(null_array.files, -8, -5)
+  seq_seeds <- stringr::str_sub(seq.files, -8, -5)
+  null_seq_seeds <- stringr::str_sub(null_seq.files, -8, -5)
+  if (!(all(array_seeds == null_array_seeds) &
+        all(seq_seeds == null_seq_seeds))) {
+    stop("Array or seq seeds do not match in delta kappa plotting script.")
+  }
+  
+}
 
 # define output files
-plot.file.lead <- paste0(file_identifier, "_train_3_models_kappa_")
-summary.df.filename <- file.path(res.dir,
+plot.file.lead <- ifelse(null_model,
+                         paste0(file_identifier, "_train_3_models_delta_kappa_"),
+                         paste0(file_identifier, "_train_3_models_kappa_"))
+summary.df.filename <- ifelse(null_model,
+                              file.path(res.dir,
+                                        paste0(file_identifier,
+                                               "_train_3_models_delta_kappa_summary_table.tsv")),
+                              file.path(res.dir,
                                  paste0(file_identifier,
-                                        "_train_3_models_summary_table.tsv"))
+                                        "_train_3_models_kappa_summary_table.tsv")))
 
 #### read in data --------------------------------------------------------------
 
@@ -61,10 +82,39 @@ for (i in 1:length(array.files)) {
   seq.list[[i]] <- fread(seq.files[i], data.table = F)
 }
 
+if (null_model) {
+  null_array.list <- list() # initialize list that will hold null array tables
+  null_seq.list <- list() # initialize list that will hold null RNA-seq tables
+  for (i in 1:length(null_array.files)) {
+    null_array.list[[i]] <- fread(array.files[i], data.table = F)
+    null_seq.list[[i]] <- fread(seq.files[i], data.table = F)
+  }
+  
+  # calculate delta kappa values
+  delta_kappa_array.list <- list() # list for delta kappa array values
+  delta_kappa_seq.list <- list() # list for delta kappa seq values
+  for (i in 1:length(array.files)) {
+    delta_kappa_array.list[[i]] <- array.list[[i]] %>%
+      left_join(null_array.list[[i]],
+                by = c("perc.seq", "classifier", "norm.method")) %>%
+      mutate(delta_kappa = kappa.x - kappa.y) %>% # regular kappa - null kappa
+      select(delta_kappa, perc.seq, classifier, norm.method)
+    delta_kappa_seq.list[[i]] <- regular_seq.list[[i]] %>%
+      left_join(null_seq.list[[i]],
+                by = c("perc.seq", "classifier", "norm.method")) %>%
+      mutate(delta_kappa = kappa.x - kappa.y) %>% # regular kappa - null kappa
+      select(delta_kappa, perc.seq, classifier, norm.method)
+  }
+  
+}
+
 # combine all tables from each platform into a data.frame
-array.df <- data.table::rbindlist(array.list)
-seq.df <- data.table::rbindlist(seq.list)
-rm(list = c("array.list", "seq.list"))
+array.df <- ifelse(null_model,
+                   data.table::rbindlist(delta_kappa_array.list),
+                   data.table::rbindlist(array.list))
+seq.df <- ifelse(null_model,
+                 data.table::rbindlist(delta_kappa_seq.list),
+                 data.table::rbindlist(seq.list))
 
 #### plot test set results -----------------------------------------------------
 # bind all kappa stats together
@@ -92,7 +142,7 @@ test.df$Classifier <- as.factor(test.df$Classifier)
 cls.methods <- unique(test.df$Classifier)
 for (cls in cls.methods) {
   plot.nm <- file.path(plot.dir,
-                       paste0(plot.file.lead, # includes file_identifier
+                       paste0(plot.file.lead, # includes file_identifier and delta/not delta
                               stringr::str_replace_all(cls,
                                                        pattern = " ",
                                                        replacement = "_"),
@@ -108,6 +158,9 @@ for (cls in cls.methods) {
                  position = position_dodge(0.7), size = 1) +
     ggtitle(paste0(cancer_type, ": ", cls)) +
     xlab("% RNA-seq samples") +
+    ylab(ifelse(null_model,
+                "Delta Kappa",
+                "Kappa")) +
     theme_bw() +
     scale_colour_manual(values = cbPalette[2:3]) +
     theme(text = element_text(size = 18)) +
@@ -123,4 +176,4 @@ summary.df <- test.df %>%
                    SD = sd(Kappa)) %>%
   dplyr::ungroup()
 readr::write_tsv(summary.df,
-                 summary.df.filename)
+                 summary.df.filename) # delta or not delta in file name
