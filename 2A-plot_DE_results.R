@@ -24,7 +24,7 @@ source(here::here("util/option_functions.R"))
 check_options(opt)
 
 # load libraries
-suppressMessages(library(ggplot2))
+suppressMessages(source(here::here("load_packages.R")))
 source(here::here("util", "differential_expression_functions.R"))
 
 # set options
