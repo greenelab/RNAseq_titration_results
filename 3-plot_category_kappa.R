@@ -96,13 +96,15 @@ if (null_model) {
   for (pair_index in 1:length(array.files)) {
     delta_kappa_array.list[[pair_index]] <- array.list[[pair_index]] %>%
       left_join(null_array.list[[pair_index]],
-                by = c("perc.seq", "classifier", "norm.method")) %>%
-      mutate(delta_kappa = kappa.x - kappa.y) %>% # regular kappa - null kappa
+                by = c("perc.seq", "classifier", "norm.method"),
+                suffix = c(".true", ".null")) %>%
+      mutate(delta_kappa = kappa.true - kappa.null) %>% # regular kappa - null kappa
       select(delta_kappa, perc.seq, classifier, norm.method)
     delta_kappa_seq.list[[pair_index]] <- seq.list[[pair_index]] %>%
       left_join(null_seq.list[[pair_index]],
-                by = c("perc.seq", "classifier", "norm.method")) %>%
-      mutate(delta_kappa = kappa.x - kappa.y) %>% # regular kappa - null kappa
+                by = c("perc.seq", "classifier", "norm.method"),
+                suffix = c(".true", ".null")) %>%
+      mutate(delta_kappa = kappa.true - kappa.null) %>% # regular kappa - null kappa
       select(delta_kappa, perc.seq, classifier, norm.method)
   }
   
