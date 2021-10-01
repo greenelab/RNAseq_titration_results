@@ -24,7 +24,7 @@ source(here::here("util/option_functions.R"))
 check_options(opt)
 
 # load libraries
-suppressMessages(library(ggplot2))
+suppressMessages(source(here::here("load_packages.R")))
 source(here::here("util", "differential_expression_functions.R"))
 
 # set options
@@ -32,6 +32,7 @@ cancer_type <- opt$cancer_type
 subtype_vs_others <- opt$subtype_vs_others
 subtype_vs_subtype <- opt$subtype_vs_subtype
 two_subtypes <- as.vector(stringr::str_split(subtype_vs_subtype, pattern = ",", simplify = TRUE))
+file_identifier <- str_c(cancer_type, "subtype", sep = "_") # we are only working with subtype models here
 
 # define directories
 res.dir <- here::here("results")
@@ -41,13 +42,13 @@ plots.dir <- here::here("plots")
 
 # subtype v. other fit objects
 subtype_vs_others.fit.list <- readRDS(file.path(res.dir, "differential_expression",
-                                                paste0(cancer_type, "_titration_differential_exp_eBayes_fits_",
+                                                paste0(file_identifier, "_titration_differential_exp_eBayes_fits_",
                                                        subtype_vs_others, "vOther.RDS")))
 
 # plot proportion of genes that are diff expressed and get topTable(s)
 subtype_vs_others.results <- PlotProportionDE(subtype_vs_others.fit.list)
 ggsave(file.path(plots.dir,
-                 paste0(cancer_type, "_differential_expr_proportion_ltFDR5perc_",
+                 paste0(file_identifier, "_differential_expr_proportion_ltFDR5perc_",
                         subtype_vs_others, "vOther.pdf")),
        plot = subtype_vs_others.results$plot, width = 11, height = 4.25)
 
@@ -63,13 +64,13 @@ subtypes_combination_nice <- stringr::str_c(two_subtypes, collapse = " vs. ")
 
 last_subtype.fit.list <- readRDS(file.path(
   res.dir, "differential_expression",
-  paste0(cancer_type, "_titration_differential_exp_eBayes_fits_",
+  paste0(file_identifier, "_titration_differential_exp_eBayes_fits_",
          subtypes_combination, ".RDS")))
 
 # plot proportion of genes that are diff expressed and get topTable(s)
 last_subtype.results <- PlotProportionDE(last_subtype.fit.list)
 ggsave(file.path(plots.dir,
-                 paste0(cancer_type, "_differential_expr_proportion_ltFDR5perc_",
+                 paste0(file_identifier, "_differential_expr_proportion_ltFDR5perc_",
                         subtypes_combination, ".pdf")),
        plot = last_subtype.results$plot, width = 11, height = 4.25)
 
