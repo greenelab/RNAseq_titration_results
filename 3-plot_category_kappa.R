@@ -43,9 +43,9 @@ seq.files <- lf[grepl(paste0(file_identifier,
                              "_train_3_models_seq_kappa_"), lf)]
 if (null_model) {
   null_array.files <- lf[grepl(paste0(file_identifier,
-                                      "null_train_3_models_array_kappa_"), lf)]
+                                      "_null_train_3_models_array_kappa_"), lf)]
   null_seq.files <- lf[grepl(paste0(file_identifier,
-                                    "null_train_3_models_seq_kappa_"), lf)]
+                                    "_null_train_3_models_seq_kappa_"), lf)]
   
   # check that we have ordered pairs of regular and null files for array and seq
   array_seeds <- stringr::str_sub(array.files, -8, -5)
@@ -86,8 +86,8 @@ if (null_model) {
   null_array.list <- list() # initialize list that will hold null array tables
   null_seq.list <- list() # initialize list that will hold null RNA-seq tables
   for (i in 1:length(null_array.files)) {
-    null_array.list[[i]] <- fread(array.files[i], data.table = F)
-    null_seq.list[[i]] <- fread(seq.files[i], data.table = F)
+    null_array.list[[i]] <- fread(null_array.files[i], data.table = F)
+    null_seq.list[[i]] <- fread(null_seq.files[i], data.table = F)
   }
   
   # calculate delta kappa values
@@ -99,7 +99,7 @@ if (null_model) {
                 by = c("perc.seq", "classifier", "norm.method")) %>%
       mutate(delta_kappa = kappa.x - kappa.y) %>% # regular kappa - null kappa
       select(delta_kappa, perc.seq, classifier, norm.method)
-    delta_kappa_seq.list[[i]] <- regular_seq.list[[i]] %>%
+    delta_kappa_seq.list[[i]] <- seq.list[[i]] %>%
       left_join(null_seq.list[[i]],
                 by = c("perc.seq", "classifier", "norm.method")) %>%
       mutate(delta_kappa = kappa.x - kappa.y) %>% # regular kappa - null kappa
@@ -109,12 +109,14 @@ if (null_model) {
 }
 
 # combine all tables from each platform into a data.frame
-array.df <- ifelse(null_model,
-                   data.table::rbindlist(delta_kappa_array.list),
-                   data.table::rbindlist(array.list))
-seq.df <- ifelse(null_model,
-                 data.table::rbindlist(delta_kappa_seq.list),
-                 data.table::rbindlist(seq.list))
+# cannot use ifelse() because return value must be same dim as conditional test
+if (null_model) {
+  array.df <- data.table::rbindlist(delta_kappa_array.list)
+  seq.df <- data.table::rbindlist(delta_kappa_seq.list)
+} else {
+  array.df <- data.table::rbindlist(array.list)
+  seq.df <- data.table::rbindlist(seq.list)
+}
 
 #### plot test set results -----------------------------------------------------
 # bind all kappa stats together
