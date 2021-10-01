@@ -21,15 +21,15 @@ GetDesignMat <- function(norm.dt, sample.df, subtype) {
 
   # error-handling
   if (!("sample" %in% colnames(sample.df)
-        & "subtype" %in% colnames(sample.df))) {
-    stop("sample.df must have columns named sample and subtype")
+        & "category" %in% colnames(sample.df))) {
+    stop("sample.df must have columns named sample and category")
   }
 
   # get a factor vector of labels, ordered to match the columns of
   # norm.dt
   group.factor <-
-    as.character(GetOrderedSubtypeLabels(norm.dt,
-                                         sample.df))
+    as.character(GetOrderedCategoryLabels(norm.dt,
+                                          sample.df))
   group.factor[which(group.factor != subtype)] <- "Other"
   group.factor <- as.factor(group.factor)
 
@@ -458,8 +458,8 @@ SmallNDEGWrapper <- function(norm.list, sample.df, subtype) {
   #
   # error-handling
   if (!("sample" %in% colnames(sample.df)
-        & "subtype" %in% colnames(sample.df))) {
-    stop("sample.df must have columns named sample and subtype")
+        & "category" %in% colnames(sample.df))) {
+    stop("sample.df must have columns named sample and category")
   }
 
   full.design.mat <- GetDesignMat(norm.list$log, sample.df, subtype)
@@ -506,13 +506,13 @@ GetSamplesforMixingSmallN <- function(n, sample.df, subtype) {
   # get samples from the subtype of interest
   subtype.samples <-
     as.character(
-      sample.df$sample[sample(which(sample.df$subtype == subtype), n)]
+      sample.df$sample[sample(which(sample.df$category == subtype), n)]
     )
 
   # get comparator group samples
   other.samples <-
     as.character(
-      sample.df$sample[sample(which(sample.df$subtype != subtype), n)]
+      sample.df$sample[sample(which(sample.df$category != subtype), n)]
     )
 
   # all samples

@@ -32,6 +32,7 @@ source(here::here("util", "color_blind_friendly_palette.R"))
 cancer_type <- opt$cancer_type
 subtype_vs_subtype <- opt$subtype_vs_subtype
 two_subtypes <- as.vector(stringr::str_split(subtype_vs_subtype, pattern = ",", simplify = TRUE))
+file_identifier <- str_c(cancer_type, "subtype", sep = "_") # we are only working with subtype models here
 
 # set seed
 initial.seed <- opt$seed
@@ -51,8 +52,8 @@ array.file <- file.path(data.dir,
                         paste0(cancer_type, "array_matchedOnly_ordered.pcl"))
 smpl.file <- file.path(res.dir,
                        list.files(res.dir, # this finds the first example of a subtypes file from cancer_type
-                                  pattern = paste0(cancer_type, # and does not rely on knowing a seed
-                                                   "_matchedSamples_subtypes_training_testing_split_labels_"))[1])
+                                  pattern = paste0(file_identifier, # and does not rely on knowing a seed
+                                                   "_matchedSamples_training_testing_split_labels_"))[1])
 
 #### functions -----------------------------------------------------------------
 
@@ -76,7 +77,7 @@ sample.df <- read.delim(smpl.file)
 
 # check that subtypes are in sample.df
 for(subtype in two_subtypes) {
-  if (!(subtype %in% sample.df$subtype)) {
+  if (!(subtype %in% sample.df$category)) {
     stop(paste("Subtype", subtype, "not found in sample file",
                smpl.file, "in 3A-small_n_differential_expression.R."))
   }
@@ -89,7 +90,7 @@ sample.names <- sample.df$sample
 # leave only subtypes of interest to choose from & make data.table
 # remove all samples that are not subtypes of interest
 samples.to.keep <-
-  sample.df$sample[which(sample.df$subtype %in% two_subtypes)]
+  sample.df$sample[which(sample.df$category %in% two_subtypes)]
 
 array.dt <- data.table(array.data[,
                                   c(1, which(colnames(array.data) %in%
@@ -99,7 +100,7 @@ seq.dt <- data.table(seq.data[,
                                            samples.to.keep))])
 sample.df <- sample.df[which(sample.df$sample %in% samples.to.keep), ]
 
-smaller_subtype_size <- min(table(droplevels(sample.df$subtype)))
+smaller_subtype_size <- min(table(droplevels(sample.df$category)))
 
 # different sizes of n to test
 no.samples <- c(3, 4, 5, 6, 8, 10, 15, 25, 50)
@@ -156,7 +157,7 @@ jacc.df <- data.table::rbindlist(jacc.df.list)
 
 write.table(jacc.df,
             file = file.path(deg.dir,
-                             paste0(cancer_type,
+                             paste0(file_identifier,
                                     "_small_n_",
                                     subtypes_combination,
                                     "_50-50_jaccard_results.tsv")),
@@ -176,5 +177,5 @@ ggplot(jacc.df, aes(x = no.samples, y = jaccard, color = platform)) +
   scale_colour_manual(values = cbPalette[c(2, 3)]) +
   theme(text = element_text(size = 18))
 ggsave(filename = here::here("plots",
-                             paste0(cancer_type, "_small_n_", subtypes_combination, "_50-50_jaccard_lineplots.pdf")),
+                             paste0(file_identifier, "_small_n_", subtypes_combination, "_50-50_jaccard_lineplots.pdf")),
        plot = last_plot(), width = 5, height = 7)

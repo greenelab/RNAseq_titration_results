@@ -37,6 +37,7 @@ cancer_type <- opt$cancer_type
 subtype_vs_others <- opt$subtype_vs_others
 subtype_vs_subtype <- opt$subtype_vs_subtype
 two_subtypes <- as.vector(stringr::str_split(subtype_vs_subtype, pattern = ",", simplify = TRUE))
+file_identifier <- str_c(cancer_type, "subtype", sep = "_") # we are only working with subtype models here
 
 # set seed
 initial.seed <- opt$seed
@@ -50,24 +51,26 @@ norm.dir <- here::here("normalized_data")
 deg.dir <- file.path(res.dir, "differential_expression")
 
 # define input files
-seq.file <- file.path(data.dir, paste0(cancer_type, "RNASeq_matchedOnly_ordered.pcl"))
-array.file <- file.path(data.dir, paste0(cancer_type, "array_matchedOnly_ordered.pcl"))
+seq.file <- file.path(data.dir,
+                      paste0(cancer_type, "RNASeq_matchedOnly_ordered.pcl"))
+array.file <- file.path(data.dir,
+                        paste0(cancer_type, "array_matchedOnly_ordered.pcl"))
 smpl.file <- file.path(res.dir,
                        list.files(res.dir, # this finds the first example of a subtypes file from cancer_type
-                                  pattern = paste0(cancer_type, # and does not rely on knowing a seed
-                                                   "_matchedSamples_subtypes_training_testing_split_labels_"))[1])
+                                  pattern = paste0(file_identifier, # and does not rely on knowing a seed
+                                                   "_matchedSamples_training_testing_split_labels_"))[1])
 
 # define output files
 subtype_vs_others.rds <- file.path(deg.dir,
-                                   paste0(cancer_type,
+                                   paste0(file_identifier,
                                           "_titration_differential_exp_eBayes_fits_",
                                           subtype_vs_others, "vOther.RDS"))
 two_subtypes.rds <- file.path(deg.dir,
-                              paste0(cancer_type,
+                              paste0(file_identifier,
                                      "_titration_differential_exp_eBayes_fits_",
                                      stringr::str_c(two_subtypes, collapse = "v"), ".RDS"))
 norm.rds <- file.path(norm.dir,
-                      paste0(cancer_type, "_titration_no_ZTO_transform_with_UN.RDS"))
+                      paste0(file_identifier, "_titration_no_ZTO_transform_with_UN.RDS"))
 
 #### read in data --------------------------------------------------------------
 
@@ -77,7 +80,7 @@ sample.df <- read.delim(smpl.file)
 
 # check that subtypes are in sample.df
 for(subtype in c(subtype_vs_others, two_subtypes)) {
-  if (!(subtype %in% sample.df$subtype)) {
+  if (!(subtype %in% sample.df$category)) {
     stop(paste("Subtype", subtype, "not found in sample file",
                smpl.file, "in 1A-detect_differentially_expressed_genes.R."))
   }
@@ -180,7 +183,7 @@ saveRDS(fit.results.list, file = subtype_vs_others.rds)
 #### Subtype v. Subtype --------------------------------------------------------
 # remove all samples that are not in these subtypes
 samples.to.keep <-
-  sample.df$sample[which(sample.df$subtype %in% two_subtypes)]
+  sample.df$sample[which(sample.df$category %in% two_subtypes)]
 
 pruned.norm.list <-
   lapply(norm.titrate.list,
