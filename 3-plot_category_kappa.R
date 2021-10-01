@@ -77,30 +77,30 @@ summary.df.filename <- ifelse(null_model,
 # data
 array.list <- list()  # initialize list that will hold all array tables
 seq.list <- list()  # initialize list that will hold all the RNA-seq tables
-for (i in 1:length(array.files)) {
-  array.list[[i]] <- fread(array.files[i], data.table = F)
-  seq.list[[i]] <- fread(seq.files[i], data.table = F)
+for (file_index in 1:length(array.files)) {
+  array.list[[file_index]] <- fread(array.files[file_index], data.table = F)
+  seq.list[[file_index]] <- fread(seq.files[file_index], data.table = F)
 }
 
 if (null_model) {
   null_array.list <- list() # initialize list that will hold null array tables
   null_seq.list <- list() # initialize list that will hold null RNA-seq tables
-  for (i in 1:length(null_array.files)) {
-    null_array.list[[i]] <- fread(null_array.files[i], data.table = F)
-    null_seq.list[[i]] <- fread(null_seq.files[i], data.table = F)
+  for (null_file_index in 1:length(null_array.files)) {
+    null_array.list[[null_file_index]] <- fread(null_array.files[null_file_index], data.table = F)
+    null_seq.list[[null_file_index]] <- fread(null_seq.files[null_file_index], data.table = F)
   }
   
   # calculate delta kappa values
   delta_kappa_array.list <- list() # list for delta kappa array values
   delta_kappa_seq.list <- list() # list for delta kappa seq values
-  for (i in 1:length(array.files)) {
-    delta_kappa_array.list[[i]] <- array.list[[i]] %>%
-      left_join(null_array.list[[i]],
+  for (pair_index in 1:length(array.files)) {
+    delta_kappa_array.list[[pair_index]] <- array.list[[pair_index]] %>%
+      left_join(null_array.list[[pair_index]],
                 by = c("perc.seq", "classifier", "norm.method")) %>%
       mutate(delta_kappa = kappa.x - kappa.y) %>% # regular kappa - null kappa
       select(delta_kappa, perc.seq, classifier, norm.method)
-    delta_kappa_seq.list[[i]] <- seq.list[[i]] %>%
-      left_join(null_seq.list[[i]],
+    delta_kappa_seq.list[[pair_index]] <- seq.list[[pair_index]] %>%
+      left_join(null_seq.list[[pair_index]],
                 by = c("perc.seq", "classifier", "norm.method")) %>%
       mutate(delta_kappa = kappa.x - kappa.y) %>% # regular kappa - null kappa
       select(delta_kappa, perc.seq, classifier, norm.method)
