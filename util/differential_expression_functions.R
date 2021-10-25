@@ -723,7 +723,7 @@ SmallNDEGWrapper <- function(norm.list, sample.df, subtype) {
 
 }
 
-GetSamplesforMixingSmallN <- function(n, sample.df, subtype) {
+GetSamplesforMixingSmallN <- function(n, sample.df, subtype, seq_proportion) {
   # This function is designed to identify sample names to be used in the "small
   # n" differential expression experiment
   #
@@ -731,6 +731,7 @@ GetSamplesforMixingSmallN <- function(n, sample.df, subtype) {
   #   n: number of samples (for each subtype - no. of replicates)
   #   sample.df: a data.frame mapping sample names to subtype labels
   #   subtype: which subtype should be compared to all others
+  #   seq_proportion: percentage of RNA-seq samples to include in mix
   #
   # Returns:
   #   A list comprised of the following:
@@ -755,8 +756,8 @@ GetSamplesforMixingSmallN <- function(n, sample.df, subtype) {
   # all samples
   all.samples <- c(subtype.samples, other.samples)
   # array half
-  array.samples <- c(sample(subtype.samples, floor(n * .5)),
-                     sample(other.samples, ceiling(n * .5)))
+  array.samples <- c(sample(subtype.samples, floor(n * (1 - seq_proportion))),
+                     sample(other.samples, ceiling(n * (1 - seq_proportion))))
   # seq half
   seq.samples <- all.samples[!(all.samples %in% array.samples)]
 
@@ -801,7 +802,7 @@ SmallNNormWrapper <- function(array.dt, seq.dt, mix.list, zto = FALSE) {
                                            mix.list$all)), with = FALSE]
   seq.full.dt  <- seq.dt[, c(1, which(colnames(seq.dt) %in%
                                         mix.list$all)), with = FALSE]
-
+  
   # array and seq data.tables to be used in the 50-50 experiment
   array.half.dt <- array.dt[, c(1, which(colnames(array.dt) %in%
                                            mix.list$array)), with = FALSE]
