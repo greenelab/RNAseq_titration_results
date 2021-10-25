@@ -609,6 +609,77 @@ GetSmallNSilverStandardJaccard <- function(top.table.list, cutoff = 0.05){
 
 }
 
+GetSmallNSilverStandardStats <- function(top.table.list, cutoff = 0.05){
+  # This function takes a list of limma::topTable output, derives "silver
+  # standards" from 100% array and 100% seq data, and finds three stats:
+  # Jaccard similarity, Rand index, and Spearman correlation
+  # between the standards and any experiment differential expression results
+  # (here, quantile norm and z-score are used for illustration)
+  #
+  # Args:
+  #   top.table.list: a list of limma::topTable output with all genes -
+  #                   output of GetAllGenesTopTable
+  #   cutoff: FDR cutoff, defaults to FDR < 5%
+  #
+  # Returns:
+  #   stats.df: a data.frame of three stats results with columns corresponding to
+  #             the Jaccard value, Rand index, Spearman correlation,
+  #             the silver standard used for the comparison ("platform"),
+  #             the normalization method, and the n used (number of samples; "no.samples")
+  #
+  
+  # initialize list to hold stats
+  stats.list <- list()
+  
+  # for each n (number of samples)
+  for (smpl.no.iter in seq_along(top.table.list)) {
+    
+    current.smpl.tt <- top.table.list[[smpl.no.iter]]
+    current.n <- names(top.table.list)[smpl.no.iter]
+    
+    array.top <- current.smpl.tt$log
+    seq.top <- current.smpl.tt$un
+    
+    stats.list[[current.n]]$qn$array <-
+      GetGeneSetStats(silver.set = array.top,
+                      top.table = current.smpl.tt$qn,
+                      cutoff = cutoff)
+    stats.list[[current.n]]$qn$seq <-
+      GetGeneSetStats(silver.set = seq.top,
+                      top.table = current.smpl.tt$qn,
+                      cutoff = cutoff)
+    stats.list[[current.n]]$z$array <-
+      GetGeneSetStats(silver.set = array.top,
+                      top.table = current.smpl.tt$z,
+                      cutoff = cutoff)
+    stats.list[[current.n]]$z$seq <-
+      GetGeneSetStats(silver.set = seq.top,
+                      top.table = current.smpl.tt$z,
+                      cutoff = cutoff)
+  }
+  
+  stats.df <- reshape2::melt(stats.list)
+  colnames(stats.df) <-c("jaccard", "rand", "spearman",
+                         "platform", "normalization", "no.samples")
+  
+  # rename platforms
+  plt.recode.str <-
+    "'array' = 'Microarray'; 'seq' = 'RNA-seq'"
+  stats.df$platform <- car::recode(stats.df$platform,
+                                   recodes = plt.recode.str)
+  
+  # order no.samples so plot displays from smallest n to largest
+  stats.df$no.samples <-
+    factor(stats.df$no.samples,
+           levels = sort(unique(as.numeric(as.character(stats.df$no.samples)))))
+  
+  # capitalize normalization methods for display
+  stats.df$normalization <- as.factor(toupper(stats.df$normalization))
+  
+  return(stats.df)
+  
+}
+
 SmallNDEGWrapper <- function(norm.list, sample.df, subtype) {
   # Perform differential expression analysis for the small n experiments
   # from a list of normalized data from SmallNNormWrapper

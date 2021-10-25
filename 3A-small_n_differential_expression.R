@@ -109,8 +109,8 @@ no.samples <- no.samples[which(no.samples <= smaller_subtype_size)]
 message(paste("Smaller subtype has", smaller_subtype_size, "samples,",
               "so using up to", max(no.samples), "samples in 3A-small_n_differential_expression.R"))
 
-# initialize list to hold jaccard index data.frames from the 10 trials
-jacc.df.list <- list()
+# initialize list to hold Jaccard, Rand, Spearman data from the 10 trials
+stats.df.list <- list()
 
 # we're going to repeat the small n experiment 10 times
 for (trial.iter in 1:10) {
@@ -144,8 +144,8 @@ for (trial.iter in 1:10) {
 
   # how do the 50/50 array/seq differentially expressed genes compared to
   # the platform-specific standards?
-  jacc.df.list[[trial.iter]] <- GetSmallNSilverStandardJaccard(top.table.list,
-                                                               cutoff = 0.1)
+  stats.df.list[[trial.iter]] <- GetSmallNSilverStandardStats(top.table.list,
+                                                              cutoff = 0.1)
 
 }
 
@@ -153,18 +153,18 @@ for (trial.iter in 1:10) {
 subtypes_combination <- stringr::str_c(two_subtypes, collapse = "v")
 subtypes_combination_nice <- stringr::str_c(two_subtypes, collapse = " vs. ")
 
-jacc.df <- data.table::rbindlist(jacc.df.list)
+stats.df <- data.table::rbindlist(stats.df.list)
 
-write.table(jacc.df,
+write.table(stats.df,
             file = file.path(deg.dir,
                              paste0(file_identifier,
                                     "_small_n_",
                                     subtypes_combination,
-                                    "_50-50_jaccard_results.tsv")),
+                                    "_50-50_results.tsv")),
             sep = "\t", quote = FALSE, row.names = FALSE)
 
 # line plot is saved as a PDF
-ggplot(jacc.df, aes(x = no.samples, y = jaccard, color = platform)) +
+ggplot(stats.df, aes(x = no.samples, y = jaccard, color = platform)) +
   facet_wrap(~ normalization, ncol = 1) +
   stat_summary(fun = median, geom = "line", aes(group = platform),
                position = position_dodge(0.2)) +
@@ -172,10 +172,42 @@ ggplot(jacc.df, aes(x = no.samples, y = jaccard, color = platform)) +
                position = position_dodge(0.2), size = 0.2) +
   theme_bw() +
   ggtitle(paste(subtypes_combination_nice, "FDR < 10%")) +
-  ylab("Jaccard similarity to standard") +
+  ylab("Jaccard similarity") +
   xlab("Number of samples (n)") +
   scale_colour_manual(values = cbPalette[c(2, 3)]) +
   theme(text = element_text(size = 18))
 ggsave(filename = here::here("plots",
                              paste0(file_identifier, "_small_n_", subtypes_combination, "_50-50_jaccard_lineplots.pdf")),
+       plot = last_plot(), width = 5, height = 7)
+
+ggplot(stats.df, aes(x = no.samples, y = rand, color = platform)) +
+  facet_wrap(~ normalization, ncol = 1) +
+  stat_summary(fun = median, geom = "line", aes(group = platform),
+               position = position_dodge(0.2)) +
+  stat_summary(fun.data = DataSummary, aes(group = platform),
+               position = position_dodge(0.2), size = 0.2) +
+  theme_bw() +
+  ggtitle(paste(subtypes_combination_nice, "FDR < 10%")) +
+  ylab("Rand index") +
+  xlab("Number of samples (n)") +
+  scale_colour_manual(values = cbPalette[c(2, 3)]) +
+  theme(text = element_text(size = 18))
+ggsave(filename = here::here("plots",
+                             paste0(file_identifier, "_small_n_", subtypes_combination, "_50-50_rand_lineplots.pdf")),
+       plot = last_plot(), width = 5, height = 7)
+
+ggplot(stats.df, aes(x = no.samples, y = spearman, color = platform)) +
+  facet_wrap(~ normalization, ncol = 1) +
+  stat_summary(fun = median, geom = "line", aes(group = platform),
+               position = position_dodge(0.2)) +
+  stat_summary(fun.data = DataSummary, aes(group = platform),
+               position = position_dodge(0.2), size = 0.2) +
+  theme_bw() +
+  ggtitle(paste(subtypes_combination_nice, "FDR < 10%")) +
+  ylab("Spearman correlation") +
+  xlab("Number of samples (n)") +
+  scale_colour_manual(values = cbPalette[c(2, 3)]) +
+  theme(text = element_text(size = 18))
+ggsave(filename = here::here("plots",
+                             paste0(file_identifier, "_small_n_", subtypes_combination, "_50-50_spearman_lineplots.pdf")),
        plot = last_plot(), width = 5, height = 7)
