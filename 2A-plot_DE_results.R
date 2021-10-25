@@ -52,11 +52,16 @@ ggsave(file.path(plots.dir,
                         subtype_vs_others, "vOther.pdf")),
        plot = subtype_vs_others.results$plot, width = 11, height = 4.25)
 
-# plot jaccard similarity with silver standards
-subtype_vs_others.jacc.plot <- PlotSilverStandardJaccard(subtype_vs_others.results$top.table.list,
-                                                         title = paste(subtype_vs_others, "v. Other FDR < 5%"))
-ggsave(file.path(plots.dir, paste0(subtype_vs_others, "_v_other_jaccard_lineplot.pdf")),
-       plot = subtype_vs_others.jacc.plot, width = 8.5, height = 4)
+# plot jaccard similarity, rand index, and spearman correlation with silver standards
+subtype_vs_others.plots <- PlotSilverStandardStats(subtype_vs_others.results$top.table.list,
+                                                   title = paste(subtype_vs_others, "v. Other FDR < 5%"))
+
+ggsave(file.path(plots.dir, paste0(subtypes_combination, "_jaccard_lineplot.pdf")),
+       plot = subtype_vs_others.plots$jaccard, width = 8.5, height = 4)
+ggsave(file.path(plots.dir, paste0(subtypes_combination, "_rand_lineplot.pdf")),
+       plot = subtype_vs_others.plots$rand, width = 8.5, height = 4)
+ggsave(file.path(plots.dir, paste0(subtypes_combination, "_spearman_lineplot.pdf")),
+       plot = subtype_vs_others.plots$spearman, width = 8.5, height = 4)
 
 #### plot Subtype v. Subtype results --------------------------------------------
 subtypes_combination <- stringr::str_c(two_subtypes, collapse = "v")
@@ -74,8 +79,13 @@ ggsave(file.path(plots.dir,
                         subtypes_combination, ".pdf")),
        plot = last_subtype.results$plot, width = 11, height = 4.25)
 
-# plot jaccard similarity with silver standards
-last_subtype.jacc.plot <- PlotSilverStandardJaccard(last_subtype.results$top.table.list,
-                                                    title = paste(subtypes_combination_nice, "FDR < 5%"))
+# plot jaccard similarity, rand index, and spearman correlation with silver standards
+last_subtype.plots <- PlotSilverStandardStats(last_subtype.results$top.table.list,
+                                              title = paste(subtypes_combination_nice, "FDR < 5%"))
+
 ggsave(file.path(plots.dir, paste0(subtypes_combination, "_jaccard_lineplot.pdf")),
-       plot = last_subtype.jacc.plot, width = 8.5, height = 4)
+       plot = last_subtype.plots$jaccard, width = 8.5, height = 4)
+ggsave(file.path(plots.dir, paste0(subtypes_combination, "_rand_lineplot.pdf")),
+       plot = last_subtype.plots$rand, width = 8.5, height = 4)
+ggsave(file.path(plots.dir, paste0(subtypes_combination, "_spearman_lineplot.pdf")),
+       plot = last_subtype.plots$spearman, width = 8.5, height = 4)

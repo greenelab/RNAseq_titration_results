@@ -240,6 +240,69 @@ GetGeneSetJaccard <- function(silver.set, top.table,
   return(jacc)
 }
 
+GetGeneSetStats <- function(silver.set,
+                           top.table,
+                           cutoff = 0.05) {
+  # Given a top table list of from RNA-seq or microarray-only data
+  # (our "silver standard" of differentially expressed genes), compare those 
+  # true positives and true negatives differentially expressed genes (DEGs)
+  # against DEGs meeting out cutoff criteria in other experimental settings
+  # using Jaccard similarity, Rand index, and Spearman rank correlation
+  #
+  # Args:
+  #   silver.set: output of limma::topTable (typically from GetAllGenesTopTable)
+  #               for the silver standard RNA-seq or array data being compared against
+  #   top.table: output of limma::topTable (typically from GetAllGenesTopTable)
+  #              for the other differential expression experiment being
+  #              considered
+  #   cutoff: the adjusted p-value threshold - all genes with an adjusted p
+  #           below this threshold will be considered differentially expressed
+  #
+  # Returns:
+  #   jacc: Jaccard similarity
+  #   rand: Rand index
+  #   spearman: Spearman correlation rho
+  
+  # start with silver standard
+  silver_df <- silver.set %>%
+    rownames_to_column(var = "gene") %>%
+    select(gene, adj.P.Val) %>%
+    rename("silver.adj.P.Val" = "adj.P.Val") %>%
+    mutate(silver_group = as.integer(silver.adj.P.Val < 0.05))
+  
+  # do the same with our experimental setting
+  experimental_df <- top.table %>%
+    rownames_to_column(var = "gene") %>%
+    select(gene, adj.P.Val) %>%
+    rename("experimental.adj.P.Val" = "adj.P.Val") %>%
+    mutate(experimental_group = as.integer(experimental.adj.P.Val < 0.05))
+    
+  # join those data sets together to match up gene names
+  combined_df <- silver_df %>%
+    left_join(experimental_df,
+              by = "gene")
+  
+  # calculate agreement between two results
+  contingency_table <- combine_df %>%
+    select(silver_group,
+           experimental_group) %>%
+    table()
+  
+  TN <- contingency_table[1,1]
+  TP <- contingency_table[2,2]
+  total <- sum(contingency_table)
+  
+  # calculate and return jaccard, rand index, and spearman
+  jacc <- TP/(total - TN)
+  rand <- (TP + TN)/total
+  spearman <- cor.test(combined_df$silver.adj.P.Val,
+                       combined_df$experimental.adj.P.Val,
+                       method = "spearman",
+                       exact = FALSE,
+                       continuity = TRUE)
+  return(c(jacc, rand, spearman))
+}
+
 
 PlotProportionDE <- function(fit.list, adjust.method = "BH", cutoff = 0.05) {
   # from a list of limma fits, plot the proportion of genes that are
@@ -367,6 +430,109 @@ PlotSilverStandardJaccard <- function(top.table.list, title,
     theme(axis.text.x=element_text(angle = 45, vjust = 0.5))
   return(p)
 
+}
+
+PlotSilverStandardStats <- function(top.table.list, title,
+                                    cutoff = 0.05){
+  # Given a list of top tables, plot the Jaccard similarity, Rand index, and
+  # Spearman rho between the "silver standards" and all other experiments
+  #
+  # Args:
+  #   top.table.list: list of limma::topTable objects from PlotProportionDE
+  #   title: a character vector to be used for the title of the plot
+  #   cutoff: adjusted p-value threshold to be used
+  #
+  # Returns:
+  #   Jaccard similarity line plot
+  #   Rand index line plot
+  #   Spearman rank correlation line plot
+  
+  ### "silver standards" ###
+  
+  # 100% RNA-seq data RSEM using limma::voom processing step
+  #top.table.list$`100`$un
+  
+  # LOG 100% array data
+  #top.table.list$`0`$log
+  
+  # how similiar are DEG results to the RNA-seq silver standard?
+  seq.stats.list <-
+    lapply(top.table.list,
+           function(x) lapply(x,
+                              function(y) GetGeneSetStats(top.table.list$`100`$un,
+                                                          y, cutoff = cutoff)))
+  seq.stats.df <- reshape2::melt(seq.stats.list)
+  
+  # how similiar are DEG results to the microarray silver standard?
+  array.stats.list <-
+    lapply(top.table.list,
+           function(x) lapply(x,
+                              function(y) GetGeneSetStats(top.table.list$`0`$log,
+                                                          y, cutoff = cutoff)))
+  array.stats.df <- reshape2::melt(array.stats.list)
+  
+  # combine seq and array similarity results
+  array.stats.df <- cbind(array.stats.df, rep("Microarray", nrow(array.stats.df)))
+  seq.stats.df <- cbind(seq.stats.df, rep("RNA-seq", nrow(seq.stats.df)))
+  colnames(seq.stats.df) <- colnames(array.stats.df) <- c("jaccard",
+                                                          "rand",
+                                                          "spearman",
+                                                          "normalization",
+                                                          "perc.seq",
+                                                          "platform")
+  mstr.df <- rbind(array.stats.df, seq.stats.df)
+  
+  # order % seq so plot displays 0-100
+  mstr.df$perc.seq <- factor(mstr.df$perc.seq, levels = seq(0, 100, 10))
+  
+  # capitalize normalization methods for display
+  mstr.df$normalization <- as.factor(toupper(mstr.df$normalization))
+  
+  # line plots
+  # TODO make this less repetitive once we figure out what to do with plots overall
+  plots_list <- list()
+  
+  plots_list[["jaccard"]] <- ggplot(mstr.df, aes(perc.seq, jaccard,
+                                                 color = platform,
+                                                 fill = platform)) +
+    facet_wrap(~normalization, ncol = 4) +
+    geom_line(aes(group = platform), position = position_dodge(0.3)) +
+    geom_point(aes(group = platform), position = position_dodge(0.3)) +
+    theme_bw() +
+    scale_colour_manual(values = cbPalette[c(2, 3)]) +
+    ggtitle(title) +
+    xlab("% RNA-seq") +
+    ylab("Jaccard similarity") +
+    theme(axis.text.x=element_text(angle = 45, vjust = 0.5))
+  
+  plots_list[["rand"]] <- ggplot(mstr.df, aes(perc.seq, rand,
+                                                 color = platform,
+                                                 fill = platform)) +
+    facet_wrap(~normalization, ncol = 4) +
+    geom_line(aes(group = platform), position = position_dodge(0.3)) +
+    geom_point(aes(group = platform), position = position_dodge(0.3)) +
+    theme_bw() +
+    scale_colour_manual(values = cbPalette[c(2, 3)]) +
+    ggtitle(title) +
+    xlab("% RNA-seq") +
+    ylab("Rand index") +
+    theme(axis.text.x=element_text(angle = 45, vjust = 0.5))
+  
+  plots_list[["spearman"]] <- ggplot(mstr.df, aes(perc.seq, spearman,
+                                                  color = platform,
+                                                  fill = platform)) +
+    facet_wrap(~normalization, ncol = 4) +
+    geom_line(aes(group = platform), position = position_dodge(0.3)) +
+    geom_point(aes(group = platform), position = position_dodge(0.3)) +
+    theme_bw() +
+    scale_colour_manual(values = cbPalette[c(2, 3)]) +
+    ggtitle(title) +
+    xlab("% RNA-seq") +
+    ylab("Spearman rank correlation (rho)") +
+    theme(axis.text.x=element_text(angle = 45, vjust = 0.5))
+  
+  return(plots_list)
+  
 }
 
 #### small n functions ---------------------------------------------------------
