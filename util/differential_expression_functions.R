@@ -463,7 +463,8 @@ PlotSilverStandardStats <- function(top.table.list, title,
            function(x) lapply(x,
                               function(y) GetGeneSetStats(top.table.list$`100`$un,
                                                           y, cutoff = cutoff)))
-  seq.stats.df <- reshape2::melt(seq.stats.list)
+  seq.stats.df <- reshape2::melt(seq.stats.list,
+                                 id.vars = c("jaccard", "rand", "spearman"))
   
   # how similiar are DEG results to the microarray silver standard?
   array.stats.list <-
@@ -471,7 +472,8 @@ PlotSilverStandardStats <- function(top.table.list, title,
            function(x) lapply(x,
                               function(y) GetGeneSetStats(top.table.list$`0`$log,
                                                           y, cutoff = cutoff)))
-  array.stats.df <- reshape2::melt(array.stats.list)
+  array.stats.df <- reshape2::melt(array.stats.list,
+                                   id.vars = c("jaccard", "rand", "spearman"))
   
   # combine seq and array similarity results
   array.stats.df <- cbind(array.stats.df, rep("Microarray", nrow(array.stats.df)))
@@ -660,7 +662,8 @@ GetSmallNSilverStandardStats <- function(top.table.list, cutoff = 0.05){
                       cutoff = cutoff)
   }
   
-  stats.df <- reshape2::melt(stats.list)
+  stats.df <- reshape2::melt(stats.list,
+                             id.vars = c("jaccard", "rand", "spearman"))
   colnames(stats.df) <-c("jaccard", "rand", "spearman",
                          "platform", "normalization", "no.samples")
   
