@@ -300,7 +300,9 @@ GetGeneSetStats <- function(silver.set,
                                  method = "spearman",
                                  exact = FALSE,
                                  continuity = TRUE)$estimate)
-  return(c(jacc, rand, spearman))
+  return(data.frame(jaccard_similarity = jacc,
+                    rand_index = rand,
+                    spearman_rho = spearman))
 }
 
 
