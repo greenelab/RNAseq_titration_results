@@ -283,7 +283,7 @@ GetGeneSetStats <- function(silver.set,
               by = "gene")
   
   # calculate agreement between two results
-  contingency_table <- combine_df %>%
+  contingency_table <- combined_df %>%
     select(silver_group,
            experimental_group) %>%
     table()
