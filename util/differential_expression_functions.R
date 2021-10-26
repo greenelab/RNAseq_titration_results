@@ -295,11 +295,11 @@ GetGeneSetStats <- function(silver.set,
   # calculate and return jaccard, rand index, and spearman
   jacc <- TP/(total - TN)
   rand <- (TP + TN)/total
-  spearman <- cor.test(combined_df$silver.adj.P.Val,
-                       combined_df$experimental.adj.P.Val,
-                       method = "spearman",
-                       exact = FALSE,
-                       continuity = TRUE)
+  spearman <- as.vector(cor.test(combined_df$silver.adj.P.Val,
+                                 combined_df$experimental.adj.P.Val,
+                                 method = "spearman",
+                                 exact = FALSE,
+                                 continuity = TRUE)$estimate)
   return(c(jacc, rand, spearman))
 }
 
