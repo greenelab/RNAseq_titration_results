@@ -127,7 +127,7 @@ stats.df.list[1:11] <- foreach(seq_prop = seq(0, 1, 0.1)) %dopar% {
     sample.list <-
       lapply(no.samples,  # for each n (3...50)
              function(x) GetSamplesforMixingSmallN(x, sample.df,
-                                                   subtype = last(two_subtypes),
+                                                   subtype = data.table::last(two_subtypes),
                                                    seq_proportion = seq_prop))
     
     # initialize list to hold differential expression results (eBayes output)
