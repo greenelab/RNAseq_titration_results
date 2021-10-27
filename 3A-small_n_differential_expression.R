@@ -168,7 +168,7 @@ names(stats.df.list)[1:11] <- as.character(seq(0, 100, 10))
 subtypes_combination <- stringr::str_c(two_subtypes, collapse = "v")
 subtypes_combination_nice <- stringr::str_c(two_subtypes, collapse = " vs. ")
 
-stats.df <- reshap2::melt(stats.df.list)
+stats.df <- reshape2::melt(stats.df.list)
 
 write.table(stats.df,
             file = file.path(deg.dir,
