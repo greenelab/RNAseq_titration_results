@@ -56,11 +56,14 @@ ggsave(file.path(plots.dir,
 subtype_vs_others.plots <- PlotSilverStandardStats(subtype_vs_others.results$top.table.list,
                                                    title = paste(subtype_vs_others, "v. Other FDR < 5%"))
 
-ggsave(file.path(plots.dir, paste0(subtypes_combination, "_jaccard_lineplot.pdf")),
+ggsave(file.path(plots.dir, paste0(subtype_vs_others,
+                                   "_vOthers_jaccard_lineplot.pdf")),
        plot = subtype_vs_others.plots$jaccard, width = 8.5, height = 4)
-ggsave(file.path(plots.dir, paste0(subtypes_combination, "_rand_lineplot.pdf")),
+ggsave(file.path(plots.dir, paste0(subtype_vs_others,
+                                   "_vOthers_rand_lineplot.pdf")),
        plot = subtype_vs_others.plots$rand, width = 8.5, height = 4)
-ggsave(file.path(plots.dir, paste0(subtypes_combination, "_spearman_lineplot.pdf")),
+ggsave(file.path(plots.dir, paste0(subtype_vs_others,
+                                   "_vOthers_spearman_lineplot.pdf")),
        plot = subtype_vs_others.plots$spearman, width = 8.5, height = 4)
 
 #### plot Subtype v. Subtype results --------------------------------------------

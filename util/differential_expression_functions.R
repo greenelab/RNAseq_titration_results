@@ -280,10 +280,12 @@ GetGeneSetStats <- function(silver.set,
   # join those data sets together to match up gene names
   combined_df <- silver_df %>%
     left_join(experimental_df,
-              by = "gene")
+              by = "gene") %>%
+    mutate(silver_group = factor(silver_group, levels = c(0, 1)),
+           experimental_group = factor(experimental_group, levels = c(0, 1)))
   
   # calculate agreement between two results
-  contingency_table <- combine_df %>%
+  contingency_table <- combined_df %>%
     select(silver_group,
            experimental_group) %>%
     table()
@@ -295,12 +297,14 @@ GetGeneSetStats <- function(silver.set,
   # calculate and return jaccard, rand index, and spearman
   jacc <- TP/(total - TN)
   rand <- (TP + TN)/total
-  spearman <- cor.test(combined_df$silver.adj.P.Val,
-                       combined_df$experimental.adj.P.Val,
-                       method = "spearman",
-                       exact = FALSE,
-                       continuity = TRUE)
-  return(c(jacc, rand, spearman))
+  spearman <- as.vector(cor.test(combined_df$silver.adj.P.Val,
+                                 combined_df$experimental.adj.P.Val,
+                                 method = "spearman",
+                                 exact = FALSE,
+                                 continuity = TRUE)$estimate)
+  return(data.frame("jaccard" = jacc,
+                    "rand" = rand,
+                    "spearman" = spearman))
 }
 
 
@@ -461,7 +465,8 @@ PlotSilverStandardStats <- function(top.table.list, title,
            function(x) lapply(x,
                               function(y) GetGeneSetStats(top.table.list$`100`$un,
                                                           y, cutoff = cutoff)))
-  seq.stats.df <- reshape2::melt(seq.stats.list)
+  seq.stats.df <- reshape2::melt(seq.stats.list,
+                                 id.vars = c("jaccard", "rand", "spearman"))
   
   # how similiar are DEG results to the microarray silver standard?
   array.stats.list <-
@@ -469,7 +474,8 @@ PlotSilverStandardStats <- function(top.table.list, title,
            function(x) lapply(x,
                               function(y) GetGeneSetStats(top.table.list$`0`$log,
                                                           y, cutoff = cutoff)))
-  array.stats.df <- reshape2::melt(array.stats.list)
+  array.stats.df <- reshape2::melt(array.stats.list,
+                                   id.vars = c("jaccard", "rand", "spearman"))
   
   # combine seq and array similarity results
   array.stats.df <- cbind(array.stats.df, rep("Microarray", nrow(array.stats.df)))
@@ -658,7 +664,8 @@ GetSmallNSilverStandardStats <- function(top.table.list, cutoff = 0.05){
                       cutoff = cutoff)
   }
   
-  stats.df <- reshape2::melt(stats.list)
+  stats.df <- reshape2::melt(stats.list,
+                             id.vars = c("jaccard", "rand", "spearman"))
   colnames(stats.df) <-c("jaccard", "rand", "spearman",
                          "platform", "normalization", "no.samples")
   
