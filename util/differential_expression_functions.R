@@ -280,7 +280,9 @@ GetGeneSetStats <- function(silver.set,
   # join those data sets together to match up gene names
   combined_df <- silver_df %>%
     left_join(experimental_df,
-              by = "gene")
+              by = "gene") %>%
+    mutate(silver_group = factor(silver_group, levels = c(0, 1)),
+           experimental_group = factor(experimental_group, levels = c(0, 1)))
   
   # calculate agreement between two results
   contingency_table <- combined_df %>%
