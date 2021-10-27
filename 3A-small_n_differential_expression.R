@@ -119,7 +119,7 @@ doParallel::registerDoParallel(cl)
 
 # at each titration level (0-100% RNA-seq)
 stats.df.list[1:11] <- foreach(seq_prop = seq(0, 1, 0.1),
-                               .packages = c("magrittr")) %dopar% {
+                               .packages = c("tidyverse")) %dopar% {
   # we're going to repeat the small n experiment 10 times
   for (trial.iter in 1:10) {
     
