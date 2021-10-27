@@ -819,9 +819,14 @@ SmallNNormWrapper <- function(array.dt, seq.dt, mix.list, zto = FALSE) {
   # remove any rows (genes) that all have same values, will cause issues with
   # z-score
   GetAllSameRowIndex <- function(x){
-    vals <- x[, 2:ncol(x), with = FALSE]
-    indx <- which(apply(vals, 1, check_all_same))
-    return(indx)
+    if (ncol(x) > 1) { # check that there is at least one data column
+      # there will be no data column when no seq or no array samples are included
+      vals <- x[, 2:ncol(x), with = FALSE]
+      indx <- which(apply(vals, 1, check_all_same))
+      return(indx)
+    } else {
+      return(integer(0))
+    }
   }
 
   all.same.indx <- unique(c(GetAllSameRowIndex(seq.full.dt),
