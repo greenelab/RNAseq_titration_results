@@ -847,12 +847,26 @@ SmallNNormWrapper <- function(array.dt, seq.dt, mix.list, zto = FALSE) {
   norm.list[["log"]] <- LOGArrayOnly(array.full.dt, zto)
   norm.list[["un"]] <- seq.full.dt
   # 50-50 experiments
-  norm.list[["qn"]] <- QNProcessing(array.dt = array.half.dt,
-                                    seq.dt = seq.half.dt,
+  if (ncol(seq.half.df) == 1) { # no seq samples added, array only
+    norm.list[["qn"]] <- QNSingleDT(dt = array.half.df,
                                     zero.to.one = zto)
-  norm.list[["z"]] <- ZScoreProcessing(array.dt = array.half.dt,
-                                       seq.dt = seq.half.dt,
+    norm.list[["z"]] <- ZScoreSingleDT(dt = array.half.df,
                                        zero.to.one = zto)
+  } else if (ncol(array.half.df) == 1) { # no array samnples added, seq only
+    norm.list[["qn"]] <- QNSingleDT(dt = seq.half.df,
+                                    zero.to.one = zto)
+    norm.list[["z"]] <- ZScoreSingleDT(dt = seq.half.df,
+                                       zero.to.one = zto)
+    
+  } else {
+    norm.list[["qn"]] <- QNProcessing(array.dt = array.half.dt,
+                                      seq.dt = seq.half.dt,
+                                      zero.to.one = zto)
+    norm.list[["z"]] <- ZScoreProcessing(array.dt = array.half.dt,
+                                         seq.dt = seq.half.dt,
+                                         zero.to.one = zto)
+  }
+  
   return(norm.list)
-
+  
 }
