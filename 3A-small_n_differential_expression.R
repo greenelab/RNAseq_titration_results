@@ -142,7 +142,7 @@ stats.df.list[1:11] <- foreach(seq_prop = seq(0, 1, 0.1)) %dopar% {
       # perform differential expression analysis
       master.deg.list[[as.character(no.samples[smpl.no.iter])]] <-
         SmallNDEGWrapper(norm.list = norm.list, sample.df = sample.df,
-                         subtype = last(two_subtypes))
+                         subtype = data.table::last(two_subtypes))
     }
     
     top.table.list <-
