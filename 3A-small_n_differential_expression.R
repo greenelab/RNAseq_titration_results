@@ -2,7 +2,6 @@
 # The purpose of this analysis is to examine how normalization methods
 # (quantile normalization or z-transformation) perform wrt differential
 # expression when there are a small number of samples on each platform
-# (50-50 split microarray and RNA-seq).
 #
 # USAGE: Rscript 3A-small_n_differential_expression.R --cancer_type --subtype_vs_subtype
 
@@ -118,13 +117,14 @@ cl <- parallel::makeCluster(detectCores() - 1)
 doParallel::registerDoParallel(cl)
 
 # at each titration level (0-100% RNA-seq)
-stats.df.list[1:11] <- foreach(seq_prop = seq(0, 1, 0.1),
-                               .packages = c("tidyverse")) %dopar% {
+stats.df.list[1:9] <- foreach(seq_prop = seq(0.1, .9, 0.1), .packages = c("tidyverse")) %dopar% {
+  
   # we're going to repeat the small n experiment 10 times
   for (trial.iter in 1:10) {
     
     # for each n (3...50), get the sample names that will be included in the
     # experiment and on each platform
+    stats.df.iter_list <- list()
     sample.list <-
       lapply(no.samples,  # for each n (3...50)
              function(x) GetSamplesforMixingSmallN(x, sample.df,
@@ -136,14 +136,19 @@ stats.df.list[1:11] <- foreach(seq_prop = seq(0, 1, 0.1),
     
     for (smpl.no.iter in seq_along(sample.list)) {  # for each n (3...50)
       # normalize data
-      norm.list <- SmallNNormWrapper(array.dt = array.dt,
-                                     seq.dt = seq.dt,
-                                     mix.list = sample.list[[smpl.no.iter]],
-                                     zto = FALSE)
-      # perform differential expression analysis
-      master.deg.list[[as.character(no.samples[smpl.no.iter])]] <-
-        SmallNDEGWrapper(norm.list = norm.list, sample.df = sample.df,
-                         subtype = data.table::last(two_subtypes))
+      n_array <- length(sample.list[[smpl.no.iter]]$array)
+      n_seq <- length(sample.list[[smpl.no.iter]]$seq)
+      
+      if (n_array >= 3 & n_seq >= 3) { # require at least three array and seq samples
+        norm.list <- SmallNNormWrapper(array.dt = array.dt,
+                                       seq.dt = seq.dt,
+                                       mix.list = sample.list[[smpl.no.iter]],
+                                       zto = FALSE)
+        # perform differential expression analysis
+        master.deg.list[[as.character(no.samples[smpl.no.iter])]] <-
+          SmallNDEGWrapper(norm.list = norm.list, sample.df = sample.df,
+                           subtype = data.table::last(two_subtypes)) 
+      }
     }
     
     top.table.list <-
@@ -153,17 +158,19 @@ stats.df.list[1:11] <- foreach(seq_prop = seq(0, 1, 0.1),
     
     # how do the 50/50 array/seq differentially expressed genes compared to
     # the platform-specific standards?
-    stats.df.list[[trial.iter]] <- GetSmallNSilverStandardStats(top.table.list,
-                                                                cutoff = 0.1)
-    
+    if (length(top.table.list) > 0) {
+      stats.df.iter_list[[trial.iter]] <- GetSmallNSilverStandardStats(top.table.list,
+                                                                       cutoff = 0.1)  
+    }
   }
+  stats.df.iter_list # return stats.df.iter_list to stats.df.list
 }
 
 # stop parallel backend
 parallel::stopCluster(cl)
 
 # renames list levels
-names(stats.df.list)[1:11] <- as.character(seq(0, 100, 10))
+names(stats.df.list)[1:9] <- as.character(seq(10, 90, 10))
 
 # combine jaccard similarity data.frames into one data.frame
 subtypes_combination <- stringr::str_c(two_subtypes, collapse = "v")
@@ -180,11 +187,13 @@ write.table(stats.df,
             sep = "\t", quote = FALSE, row.names = FALSE)
 
 # line plot is saved as a PDF
-for (percent_rna_seq %in% as.character(seq(0, 100, 10))) {
+for (percent_rna_seq in as.integer(names(stats.df.list))) {
   stats.df.pct <- stats.df %>%
-    filter(seq_prop = percent_rna_seq)
+    filter(seq_prop == percent_rna_seq)
   
-  ggplot(stats.df.pct, aes(x = no.samples, y = jaccard, color = platform)) +
+  ggplot(stats.df.pct, aes(x = no.samples,
+                           y = jaccard,
+                           color = platform)) +
     facet_wrap(~ normalization, ncol = 1) +
     stat_summary(fun = median, geom = "line", aes(group = platform),
                  position = position_dodge(0.2)) +
@@ -197,7 +206,8 @@ for (percent_rna_seq %in% as.character(seq(0, 100, 10))) {
     scale_colour_manual(values = cbPalette[c(2, 3)]) +
     theme(text = element_text(size = 18))
   ggsave(filename = here::here("plots",
-                               paste0(file_identifier, "_small_n_", subtypes_combination, "_", percent_rna_seq, "pct_rna_seq_jaccard_lineplots.pdf")),
+                               str_c(file_identifier, "small_n", subtypes_combination,
+                                     percent_rna_seq, "pct_rna_seq_jaccard_lineplots.pdf", sep = "_")),
          plot = last_plot(), width = 5, height = 7)
   
   ggplot(stats.df.pct, aes(x = no.samples, y = rand, color = platform)) +
@@ -213,7 +223,8 @@ for (percent_rna_seq %in% as.character(seq(0, 100, 10))) {
     scale_colour_manual(values = cbPalette[c(2, 3)]) +
     theme(text = element_text(size = 18))
   ggsave(filename = here::here("plots",
-                               paste0(file_identifier, "_small_n_", subtypes_combination, "_", percent_rna_seq, "pct_rna_seq_rand_lineplots.pdf")),
+                               str_c(file_identifier, "small_n", subtypes_combination,
+                                     percent_rna_seq, "pct_rna_seq_rand_lineplots.pdf", sep = "_")),
          plot = last_plot(), width = 5, height = 7)
   
   ggplot(stats.df.pct, aes(x = no.samples, y = spearman, color = platform)) +
@@ -229,6 +240,7 @@ for (percent_rna_seq %in% as.character(seq(0, 100, 10))) {
     scale_colour_manual(values = cbPalette[c(2, 3)]) +
     theme(text = element_text(size = 18))
   ggsave(filename = here::here("plots",
-                               paste0(file_identifier, "_small_n_", subtypes_combination, "_", percent_rna_seq, "pct_rna_seq_spearman_lineplots.pdf")),
+                               str_c(file_identifier, "small_n", subtypes_combination,
+                                     percent_rna_seq, "pct_rna_seq_spearman_lineplots.pdf", sep = "_")),
          plot = last_plot(), width = 5, height = 7)
 }
