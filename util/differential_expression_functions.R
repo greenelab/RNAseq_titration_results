@@ -295,7 +295,11 @@ GetGeneSetStats <- function(silver.set,
   total <- sum(contingency_table)
   
   # calculate and return jaccard, rand index, and spearman
-  jacc <- TP/(total - TN)
+  if (total == TN) { # denominator of 0 leads to NaN
+    jacc <- 0
+  } else {
+    jacc <- TP/(total - TN)  
+  }
   rand <- (TP + TN)/total
   spearman <- as.vector(cor.test(combined_df$silver.adj.P.Val,
                                  combined_df$experimental.adj.P.Val,
