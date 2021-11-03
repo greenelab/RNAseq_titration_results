@@ -120,11 +120,11 @@ doParallel::registerDoParallel(cl)
 stats.df.list[1:9] <- foreach(seq_prop = seq(0.1, .9, 0.1), .packages = c("tidyverse")) %dopar% {
   
   # we're going to repeat the small n experiment 10 times
+  stats.df.iter_list <- list() # this is returned to stats.df.list each iteration
   for (trial.iter in 1:10) {
     
     # for each n (3...50), get the sample names that will be included in the
     # experiment and on each platform
-    stats.df.iter_list <- list()
     sample.list <-
       lapply(no.samples,  # for each n (3...50)
              function(x) GetSamplesforMixingSmallN(x, sample.df,
@@ -176,7 +176,10 @@ names(stats.df.list)[1:9] <- as.character(seq(10, 90, 10))
 subtypes_combination <- stringr::str_c(two_subtypes, collapse = "v")
 subtypes_combination_nice <- stringr::str_c(two_subtypes, collapse = " vs. ")
 
-stats.df <- reshape2::melt(stats.df.list)
+stats.df <- reshape2::melt(stats.df.list,
+                           id.vars = c("platform", "normalization", "no.samples"))
+names(stats.df) <- c("platform", "normalization", "no.samples", "metric", "value",
+                     "iteration", "seq_prop")
 
 write.table(stats.df,
             file = file.path(deg.dir,
@@ -187,6 +190,7 @@ write.table(stats.df,
             sep = "\t", quote = FALSE, row.names = FALSE)
 
 # line plot is saved as a PDF
+# TODO future problem: make sure the x-axis values are consistent across plots
 for (percent_rna_seq in as.integer(names(stats.df.list))) {
   stats.df.pct <- stats.df %>%
     filter(seq_prop == percent_rna_seq)
@@ -210,7 +214,9 @@ for (percent_rna_seq in as.integer(names(stats.df.list))) {
                                      percent_rna_seq, "pct_rna_seq_jaccard_lineplots.pdf", sep = "_")),
          plot = last_plot(), width = 5, height = 7)
   
-  ggplot(stats.df.pct, aes(x = no.samples, y = rand, color = platform)) +
+  ggplot(stats.df.pct, aes(x = no.samples,
+                           y = rand,
+                           color = platform)) +
     facet_wrap(~ normalization, ncol = 1) +
     stat_summary(fun = median, geom = "line", aes(group = platform),
                  position = position_dodge(0.2)) +
@@ -227,7 +233,9 @@ for (percent_rna_seq in as.integer(names(stats.df.list))) {
                                      percent_rna_seq, "pct_rna_seq_rand_lineplots.pdf", sep = "_")),
          plot = last_plot(), width = 5, height = 7)
   
-  ggplot(stats.df.pct, aes(x = no.samples, y = spearman, color = platform)) +
+  ggplot(stats.df.pct, aes(x = no.samples,
+                           y = spearman,
+                           color = platform)) +
     facet_wrap(~ normalization, ncol = 1) +
     stat_summary(fun = median, geom = "line", aes(group = platform),
                  position = position_dodge(0.2)) +
