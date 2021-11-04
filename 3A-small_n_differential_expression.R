@@ -180,6 +180,9 @@ stats.df <- reshape2::melt(stats.df.list,
                            id.vars = c("platform", "normalization", "no.samples"))
 names(stats.df) <- c("platform", "normalization", "no.samples", "metric", "value",
                      "iteration", "seq_prop")
+stats.df <- pivot_wider(stats.df,
+                        names_from = "metric",
+                        values_from = "value")
 
 write.table(stats.df,
             file = file.path(deg.dir,
