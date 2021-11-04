@@ -156,7 +156,7 @@ stats.df.list[1:9] <- foreach(seq_prop = seq(0.1, .9, 0.1), .packages = c("tidyv
              function(x)  # for each normalization method
                lapply(x, function(y) GetAllGenesTopTable(y)))  # extract DEGs
     
-    # how do the 50/50 array/seq differentially expressed genes compared to
+    # how do the (100-X)%/X% array/seq differentially expressed genes compared to
     # the platform-specific standards?
     if (length(top.table.list) > 0) {
       stats.df.iter_list[[trial.iter]] <- GetSmallNSilverStandardStats(top.table.list,
