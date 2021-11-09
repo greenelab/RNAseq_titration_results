@@ -295,7 +295,11 @@ GetGeneSetStats <- function(silver.set,
   total <- sum(contingency_table)
   
   # calculate and return jaccard, rand index, and spearman
-  jacc <- TP/(total - TN)
+  if (total == TN) { # denominator of 0 leads to NaN
+    jacc <- 0
+  } else {
+    jacc <- TP/(total - TN)  
+  }
   rand <- (TP + TN)/total
   spearman <- as.vector(cor.test(combined_df$silver.adj.P.Val,
                                  combined_df$experimental.adj.P.Val,
@@ -546,7 +550,7 @@ PlotSilverStandardStats <- function(top.table.list, title,
 GetSmallNSilverStandardJaccard <- function(top.table.list, cutoff = 0.05){
   # This function takes a list of limma::topTable output, derives "silver
   # standards" from 100% array and 100% seq data, and finds the Jaccard
-  # similarity between the standards and 50-50 experiment differential
+  # similarity between the standards and titrated experiment differential
   # expression results (quantile norm and z-score)
   #
   # Args:
@@ -707,7 +711,7 @@ SmallNDEGWrapper <- function(norm.list, sample.df, subtype) {
   }
 
   full.design.mat <- GetDesignMat(norm.list$log, sample.df, subtype)
-  half.design.mat <- GetDesignMat(norm.list$qn, sample.df, subtype)
+  part.design.mat <- GetDesignMat(norm.list$qn, sample.df, subtype)
 
   # initialize list to hold fits
   fit.list <- list()
@@ -722,15 +726,15 @@ SmallNDEGWrapper <- function(norm.list, sample.df, subtype) {
   voom.counts <- limma::voom(counts = exprs)
   fit.list[["un"]] <- GetFiteBayes(voom.counts, full.design.mat)
 
-  # 50-50 split data experiment - quantile normalization and z-transformation
-  fit.list[["qn"]] <- GetFiteBayes(norm.list$qn, half.design.mat)
-  fit.list[["z"]] <- GetFiteBayes(norm.list$z, half.design.mat)
+  # (100-X)%/X% split data experiment - quantile normalization and z-transformation
+  fit.list[["qn"]] <- GetFiteBayes(norm.list$qn, part.design.mat)
+  fit.list[["z"]] <- GetFiteBayes(norm.list$z, part.design.mat)
 
   return(fit.list)
 
 }
 
-GetSamplesforMixingSmallN <- function(n, sample.df, subtype) {
+GetSamplesforMixingSmallN <- function(n, sample.df, subtype, seq_proportion) {
   # This function is designed to identify sample names to be used in the "small
   # n" differential expression experiment
   #
@@ -738,13 +742,14 @@ GetSamplesforMixingSmallN <- function(n, sample.df, subtype) {
   #   n: number of samples (for each subtype - no. of replicates)
   #   sample.df: a data.frame mapping sample names to subtype labels
   #   subtype: which subtype should be compared to all others
+  #   seq_proportion: percentage of RNA-seq samples to include in mix
   #
   # Returns:
   #   A list comprised of the following:
   #     all: names of all samples to be used for the experiment (100% of
   #          a single platform)
-  #     array: names of samples to be used for array half of experiment
-  #     seq: names of samples to be used for sequencing half of experiment
+  #     array: names of samples to be used for array part of experiment
+  #     seq: names of samples to be used for sequencing part of experiment
   #
 
   # get samples from the subtype of interest
@@ -761,10 +766,10 @@ GetSamplesforMixingSmallN <- function(n, sample.df, subtype) {
 
   # all samples
   all.samples <- c(subtype.samples, other.samples)
-  # array half
-  array.samples <- c(sample(subtype.samples, floor(n * .5)),
-                     sample(other.samples, ceiling(n * .5)))
-  # seq half
+  # array part
+  array.samples <- c(sample(subtype.samples, floor(n * (1 - seq_proportion))),
+                     sample(other.samples, ceiling(n * (1 - seq_proportion))))
+  # seq part
   seq.samples <- all.samples[!(all.samples %in% array.samples)]
 
   return(list("all" = all.samples, "array" = array.samples,
@@ -777,7 +782,7 @@ SmallNNormWrapper <- function(array.dt, seq.dt, mix.list, zto = FALSE) {
   # differential expression experiment -- it will return a list of normalized
   # data that includes two controls (100% log-transformed array data and
   # and 100% untransformed RNA-seq count data (RSEM)) and two experimental
-  # datasets (50-50 array and seq data either quantile normalized or
+  # datasets (titrated array and seq data either quantile normalized or
   # z-transformed)
   #
   # Args:
@@ -792,8 +797,8 @@ SmallNNormWrapper <- function(array.dt, seq.dt, mix.list, zto = FALSE) {
   # Returns:
   #   norm.list: a normalized list of data with log (100% array data),
   #              un (100% untransformed RNA-seq data), qn (quantile normalized
-  #              data that is 50-50 array/seq data [the array data is used as
-  #              the reference]), and z (z-transformed data that is 50-50
+  #              data that is titrated array/seq data [the array data is used as
+  #              the reference]), and z (z-transformed data that is titrated
   #              array/seq data [z-scores within platform + concatenation])
   #
 
@@ -808,31 +813,36 @@ SmallNNormWrapper <- function(array.dt, seq.dt, mix.list, zto = FALSE) {
                                            mix.list$all)), with = FALSE]
   seq.full.dt  <- seq.dt[, c(1, which(colnames(seq.dt) %in%
                                         mix.list$all)), with = FALSE]
-
-  # array and seq data.tables to be used in the 50-50 experiment
-  array.half.dt <- array.dt[, c(1, which(colnames(array.dt) %in%
+  
+  # array and seq data.tables to be used in the titrated experiment
+  array.part.dt <- array.dt[, c(1, which(colnames(array.dt) %in%
                                            mix.list$array)), with = FALSE]
-  seq.half.dt <- seq.dt[, c(1, which(colnames(seq.dt) %in%
+  seq.part.dt <- seq.dt[, c(1, which(colnames(seq.dt) %in%
                                        mix.list$seq)), with = FALSE]
 
   # remove any rows (genes) that all have same values, will cause issues with
   # z-score
   GetAllSameRowIndex <- function(x){
-    vals <- x[, 2:ncol(x), with = FALSE]
-    indx <- which(apply(vals, 1, check_all_same))
-    return(indx)
+    if (ncol(x) > 1) { # check that there is at least one data column
+      # there will be no data column when no seq or no array samples are included
+      vals <- x[, 2:ncol(x), with = FALSE]
+      indx <- which(apply(vals, 1, check_all_same))
+      return(indx)
+    } else {
+      return(integer(0))
+    }
   }
 
   all.same.indx <- unique(c(GetAllSameRowIndex(seq.full.dt),
-                            GetAllSameRowIndex(seq.half.dt)))
+                            GetAllSameRowIndex(seq.part.dt)))
   # if no rows are all same (in previous GetAllSameRowIndex), all.same.indx is integer(0)
   # subsetting data frames by -integer(0) results in no rows
   # so check that integer vector has length > 0 before subsetting
   if (length(all.same.indx) > 0) {
     array.full.dt <- array.full.dt[-all.same.indx, ]
     seq.full.dt <- seq.full.dt[-all.same.indx, ]
-    array.half.dt <- array.half.dt[-all.same.indx, ]
-    seq.half.dt <- seq.half.dt[-all.same.indx, ]
+    array.part.dt <- array.part.dt[-all.same.indx, ]
+    seq.part.dt <- seq.part.dt[-all.same.indx, ]
   }
 
   # initialize list to hold normalized data
@@ -840,13 +850,27 @@ SmallNNormWrapper <- function(array.dt, seq.dt, mix.list, zto = FALSE) {
   # control conditions 100% log-transformed array data & 100% RSEM seq data
   norm.list[["log"]] <- LOGArrayOnly(array.full.dt, zto)
   norm.list[["un"]] <- seq.full.dt
-  # 50-50 experiments
-  norm.list[["qn"]] <- QNProcessing(array.dt = array.half.dt,
-                                    seq.dt = seq.half.dt,
+  # titrated experiments
+  if (ncol(seq.part.dt) == 1) { # no seq samples added, array only
+    norm.list[["qn"]] <- QNSingleDT(dt = array.part.dt,
                                     zero.to.one = zto)
-  norm.list[["z"]] <- ZScoreProcessing(array.dt = array.half.dt,
-                                       seq.dt = seq.half.dt,
+    norm.list[["z"]] <- ZScoreSingleDT(dt = array.part.dt,
                                        zero.to.one = zto)
+  } else if (ncol(array.part.dt) == 1) { # no array samnples added, seq only
+    norm.list[["qn"]] <- QNSingleDT(dt = seq.part.dt,
+                                    zero.to.one = zto)
+    norm.list[["z"]] <- ZScoreSingleDT(dt = seq.part.dt,
+                                       zero.to.one = zto)
+    
+  } else {
+    norm.list[["qn"]] <- QNProcessing(array.dt = array.part.dt,
+                                      seq.dt = seq.part.dt,
+                                      zero.to.one = zto)
+    norm.list[["z"]] <- ZScoreProcessing(array.dt = array.part.dt,
+                                         seq.dt = seq.part.dt,
+                                         zero.to.one = zto)
+  }
+  
   return(norm.list)
-
+  
 }
