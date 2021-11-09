@@ -1,5 +1,7 @@
 # script to get docker image up and running
 
+sudo snap refresh snapd
+
 sudo snap install docker
 
 sleep 3 && sudo chmod 666 /var/run/docker.sock
