@@ -213,6 +213,33 @@ GetAllGenesTopTable <- function(fit.object, adjust = "BH") {
   return(top.table)
 }
 
+GetGeneSetJaccard <- function(silver.set, top.table,
+                              cutoff = 0.05) {
+  # Given a "silver standard" of differentially expressed genes (a character
+  # vector), find the Jaccard similarity between the silver standard and another
+  # set of differentially expressed genes (DEGs; from limma::topTable output)
+  # using a user-specified adjusted p-value threshold
+  #
+  # Args:
+  #   silver.set: a character vector of the "silver standard" genes
+  #   top.table: output of limma::topTable (typically from GetAllGenesTopTable)
+  #              for the other differential expression experiment being
+  #              considered
+  #   cutoff: the adjusted p-value threshold - all genes with an adjusted p
+  #           below this threshold will be considered differentially expressed
+  #
+  # Returns:
+  #   jacc: Jaccard similarity of silver standard and other set of DEGs
+
+  # get differentially expressed gene set from experiment topTable
+  tt.set <- rownames(top.table)[which(top.table$adj.P.Val < cutoff)]
+  # find Jaccard similarity between experiment and silver standard
+  jacc <-
+    length(intersect(silver.set, tt.set)) / length(union(silver.set, tt.set))
+  # return Jaccard similarity
+  return(jacc)
+}
+
 GetGeneSetStats <- function(silver.set,
                            top.table,
                            cutoff = 0.05) {
@@ -338,6 +365,77 @@ PlotProportionDE <- function(fit.list, adjust.method = "BH", cutoff = 0.05) {
   return(list("top.table.list" = top.table.list, "plot" = p))
 }
 
+PlotSilverStandardJaccard <- function(top.table.list, title,
+                                      cutoff = 0.05){
+  # Given a list of top tables, plot the Jaccard similarity between the
+  # microarray and RNA-seq "silver standards" and all other experiments
+  #
+  # Args:
+  #   top.table.list: list of limma::topTable objects from PlotProportionDE
+  #   title: a character vector to be used for the title of the plot
+  #   cutoff: adjusted p-value threshold to be used
+  #
+  # Returns:
+  #   p: Jaccard similarity line plot
+  #
+
+  ### "silver standards" ###
+
+  # 100% RNA-seq data RSEM using limma::voom processing step
+  seq.truth.set <-
+    rownames(top.table.list$`100`$un)[which(top.table.list$`100`$un$adj.P.Val <
+                                              cutoff)]
+  # LOG 100% array data
+  array.truth.set <-
+    rownames(top.table.list$`0`$log)[which(top.table.list$`0`$log$adj.P.Val <
+                                             cutoff)]
+
+  # how similiar are DEG results to the RNA-seq silver standard? as data.frame
+  seq.jacc.list <-
+    lapply(top.table.list,
+           function(x) lapply(x,
+                              function(y) GetGeneSetJaccard(seq.truth.set, y)))
+  seq.jacc.df <- reshape2::melt(seq.jacc.list)
+
+  # how similiar are DEG results to the microarray silver standard? as data.frame
+  array.jacc.list <-
+    lapply(top.table.list,
+           function(x) lapply(x,
+                              function(y) GetGeneSetJaccard(array.truth.set,
+                                                            y)))
+  array.jacc.df <- reshape2::melt(array.jacc.list)
+
+  # combine seq and array similarity results
+  array.jacc.df <- cbind(array.jacc.df, rep("Microarray", nrow(array.jacc.df)))
+  seq.jacc.df <- cbind(seq.jacc.df, rep("RNA-seq", nrow(seq.jacc.df)))
+  colnames(seq.jacc.df) <- colnames(array.jacc.df) <- c("jaccard",
+                                                        "normalization",
+                                                        "perc.seq",
+                                                        "platform")
+  mstr.df <- rbind(array.jacc.df, seq.jacc.df)
+
+  # order % seq so plot displays 0-100
+  mstr.df$perc.seq <- factor(mstr.df$perc.seq, levels = seq(0, 100, 10))
+
+  # capitalize normalization methods for display
+  mstr.df$normalization <- as.factor(toupper(mstr.df$normalization))
+
+  # line plot
+  p <- ggplot(mstr.df, aes(perc.seq, jaccard,
+                           color = platform, fill = platform)) +
+    facet_wrap(~normalization, ncol = 4) +
+    geom_line(aes(group = platform), position = position_dodge(0.3)) +
+    geom_point(aes(group = platform), position = position_dodge(0.3)) +
+    theme_bw() +
+    scale_colour_manual(values = cbPalette[c(2, 3)]) +
+    ggtitle(title) +
+    xlab("% RNA-seq") +
+    ylab("Jaccard similarity") +
+    theme(axis.text.x=element_text(angle = 45, vjust = 0.5))
+  return(p)
+
+}
+
 PlotSilverStandardStats <- function(top.table.list, title,
                                     cutoff = 0.05){
   # Given a list of top tables, plot the Jaccard similarity, Rand index, and
@@ -444,6 +542,78 @@ PlotSilverStandardStats <- function(top.table.list, title,
 }
 
 #### small n functions ---------------------------------------------------------
+
+GetSmallNSilverStandardJaccard <- function(top.table.list, cutoff = 0.05){
+  # This function takes a list of limma::topTable output, derives "silver
+  # standards" from 100% array and 100% seq data, and finds the Jaccard
+  # similarity between the standards and 50-50 experiment differential
+  # expression results (quantile norm and z-score)
+  #
+  # Args:
+  #   top.table.list: a list of limma::topTable output with all genes -
+  #                   output of GetAllGenesTopTable
+  #   cutoff: FDR cutoff, defaults to FDR < 5%
+  #
+  # Returns:
+  #   jacc.df: a data.frame of the Jaccard results with columns corresponding to
+  #            the Jaccard value, the silver standard used for the
+  #            comparison ("platform"), the normalization method, and the
+  #            n used (number of samples; "no.samples")
+  #
+
+  # initialize list to hold Jaccard similarity
+  jacc.list <- list()
+
+  # for each n (number of samples)
+  for (smpl.no.iter in seq_along(top.table.list)) {
+
+    current.smpl.tt <- top.table.list[[smpl.no.iter]]
+    current.n <- names(top.table.list)[smpl.no.iter]
+
+    array.top <- current.smpl.tt$log
+    array.standard <- rownames(array.top)[which(array.top$adj.P.Val < cutoff)]
+    seq.top <- current.smpl.tt$un
+    seq.standard <- rownames(seq.top)[which(seq.top$adj.P.Val < cutoff)]
+
+    jacc.list[[current.n]]$qn$array <-
+      GetGeneSetJaccard(array.standard,
+                        top.table = current.smpl.tt$qn,
+                        cutoff)
+    jacc.list[[current.n]]$qn$seq <-
+      GetGeneSetJaccard(seq.standard,
+                        top.table = current.smpl.tt$qn,
+                        cutoff)
+    jacc.list[[current.n]]$z$array <-
+      GetGeneSetJaccard(array.standard,
+                        top.table = current.smpl.tt$z,
+                        cutoff)
+    jacc.list[[current.n]]$z$seq <-
+      GetGeneSetJaccard(seq.standard,
+                        top.table = current.smpl.tt$z,
+                        cutoff)
+
+  }
+
+  jacc.df <- reshape2::melt(jacc.list)
+  colnames(jacc.df) <-c("jaccard", "platform", "normalization", "no.samples")
+
+  # rename platforms
+  plt.recode.str <-
+    "'array' = 'Microarray'; 'seq' = 'RNA-seq'"
+  jacc.df$platform <- car::recode(jacc.df$platform,
+                                  recodes = plt.recode.str)
+
+  # order no.samples so plot displays from smallest n to largest
+  jacc.df$no.samples <-
+    factor(jacc.df$no.samples,
+           levels = sort(unique(as.numeric(as.character(jacc.df$no.samples)))))
+
+  # capitalize normalization methods for display
+  jacc.df$normalization <- as.factor(toupper(jacc.df$normalization))
+
+  return(jacc.df)
+
+}
 
 GetSmallNSilverStandardStats <- function(top.table.list, cutoff = 0.05){
   # This function takes a list of limma::topTable output, derives "silver
