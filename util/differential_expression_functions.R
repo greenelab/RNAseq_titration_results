@@ -213,15 +213,18 @@ GetAllGenesTopTable <- function(fit.object, adjust = "BH") {
   return(top.table)
 }
 
-GetGeneSetJaccard <- function(silver.set, top.table,
-                              cutoff = 0.05) {
-  # Given a "silver standard" of differentially expressed genes (a character
-  # vector), find the Jaccard similarity between the silver standard and another
-  # set of differentially expressed genes (DEGs; from limma::topTable output)
-  # using a user-specified adjusted p-value threshold
+GetGeneSetStats <- function(silver.set,
+                           top.table,
+                           cutoff = 0.05) {
+  # Given a top table list of from RNA-seq or microarray-only data
+  # (our "silver standard" of differentially expressed genes), compare those 
+  # true positives and true negatives differentially expressed genes (DEGs)
+  # against DEGs meeting out cutoff criteria in other experimental settings
+  # using Jaccard similarity, Rand index, and Spearman rank correlation
   #
   # Args:
-  #   silver.set: a character vector of the "silver standard" genes
+  #   silver.set: output of limma::topTable (typically from GetAllGenesTopTable)
+  #               for the silver standard RNA-seq or array data being compared against
   #   top.table: output of limma::topTable (typically from GetAllGenesTopTable)
   #              for the other differential expression experiment being
   #              considered
@@ -229,15 +232,56 @@ GetGeneSetJaccard <- function(silver.set, top.table,
   #           below this threshold will be considered differentially expressed
   #
   # Returns:
-  #   jacc: Jaccard similarity of silver standard and other set of DEGs
-
-  # get differentially expressed gene set from experiment topTable
-  tt.set <- rownames(top.table)[which(top.table$adj.P.Val < cutoff)]
-  # find Jaccard similarity between experiment and silver standard
-  jacc <-
-    length(intersect(silver.set, tt.set)) / length(union(silver.set, tt.set))
-  # return Jaccard similarity
-  return(jacc)
+  #   jacc: Jaccard similarity
+  #   rand: Rand index
+  #   spearman: Spearman correlation rho
+  
+  # start with silver standard
+  silver_df <- silver.set %>%
+    rownames_to_column(var = "gene") %>%
+    select(gene, adj.P.Val) %>%
+    rename("silver.adj.P.Val" = "adj.P.Val") %>%
+    mutate(silver_group = as.integer(silver.adj.P.Val < 0.05))
+  
+  # do the same with our experimental setting
+  experimental_df <- top.table %>%
+    rownames_to_column(var = "gene") %>%
+    select(gene, adj.P.Val) %>%
+    rename("experimental.adj.P.Val" = "adj.P.Val") %>%
+    mutate(experimental_group = as.integer(experimental.adj.P.Val < 0.05))
+    
+  # join those data sets together to match up gene names
+  combined_df <- silver_df %>%
+    left_join(experimental_df,
+              by = "gene") %>%
+    mutate(silver_group = factor(silver_group, levels = c(0, 1)),
+           experimental_group = factor(experimental_group, levels = c(0, 1)))
+  
+  # calculate agreement between two results
+  contingency_table <- combined_df %>%
+    select(silver_group,
+           experimental_group) %>%
+    table()
+  
+  TN <- contingency_table[1,1]
+  TP <- contingency_table[2,2]
+  total <- sum(contingency_table)
+  
+  # calculate and return jaccard, rand index, and spearman
+  if (total == TN) { # denominator of 0 leads to NaN
+    jacc <- 0
+  } else {
+    jacc <- TP/(total - TN)  
+  }
+  rand <- (TP + TN)/total
+  spearman <- as.vector(cor.test(combined_df$silver.adj.P.Val,
+                                 combined_df$experimental.adj.P.Val,
+                                 method = "spearman",
+                                 exact = FALSE,
+                                 continuity = TRUE)$estimate)
+  return(data.frame("jaccard" = jacc,
+                    "rand" = rand,
+                    "spearman" = spearman))
 }
 
 
@@ -298,10 +342,10 @@ PlotProportionDE <- function(fit.list, adjust.method = "BH", cutoff = 0.05) {
   return(list("top.table.list" = top.table.list, "plot" = p))
 }
 
-PlotSilverStandardJaccard <- function(top.table.list, title,
-                                      cutoff = 0.05){
-  # Given a list of top tables, plot the Jaccard similarity between the
-  # microarray and RNA-seq "silver standards" and all other experiments
+PlotSilverStandardStats <- function(top.table.list, title,
+                                    cutoff = 0.05){
+  # Given a list of top tables, plot the Jaccard similarity, Rand index, and
+  # Spearman rho between the "silver standards" and all other experiments
   #
   # Args:
   #   top.table.list: list of limma::topTable objects from PlotProportionDE
@@ -309,53 +353,60 @@ PlotSilverStandardJaccard <- function(top.table.list, title,
   #   cutoff: adjusted p-value threshold to be used
   #
   # Returns:
-  #   p: Jaccard similarity line plot
-  #
-
+  #   Jaccard similarity line plot
+  #   Rand index line plot
+  #   Spearman rank correlation line plot
+  
   ### "silver standards" ###
-
+  
   # 100% RNA-seq data RSEM using limma::voom processing step
-  seq.truth.set <-
-    rownames(top.table.list$`100`$un)[which(top.table.list$`100`$un$adj.P.Val <
-                                              cutoff)]
+  #top.table.list$`100`$un
+  
   # LOG 100% array data
-  array.truth.set <-
-    rownames(top.table.list$`0`$log)[which(top.table.list$`0`$log$adj.P.Val <
-                                             cutoff)]
-
-  # how similiar are DEG results to the RNA-seq silver standard? as data.frame
-  seq.jacc.list <-
+  #top.table.list$`0`$log
+  
+  # how similiar are DEG results to the RNA-seq silver standard?
+  seq.stats.list <-
     lapply(top.table.list,
            function(x) lapply(x,
-                              function(y) GetGeneSetJaccard(seq.truth.set, y)))
-  seq.jacc.df <- reshape2::melt(seq.jacc.list)
-
-  # how similiar are DEG results to the microarray silver standard? as data.frame
-  array.jacc.list <-
+                              function(y) GetGeneSetStats(top.table.list$`100`$un,
+                                                          y, cutoff = cutoff)))
+  seq.stats.df <- reshape2::melt(seq.stats.list,
+                                 id.vars = c("jaccard", "rand", "spearman"))
+  
+  # how similiar are DEG results to the microarray silver standard?
+  array.stats.list <-
     lapply(top.table.list,
            function(x) lapply(x,
-                              function(y) GetGeneSetJaccard(array.truth.set,
-                                                            y)))
-  array.jacc.df <- reshape2::melt(array.jacc.list)
-
+                              function(y) GetGeneSetStats(top.table.list$`0`$log,
+                                                          y, cutoff = cutoff)))
+  array.stats.df <- reshape2::melt(array.stats.list,
+                                   id.vars = c("jaccard", "rand", "spearman"))
+  
   # combine seq and array similarity results
-  array.jacc.df <- cbind(array.jacc.df, rep("Microarray", nrow(array.jacc.df)))
-  seq.jacc.df <- cbind(seq.jacc.df, rep("RNA-seq", nrow(seq.jacc.df)))
-  colnames(seq.jacc.df) <- colnames(array.jacc.df) <- c("jaccard",
-                                                        "normalization",
-                                                        "perc.seq",
-                                                        "platform")
-  mstr.df <- rbind(array.jacc.df, seq.jacc.df)
-
+  array.stats.df <- cbind(array.stats.df, rep("Microarray", nrow(array.stats.df)))
+  seq.stats.df <- cbind(seq.stats.df, rep("RNA-seq", nrow(seq.stats.df)))
+  colnames(seq.stats.df) <- colnames(array.stats.df) <- c("jaccard",
+                                                          "rand",
+                                                          "spearman",
+                                                          "normalization",
+                                                          "perc.seq",
+                                                          "platform")
+  mstr.df <- rbind(array.stats.df, seq.stats.df)
+  
   # order % seq so plot displays 0-100
   mstr.df$perc.seq <- factor(mstr.df$perc.seq, levels = seq(0, 100, 10))
-
+  
   # capitalize normalization methods for display
   mstr.df$normalization <- as.factor(toupper(mstr.df$normalization))
-
-  # line plot
-  p <- ggplot(mstr.df, aes(perc.seq, jaccard,
-                           color = platform, fill = platform)) +
+  
+  # line plots
+  # TODO make this less repetitive once we figure out what to do with plots overall
+  plots_list <- list()
+  
+  plots_list[["jaccard"]] <- ggplot(mstr.df, aes(perc.seq, jaccard,
+                                                 color = platform,
+                                                 fill = platform)) +
     facet_wrap(~normalization, ncol = 4) +
     geom_line(aes(group = platform), position = position_dodge(0.3)) +
     geom_point(aes(group = platform), position = position_dodge(0.3)) +
@@ -365,17 +416,45 @@ PlotSilverStandardJaccard <- function(top.table.list, title,
     xlab("% RNA-seq") +
     ylab("Jaccard similarity") +
     theme(axis.text.x=element_text(angle = 45, vjust = 0.5))
-  return(p)
-
+  
+  plots_list[["rand"]] <- ggplot(mstr.df, aes(perc.seq, rand,
+                                                 color = platform,
+                                                 fill = platform)) +
+    facet_wrap(~normalization, ncol = 4) +
+    geom_line(aes(group = platform), position = position_dodge(0.3)) +
+    geom_point(aes(group = platform), position = position_dodge(0.3)) +
+    theme_bw() +
+    scale_colour_manual(values = cbPalette[c(2, 3)]) +
+    ggtitle(title) +
+    xlab("% RNA-seq") +
+    ylab("Rand index") +
+    theme(axis.text.x=element_text(angle = 45, vjust = 0.5))
+  
+  plots_list[["spearman"]] <- ggplot(mstr.df, aes(perc.seq, spearman,
+                                                  color = platform,
+                                                  fill = platform)) +
+    facet_wrap(~normalization, ncol = 4) +
+    geom_line(aes(group = platform), position = position_dodge(0.3)) +
+    geom_point(aes(group = platform), position = position_dodge(0.3)) +
+    theme_bw() +
+    scale_colour_manual(values = cbPalette[c(2, 3)]) +
+    ggtitle(title) +
+    xlab("% RNA-seq") +
+    ylab("Spearman rank correlation (rho)") +
+    theme(axis.text.x=element_text(angle = 45, vjust = 0.5))
+  
+  return(plots_list)
+  
 }
 
 #### small n functions ---------------------------------------------------------
 
-GetSmallNSilverStandardJaccard <- function(top.table.list, cutoff = 0.05){
+GetSmallNSilverStandardStats <- function(top.table.list, cutoff = 0.05){
   # This function takes a list of limma::topTable output, derives "silver
-  # standards" from 100% array and 100% seq data, and finds the Jaccard
-  # similarity between the standards and 50-50 experiment differential
-  # expression results (quantile norm and z-score)
+  # standards" from 100% array and 100% seq data, and finds three stats:
+  # Jaccard similarity, Rand index, and Spearman correlation
+  # between the standards and any experiment differential expression results
+  # (here, quantile norm and z-score are used for illustration)
   #
   # Args:
   #   top.table.list: a list of limma::topTable output with all genes -
@@ -383,64 +462,63 @@ GetSmallNSilverStandardJaccard <- function(top.table.list, cutoff = 0.05){
   #   cutoff: FDR cutoff, defaults to FDR < 5%
   #
   # Returns:
-  #   jacc.df: a data.frame of the Jaccard results with columns corresponding to
-  #            the Jaccard value, the silver standard used for the
-  #            comparison ("platform"), the normalization method, and the
-  #            n used (number of samples; "no.samples")
+  #   stats.df: a data.frame of three stats results with columns corresponding to
+  #             the Jaccard value, Rand index, Spearman correlation,
+  #             the silver standard used for the comparison ("platform"),
+  #             the normalization method, and the n used (number of samples; "no.samples")
   #
-
-  # initialize list to hold Jaccard similarity
-  jacc.list <- list()
-
+  
+  # initialize list to hold stats
+  stats.list <- list()
+  
   # for each n (number of samples)
   for (smpl.no.iter in seq_along(top.table.list)) {
-
+    
     current.smpl.tt <- top.table.list[[smpl.no.iter]]
     current.n <- names(top.table.list)[smpl.no.iter]
-
+    
     array.top <- current.smpl.tt$log
-    array.standard <- rownames(array.top)[which(array.top$adj.P.Val < cutoff)]
     seq.top <- current.smpl.tt$un
-    seq.standard <- rownames(seq.top)[which(seq.top$adj.P.Val < cutoff)]
-
-    jacc.list[[current.n]]$qn$array <-
-      GetGeneSetJaccard(array.standard,
-                        top.table = current.smpl.tt$qn,
-                        cutoff)
-    jacc.list[[current.n]]$qn$seq <-
-      GetGeneSetJaccard(seq.standard,
-                        top.table = current.smpl.tt$qn,
-                        cutoff)
-    jacc.list[[current.n]]$z$array <-
-      GetGeneSetJaccard(array.standard,
-                        top.table = current.smpl.tt$z,
-                        cutoff)
-    jacc.list[[current.n]]$z$seq <-
-      GetGeneSetJaccard(seq.standard,
-                        top.table = current.smpl.tt$z,
-                        cutoff)
-
+    
+    stats.list[[current.n]]$qn$array <-
+      GetGeneSetStats(silver.set = array.top,
+                      top.table = current.smpl.tt$qn,
+                      cutoff = cutoff)
+    stats.list[[current.n]]$qn$seq <-
+      GetGeneSetStats(silver.set = seq.top,
+                      top.table = current.smpl.tt$qn,
+                      cutoff = cutoff)
+    stats.list[[current.n]]$z$array <-
+      GetGeneSetStats(silver.set = array.top,
+                      top.table = current.smpl.tt$z,
+                      cutoff = cutoff)
+    stats.list[[current.n]]$z$seq <-
+      GetGeneSetStats(silver.set = seq.top,
+                      top.table = current.smpl.tt$z,
+                      cutoff = cutoff)
   }
-
-  jacc.df <- reshape2::melt(jacc.list)
-  colnames(jacc.df) <-c("jaccard", "platform", "normalization", "no.samples")
-
+  
+  stats.df <- reshape2::melt(stats.list,
+                             id.vars = c("jaccard", "rand", "spearman"))
+  colnames(stats.df) <-c("jaccard", "rand", "spearman",
+                         "platform", "normalization", "no.samples")
+  
   # rename platforms
   plt.recode.str <-
     "'array' = 'Microarray'; 'seq' = 'RNA-seq'"
-  jacc.df$platform <- car::recode(jacc.df$platform,
-                                  recodes = plt.recode.str)
-
+  stats.df$platform <- car::recode(stats.df$platform,
+                                   recodes = plt.recode.str)
+  
   # order no.samples so plot displays from smallest n to largest
-  jacc.df$no.samples <-
-    factor(jacc.df$no.samples,
-           levels = sort(unique(as.numeric(as.character(jacc.df$no.samples)))))
-
+  stats.df$no.samples <-
+    factor(stats.df$no.samples,
+           levels = sort(unique(as.numeric(as.character(stats.df$no.samples)))))
+  
   # capitalize normalization methods for display
-  jacc.df$normalization <- as.factor(toupper(jacc.df$normalization))
-
-  return(jacc.df)
-
+  stats.df$normalization <- as.factor(toupper(stats.df$normalization))
+  
+  return(stats.df)
+  
 }
 
 SmallNDEGWrapper <- function(norm.list, sample.df, subtype) {
@@ -463,7 +541,7 @@ SmallNDEGWrapper <- function(norm.list, sample.df, subtype) {
   }
 
   full.design.mat <- GetDesignMat(norm.list$log, sample.df, subtype)
-  half.design.mat <- GetDesignMat(norm.list$qn, sample.df, subtype)
+  part.design.mat <- GetDesignMat(norm.list$qn, sample.df, subtype)
 
   # initialize list to hold fits
   fit.list <- list()
@@ -478,15 +556,15 @@ SmallNDEGWrapper <- function(norm.list, sample.df, subtype) {
   voom.counts <- limma::voom(counts = exprs)
   fit.list[["un"]] <- GetFiteBayes(voom.counts, full.design.mat)
 
-  # 50-50 split data experiment - quantile normalization and z-transformation
-  fit.list[["qn"]] <- GetFiteBayes(norm.list$qn, half.design.mat)
-  fit.list[["z"]] <- GetFiteBayes(norm.list$z, half.design.mat)
+  # (100-X)%/X% split data experiment - quantile normalization and z-transformation
+  fit.list[["qn"]] <- GetFiteBayes(norm.list$qn, part.design.mat)
+  fit.list[["z"]] <- GetFiteBayes(norm.list$z, part.design.mat)
 
   return(fit.list)
 
 }
 
-GetSamplesforMixingSmallN <- function(n, sample.df, subtype) {
+GetSamplesforMixingSmallN <- function(n, sample.df, subtype, seq_proportion) {
   # This function is designed to identify sample names to be used in the "small
   # n" differential expression experiment
   #
@@ -494,13 +572,14 @@ GetSamplesforMixingSmallN <- function(n, sample.df, subtype) {
   #   n: number of samples (for each subtype - no. of replicates)
   #   sample.df: a data.frame mapping sample names to subtype labels
   #   subtype: which subtype should be compared to all others
+  #   seq_proportion: percentage of RNA-seq samples to include in mix
   #
   # Returns:
   #   A list comprised of the following:
   #     all: names of all samples to be used for the experiment (100% of
   #          a single platform)
-  #     array: names of samples to be used for array half of experiment
-  #     seq: names of samples to be used for sequencing half of experiment
+  #     array: names of samples to be used for array part of experiment
+  #     seq: names of samples to be used for sequencing part of experiment
   #
 
   # get samples from the subtype of interest
@@ -517,10 +596,10 @@ GetSamplesforMixingSmallN <- function(n, sample.df, subtype) {
 
   # all samples
   all.samples <- c(subtype.samples, other.samples)
-  # array half
-  array.samples <- c(sample(subtype.samples, floor(n * .5)),
-                     sample(other.samples, ceiling(n * .5)))
-  # seq half
+  # array part
+  array.samples <- c(sample(subtype.samples, floor(n * (1 - seq_proportion))),
+                     sample(other.samples, ceiling(n * (1 - seq_proportion))))
+  # seq part
   seq.samples <- all.samples[!(all.samples %in% array.samples)]
 
   return(list("all" = all.samples, "array" = array.samples,
@@ -533,7 +612,7 @@ SmallNNormWrapper <- function(array.dt, seq.dt, mix.list, zto = FALSE) {
   # differential expression experiment -- it will return a list of normalized
   # data that includes two controls (100% log-transformed array data and
   # and 100% untransformed RNA-seq count data (RSEM)) and two experimental
-  # datasets (50-50 array and seq data either quantile normalized or
+  # datasets (titrated array and seq data either quantile normalized or
   # z-transformed)
   #
   # Args:
@@ -548,8 +627,8 @@ SmallNNormWrapper <- function(array.dt, seq.dt, mix.list, zto = FALSE) {
   # Returns:
   #   norm.list: a normalized list of data with log (100% array data),
   #              un (100% untransformed RNA-seq data), qn (quantile normalized
-  #              data that is 50-50 array/seq data [the array data is used as
-  #              the reference]), and z (z-transformed data that is 50-50
+  #              data that is titrated array/seq data [the array data is used as
+  #              the reference]), and z (z-transformed data that is titrated
   #              array/seq data [z-scores within platform + concatenation])
   #
 
@@ -564,31 +643,36 @@ SmallNNormWrapper <- function(array.dt, seq.dt, mix.list, zto = FALSE) {
                                            mix.list$all)), with = FALSE]
   seq.full.dt  <- seq.dt[, c(1, which(colnames(seq.dt) %in%
                                         mix.list$all)), with = FALSE]
-
-  # array and seq data.tables to be used in the 50-50 experiment
-  array.half.dt <- array.dt[, c(1, which(colnames(array.dt) %in%
+  
+  # array and seq data.tables to be used in the titrated experiment
+  array.part.dt <- array.dt[, c(1, which(colnames(array.dt) %in%
                                            mix.list$array)), with = FALSE]
-  seq.half.dt <- seq.dt[, c(1, which(colnames(seq.dt) %in%
+  seq.part.dt <- seq.dt[, c(1, which(colnames(seq.dt) %in%
                                        mix.list$seq)), with = FALSE]
 
   # remove any rows (genes) that all have same values, will cause issues with
   # z-score
   GetAllSameRowIndex <- function(x){
-    vals <- x[, 2:ncol(x), with = FALSE]
-    indx <- which(apply(vals, 1, check_all_same))
-    return(indx)
+    if (ncol(x) > 1) { # check that there is at least one data column
+      # there will be no data column when no seq or no array samples are included
+      vals <- x[, 2:ncol(x), with = FALSE]
+      indx <- which(apply(vals, 1, check_all_same))
+      return(indx)
+    } else {
+      return(integer(0))
+    }
   }
 
   all.same.indx <- unique(c(GetAllSameRowIndex(seq.full.dt),
-                            GetAllSameRowIndex(seq.half.dt)))
+                            GetAllSameRowIndex(seq.part.dt)))
   # if no rows are all same (in previous GetAllSameRowIndex), all.same.indx is integer(0)
   # subsetting data frames by -integer(0) results in no rows
   # so check that integer vector has length > 0 before subsetting
   if (length(all.same.indx) > 0) {
     array.full.dt <- array.full.dt[-all.same.indx, ]
     seq.full.dt <- seq.full.dt[-all.same.indx, ]
-    array.half.dt <- array.half.dt[-all.same.indx, ]
-    seq.half.dt <- seq.half.dt[-all.same.indx, ]
+    array.part.dt <- array.part.dt[-all.same.indx, ]
+    seq.part.dt <- seq.part.dt[-all.same.indx, ]
   }
 
   # initialize list to hold normalized data
@@ -596,13 +680,27 @@ SmallNNormWrapper <- function(array.dt, seq.dt, mix.list, zto = FALSE) {
   # control conditions 100% log-transformed array data & 100% RSEM seq data
   norm.list[["log"]] <- LOGArrayOnly(array.full.dt, zto)
   norm.list[["un"]] <- seq.full.dt
-  # 50-50 experiments
-  norm.list[["qn"]] <- QNProcessing(array.dt = array.half.dt,
-                                    seq.dt = seq.half.dt,
+  # titrated experiments
+  if (ncol(seq.part.dt) == 1) { # no seq samples added, array only
+    norm.list[["qn"]] <- QNSingleDT(dt = array.part.dt,
                                     zero.to.one = zto)
-  norm.list[["z"]] <- ZScoreProcessing(array.dt = array.half.dt,
-                                       seq.dt = seq.half.dt,
+    norm.list[["z"]] <- ZScoreSingleDT(dt = array.part.dt,
                                        zero.to.one = zto)
+  } else if (ncol(array.part.dt) == 1) { # no array samnples added, seq only
+    norm.list[["qn"]] <- QNSingleDT(dt = seq.part.dt,
+                                    zero.to.one = zto)
+    norm.list[["z"]] <- ZScoreSingleDT(dt = seq.part.dt,
+                                       zero.to.one = zto)
+    
+  } else {
+    norm.list[["qn"]] <- QNProcessing(array.dt = array.part.dt,
+                                      seq.dt = seq.part.dt,
+                                      zero.to.one = zto)
+    norm.list[["z"]] <- ZScoreProcessing(array.dt = array.part.dt,
+                                         seq.dt = seq.part.dt,
+                                         zero.to.one = zto)
+  }
+  
   return(norm.list)
-
+  
 }
