@@ -38,14 +38,14 @@ res.dir <- here::here("results")
 
 # define input files
 # finds first example of a subtypes file from cancer_type, does not rely on seed
-#norm.test.object <- file.path(norm.data.dir,
-#                              list.files(norm.data.dir,
-#                                         pattern = paste0(file_identifier,
-#                                                          "_array_seq_test_data_normalized_list_"))[1])
-norm.train.object <- file.path(norm.data.dir,
-                               list.files(norm.data.dir,
-                                          pattern = paste0(file_identifier,
-                                                           "_array_seq_train_titrate_normalized_list_"))[1])
+#norm.test.file <- file.path(norm.data.dir,
+#                            list.files(norm.data.dir,
+#                                       pattern = paste0(file_identifier,
+#                                                        "_array_seq_test_data_normalized_list_"))[1])
+norm.train.file <- file.path(norm.data.dir,
+                             list.files(norm.data.dir,
+                                        pattern = paste0(file_identifier,
+                                                         "_array_seq_train_titrate_normalized_list_"))[1])
 sample.file <- file.path(res.dir,
                          list.files(res.dir,
                                     pattern = paste0(file_identifier,
@@ -53,9 +53,27 @@ sample.file <- file.path(res.dir,
 
 #### read in data --------------------------------------------------------------
 
-#norm.test.list <- read_rds(norm.test.object)
-norm.train.list <- read_rds(norm.train.object)
+#norm.test.list <- read_rds(norm.test.file)
+norm.train.list <- read_rds(norm.train.file)
 sample.df <- read.delim(sample.file)
+
+# convert gene names column to row names
+# convert GBM gene names to SYMBOL
+convert_row_names <- function(expr, cancer_type){
+  if (cancer_type == "GBM") {
+    expr <- expr %>%
+      mutate(gene = ensembldb::select(EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86,
+                                      keys= as.character(gene),
+                                      keytype = "GENEID",
+                                      columns = "SYMBOL")$SYMBOL)
+  }
+  column_to_rownames(expr,
+                     var = "gene")
+}
+
+norm.train.list <- purrr::modify_depth(norm.train.list, 2,
+                                       function(x) convert_row_names(expr = x,
+                                                                     cancer_type = cancer_type))
 
 #### set up PLIER data ---------------------------------------------------------
 
@@ -70,54 +88,49 @@ all.paths <- PLIER::combinePaths(bloodCellMarkersIRISDMAP,
                                  svmMarkers)
 
 common.genes <- PLIER::commonRows(all.paths,
-                                  norm.train.list#TODO UPDATE)
+                                  norm.train.list[["0"]][["z"]])
 
 #### main ----------------------------------------------------------------------
-
-# repeatable PLIER function
-run_plier <- function(expr_data, paths, genes){
-
-  # minimum k for PLIER = 2*num.pc
-  set.k <- 2*PLIER::num.pc(expr_data[genes, ])
-
-  # PLIER main function
-  PLIER::PLIER(expr_data[genes, ],
-               paths[genes, ],
-               k = set.k,
-               trace = TRUE,
-               scale = F)
-}
 
 # create an output list
 plier_results_list <- list()
 
-# PLIER at pure array
-plier_results_list["array"] <- run_plier(DATA,
-                                         all.paths,
-                                         common.genes)
-
-# PLIER at pure RNA-seq
-plier_results_list["seq"] <- run_plier(DATA,
-                                       all.paths,
-                                       common.genes)
-
-# Do this at 0-100% RNA-seq titration levels
-# across each normalization method
 # parallel backend
 cl <- parallel::makeCluster(detectCores() - 1)
 doParallel::registerDoParallel(cl)
 
 # at each titration level (0-100% RNA-seq)
-plier_results_list["titrated"][1:9] <- foreach(seq_prop = seq(0.1, .9, 0.1), .packages = c("tidyverse")) %dopar% {
+perc_seq <- as.character(seq(0, 100, 10))
+norm_methods <- c("log", "npn", "qn", "tdm", "z")
+plier_results_list <- foreach(ps = perc_seq, .packages = c("PLIER", "doParallel")) %dopar% {
+  foreach(nm = norm_methods, .packages = c("PLIER", "doParallel")) %dopar% {
 
-  run_plier(DATA,
-            all.paths,
-            common.genes)
+    if (nm %in% names(norm.train.list[[ps]])){
+      if(any(apply(norm.train.list[[ps]][[nm]], 1, check_all_same))) {
+        c("Some rows all same value...")
+      } else {
+        # minimum k for PLIER = 2*num.pc
+        set.k <- 2*PLIER::num.pc(norm.train.list[[ps]][[nm]][common.genes, ])
 
+        # PLIER main function
+        PLIER::PLIER(as.matrix(norm.train.list[[ps]][[nm]][common.genes, ]),
+                     all.paths[common.genes, ],
+                     k = set.k,
+                     trace = FALSE,
+                     scale = TRUE)
+      }
+    } else {
+      c("No data for this combination...")
+    }
+  }
 }
 
 # stop parallel backend
 parallel::stopCluster(cl)
 
+write_rds(x = plier_results_list,
+          path = "test.rds")
+
 # renames list levels
-names(plier_results_list["titrated"])[1:9] <- as.character(seq(10, 90, 10))
+#names(plier_results_list) <- perc_seq
+#lapply(plier_results_list, names(x) <- norm_methods)
