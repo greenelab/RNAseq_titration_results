@@ -20,6 +20,7 @@ check_options(opt)
 
 # load libraries
 suppressMessages(source(here::here("load_packages.R")))
+source(here::here("util", "normalization_functions.R"))
 source(here::here("util", "color_blind_friendly_palette.R"))
 
 # set options
@@ -102,8 +103,8 @@ doParallel::registerDoParallel(cl)
 # at each titration level (0-100% RNA-seq)
 perc_seq <- as.character(seq(0, 100, 10))
 norm_methods <- c("log", "npn", "qn", "tdm", "z")
-plier_results_list <- foreach(ps = perc_seq, .packages = c("PLIER", "doParallel")) %dopar% {
-  foreach(nm = norm_methods, .packages = c("PLIER", "doParallel")) %dopar% {
+plier_results_list <- foreach(ps = perc_seq, .packages = c("PLIER", "doParallel"), .export = c("check_all_same")) %dopar% {
+  foreach(nm = norm_methods, .packages = c("PLIER", "doParallel"), .export = c("check_all_same")) %dopar% {
 
     if (nm %in% names(norm.train.list[[ps]])){
       if(any(apply(norm.train.list[[ps]][[nm]], 1, check_all_same))) {
