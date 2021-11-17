@@ -64,7 +64,7 @@ convert_row_names <- function(expr, cancer_type){
   if (cancer_type == "GBM") {
     expr <- expr %>%
       mutate(gene = ensembldb::select(EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86,
-                                      keys= as.character(gene),
+                                      keys = as.character(gene),
                                       keytype = "GENEID",
                                       columns = "SYMBOL")$SYMBOL)
   }
@@ -93,6 +93,8 @@ common.genes <- PLIER::commonRows(all.paths,
 
 #### main ----------------------------------------------------------------------
 
+# TODO Loop over all seeds
+
 # create an output list
 plier_results_list <- list()
 
@@ -106,7 +108,7 @@ norm_methods <- c("log", "npn", "qn", "tdm", "z")
 plier_results_list <- foreach(ps = perc_seq, .packages = c("PLIER", "doParallel"), .export = c("check_all_same")) %dopar% {
   foreach(nm = norm_methods, .packages = c("PLIER", "doParallel"), .export = c("check_all_same")) %dopar% {
 
-    if (nm %in% names(norm.train.list[[ps]])){
+    if (nm %in% names(norm.train.list[[ps]])) {
       if(any(apply(norm.train.list[[ps]][[nm]], 1, check_all_same))) {
         c("Some rows all same value...")
       } else {
@@ -129,9 +131,16 @@ plier_results_list <- foreach(ps = perc_seq, .packages = c("PLIER", "doParallel"
 # stop parallel backend
 parallel::stopCluster(cl)
 
+# renames list levels
+names(plier_results_list) <- perc_seq
+for (i in perc_seq) {
+  names(plier_results_list[[i]]) <- norm_methods
+}
+
+# TODO REMOVE THIS
 write_rds(x = plier_results_list,
           path = "test.rds")
 
-# renames list levels
-#names(plier_results_list) <- perc_seq
-#lapply(plier_results_list, names(x) <- norm_methods)
+# TODO NOW DO COMPARISON METRIC
+
+# TODO PLOT THAT
