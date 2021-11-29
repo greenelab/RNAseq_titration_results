@@ -39,42 +39,18 @@ res.dir <- here::here("results")
 
 # define input files
 # finds first example of a subtypes file from cancer_type, does not rely on seed
-#norm.test.file <- file.path(norm.data.dir,
+#norm.test.files <- file.path(norm.data.dir,
 #                            list.files(norm.data.dir,
 #                                       pattern = paste0(file_identifier,
-#                                                        "_array_seq_test_data_normalized_list_"))[1])
-norm.train.file <- file.path(norm.data.dir,
+#                                                        "_array_seq_test_data_normalized_list_")))
+norm.train.files <- file.path(norm.data.dir,
                              list.files(norm.data.dir,
                                         pattern = paste0(file_identifier,
-                                                         "_array_seq_train_titrate_normalized_list_"))[1])
-sample.file <- file.path(res.dir,
+                                                         "_array_seq_train_titrate_normalized_list_")))
+sample.files <- file.path(res.dir,
                          list.files(res.dir,
                                     pattern = paste0(file_identifier,
-                                                     "_matchedSamples_training_testing_split_labels_"))[1])
-
-#### read in data --------------------------------------------------------------
-
-#norm.test.list <- read_rds(norm.test.file)
-norm.train.list <- read_rds(norm.train.file)
-sample.df <- read.delim(sample.file)
-
-# convert gene names column to row names
-# convert GBM gene names to SYMBOL
-convert_row_names <- function(expr, cancer_type){
-  if (cancer_type == "GBM") {
-    expr <- expr %>%
-      mutate(gene = ensembldb::select(EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86,
-                                      keys = as.character(gene),
-                                      keytype = "GENEID",
-                                      columns = "SYMBOL")$SYMBOL)
-  }
-  column_to_rownames(expr,
-                     var = "gene")
-}
-
-norm.train.list <- purrr::modify_depth(norm.train.list, 2,
-                                       function(x) convert_row_names(expr = x,
-                                                                     cancer_type = cancer_type))
+                                                     "_matchedSamples_training_testing_split_labels_")))
 
 #### set up PLIER data ---------------------------------------------------------
 
@@ -88,55 +64,91 @@ all.paths <- PLIER::combinePaths(bloodCellMarkersIRISDMAP,
                                  oncogenicPathways,
                                  svmMarkers)
 
-common.genes <- PLIER::commonRows(all.paths,
-                                  norm.train.list[["0"]][["z"]])
+#### loop over data for each seed and get PLIER results ------------------------
 
-#### main ----------------------------------------------------------------------
-
-# TODO Loop over all seeds
-
-# create an output list
-plier_results_list <- list()
-
-# parallel backend
-cl <- parallel::makeCluster(detectCores() - 1)
-doParallel::registerDoParallel(cl)
-
-# at each titration level (0-100% RNA-seq)
-perc_seq <- as.character(seq(0, 100, 10))
-norm_methods <- c("log", "npn", "qn", "tdm", "z")
-plier_results_list <- foreach(ps = perc_seq, .packages = c("PLIER", "doParallel"), .export = c("check_all_same")) %dopar% {
-  foreach(nm = norm_methods, .packages = c("PLIER", "doParallel"), .export = c("check_all_same")) %dopar% {
-
-    if (nm %in% names(norm.train.list[[ps]])) {
-      if(any(apply(norm.train.list[[ps]][[nm]], 1, check_all_same))) {
-        c("Some rows all same value...")
+#for(seed_index in 1:length(norm.train.files)) {
+for(seed_index in 1:2) {
+  
+  print(str_c("PLIER with data seed", seed_index,
+              "out of", length(norm.train.files), "..."))
+  
+  #### read in data ------------------------------------------------------------
+  
+  #norm.test.list <- read_rds(norm.test.files[seed_index])
+  norm.train.list <- read_rds(norm.train.filex[seed_index])
+  sample.df <- read.delim(sample.filex[seed_index])
+  
+  # convert gene names column to row names
+  # convert GBM gene names to SYMBOL
+  convert_row_names <- function(expr, cancer_type){
+    if (cancer_type == "GBM") {
+      expr <- expr %>%
+        mutate(gene = ensembldb::select(EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86,
+                                        keys = as.character(gene),
+                                        keytype = "GENEID",
+                                        columns = "SYMBOL")$SYMBOL)
+    }
+    column_to_rownames(expr,
+                       var = "gene")
+  }
+  
+  norm.train.list <- purrr::modify_depth(norm.train.list, 2,
+                                         function(x) convert_row_names(expr = x,
+                                                                       cancer_type = cancer_type))
+  
+  #### get common gene set -----------------------------------------------------
+  
+  common.genes <- PLIER::commonRows(all.paths,
+                                    norm.train.list[["0"]][["z"]])
+  
+  #### main --------------------------------------------------------------------
+  
+  # create an output list
+  plier_results_list <- list()
+  
+  # parallel backend
+  cl <- parallel::makeCluster(detectCores() - 1)
+  doParallel::registerDoParallel(cl)
+  
+  # at each titration level (0-100% RNA-seq)
+  #perc_seq <- as.character(seq(0, 100, 10))
+  #norm_methods <- c("log", "npn", "qn", "tdm", "z")
+  perc_seq <- as.character(seq(0, 100, 50))
+  norm_methods <- c("log", "z")
+  plier_results_list <- foreach(ps = perc_seq, .packages = c("PLIER", "doParallel"), .export = c("check_all_same")) %dopar% {
+    foreach(nm = norm_methods, .packages = c("PLIER", "doParallel"), .export = c("check_all_same")) %dopar% {
+      
+      if (nm %in% names(norm.train.list[[ps]])) {
+        if(any(apply(norm.train.list[[ps]][[nm]], 1, check_all_same))) {
+          c("Some rows all same value...")
+        } else {
+          # minimum k for PLIER = 2*num.pc
+          set.k <- 2*PLIER::num.pc(norm.train.list[[ps]][[nm]][common.genes, ])
+          
+          # PLIER main function
+          PLIER::PLIER(as.matrix(norm.train.list[[ps]][[nm]][common.genes, ]),
+                       all.paths[common.genes, ],
+                       k = set.k,
+                       trace = FALSE,
+                       scale = TRUE)
+        }
       } else {
-        # minimum k for PLIER = 2*num.pc
-        set.k <- 2*PLIER::num.pc(norm.train.list[[ps]][[nm]][common.genes, ])
-
-        # PLIER main function
-        PLIER::PLIER(as.matrix(norm.train.list[[ps]][[nm]][common.genes, ]),
-                     all.paths[common.genes, ],
-                     k = set.k,
-                     trace = FALSE,
-                     scale = TRUE)
+        c("No data for this combination...")
       }
-    } else {
-      c("No data for this combination...")
     }
   }
+  
+  # stop parallel backend
+  parallel::stopCluster(cl)
+  
+  # renames list levels
+  names(plier_results_list) <- perc_seq
+  for (i in perc_seq) {
+    names(plier_results_list[[i]]) <- norm_methods
+  }
+  
+  # TODO NOW DO COMPARISON METRIC  
+
 }
-
-# stop parallel backend
-parallel::stopCluster(cl)
-
-# renames list levels
-names(plier_results_list) <- perc_seq
-for (i in perc_seq) {
-  names(plier_results_list[[i]]) <- norm_methods
-}
-
-# TODO NOW DO COMPARISON METRIC
 
 # TODO PLOT THAT
