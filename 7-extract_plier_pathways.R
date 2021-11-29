@@ -137,10 +137,6 @@ for (i in perc_seq) {
   names(plier_results_list[[i]]) <- norm_methods
 }
 
-# TODO REMOVE THIS
-write_rds(x = plier_results_list,
-          path = "test.rds")
-
 # TODO NOW DO COMPARISON METRIC
 
 # TODO PLOT THAT
