@@ -75,8 +75,8 @@ for(seed_index in 1:2) {
   #### read in data ------------------------------------------------------------
   
   #norm.test.list <- read_rds(norm.test.files[seed_index])
-  norm.train.list <- read_rds(norm.train.filex[seed_index])
-  sample.df <- read.delim(sample.filex[seed_index])
+  norm.train.list <- read_rds(norm.train.files[seed_index])
+  sample.df <- read.delim(sample.files[seed_index])
   
   # convert gene names column to row names
   # convert GBM gene names to SYMBOL
