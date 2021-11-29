@@ -66,11 +66,10 @@ all.paths <- PLIER::combinePaths(bloodCellMarkersIRISDMAP,
 
 #### loop over data for each seed and get PLIER results ------------------------
 
-#for(seed_index in 1:length(norm.train.files)) {
-for(seed_index in 1:2) {
+for(seed_index in 1:length(norm.train.files)) {
   
-  print(str_c("PLIER with data seed", seed_index,
-              "out of", length(norm.train.files), "..."))
+  message(str_c("PLIER with data seed ", seed_index,
+                "out of ", length(norm.train.files), "..."))
   
   #### read in data ------------------------------------------------------------
   
@@ -111,10 +110,8 @@ for(seed_index in 1:2) {
   doParallel::registerDoParallel(cl)
   
   # at each titration level (0-100% RNA-seq)
-  #perc_seq <- as.character(seq(0, 100, 10))
-  #norm_methods <- c("log", "npn", "qn", "tdm", "z")
-  perc_seq <- as.character(seq(0, 100, 50))
-  norm_methods <- c("log", "z")
+  perc_seq <- as.character(seq(0, 100, 10))
+  norm_methods <- c("log", "npn", "qn", "tdm", "z")
   plier_results_list <- foreach(ps = perc_seq, .packages = c("PLIER", "doParallel"), .export = c("check_all_same")) %dopar% {
     foreach(nm = norm_methods, .packages = c("PLIER", "doParallel"), .export = c("check_all_same")) %dopar% {
       
