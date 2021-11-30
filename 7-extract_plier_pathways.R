@@ -64,6 +64,20 @@ all.paths <- PLIER::combinePaths(bloodCellMarkersIRISDMAP,
                                  oncogenicPathways,
                                  svmMarkers)
 
+#### Function for converting column to row names -------------------------------
+
+convert_row_names <- function(expr, cancer_type){
+  if (cancer_type == "GBM") {
+    expr <- expr %>%
+      mutate(gene = ensembldb::select(EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86,
+                                      keys = as.character(gene),
+                                      keytype = "GENEID",
+                                      columns = "SYMBOL")$SYMBOL)
+  }
+  column_to_rownames(expr,
+                     var = "gene")
+}
+
 #### loop over data for each seed and get PLIER results ------------------------
 
 for(seed_index in 1:length(norm.train.files)) {
@@ -78,19 +92,7 @@ for(seed_index in 1:length(norm.train.files)) {
   sample.df <- read.delim(sample.files[seed_index])
   
   # convert gene names column to row names
-  # convert GBM gene names to SYMBOL
-  convert_row_names <- function(expr, cancer_type){
-    if (cancer_type == "GBM") {
-      expr <- expr %>%
-        mutate(gene = ensembldb::select(EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86,
-                                        keys = as.character(gene),
-                                        keytype = "GENEID",
-                                        columns = "SYMBOL")$SYMBOL)
-    }
-    column_to_rownames(expr,
-                       var = "gene")
-  }
-  
+  # if GBM, also convert from GENEID to SYMBOL
   norm.train.list <- purrr::modify_depth(norm.train.list, 2,
                                          function(x) convert_row_names(expr = x,
                                                                        cancer_type = cancer_type))
@@ -117,9 +119,10 @@ for(seed_index in 1:length(norm.train.files)) {
       
       if (nm %in% names(norm.train.list[[ps]])) {
         if(any(apply(norm.train.list[[ps]][[nm]], 1, check_all_same))) {
-          c("Some rows all same value...")
+          c("Some rows all same value...") # TODO This shouldn't be happening?
         } else {
           # minimum k for PLIER = 2*num.pc
+          # TODO alternatively, should we just set one k for all data sets?
           set.k <- 2*PLIER::num.pc(norm.train.list[[ps]][[nm]][common.genes, ])
           
           # PLIER main function
@@ -130,7 +133,7 @@ for(seed_index in 1:length(norm.train.files)) {
                        scale = TRUE)
         }
       } else {
-        c("No data for this combination...")
+        c("No data for this combination...") # TODO For downstream data handling, considering making NULL
       }
     }
   }
