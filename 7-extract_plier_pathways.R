@@ -149,6 +149,10 @@ for(seed_index in 1:length(norm.train.files)) {
     names(plier_results_list[[i]]) <- norm_methods
   }
   
+  # test: write out plier results
+  readr::write_rds(x = plier_results_list,
+                   path = str_c("plier_results_list.", seed_index, ".RDS"))
+  
   # Jaccard comparison metric to array and seq silver standards
   array_silver <- plier_results_list[["0"]][["z"]][["summary"]] %>%
     filter(FDR < 0.05) %>%
@@ -161,19 +165,31 @@ for(seed_index in 1:length(norm.train.files)) {
   
   for (percent_seq in perc_seq) {
     for(normalization_method in norm_methods) {
-      if (is.data.frame(plier_results_list[[percent_seq]][[normalization_method]])) {
+      if (is.list(plier_results_list[[percent_seq]][[normalization_method]])) {
         test_genes <- plier_results_list[[percent_seq]][[normalization_method]][["summary"]] %>%
           filter(FDR < 0.05) %>%
           pull(pathway) %>%
           unique()
         
-        array_jaccard <- length(intersect(array_silver, test_genes))/length(union(array_silver, test_genes))
-        seq_jaccard <- length(intersect(seq_silver, test_genes))/length(union(seq_silver, test_genes))
+        if (length(array_silver) > 0 & length(seq_silver) > 0 & length(test_genes) > 0) {
+          array_jaccard <- length(intersect(array_silver, test_genes))/length(union(array_silver, test_genes))
+          seq_jaccard <- length(intersect(seq_silver, test_genes))/length(union(seq_silver, test_genes))  
+          
+          jaccard_list[[percent_seq]][[normalization_method]] <- data.frame(silver = c("array", "seq"),
+                                                                            pseq = percent_seq,
+                                                                            nmeth = normalization_method,
+                                                                            jaccard = c(array_jaccard, seq_jaccard))
+          
+        } else {
+          message(str_c("PLIER no genes", seed_index, percent_seq, normalization_method,
+                        length(array_silver), length(seq_silver), length(test_genes),
+                        sep = " "))
+        }
         
-        jaccard_list[[percent_seq]][[normalization_method]] <- data.frame(silver = c("array", "seq"),
-                                                                          pseq = percent_seq,
-                                                                          nmeth = normalization_method,
-                                                                          jaccard = c(array_jaccard, seq_jaccard))
+      } else {
+        message(str_c("NO PLIER", seed_index, percent_seq, normalization_method,
+                      plier_results_list[[percent_seq]][[normalization_method]],
+                      sep = " "))
       }
     }
   }
