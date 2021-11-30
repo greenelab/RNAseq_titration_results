@@ -84,8 +84,9 @@ jaccard_list <- list()
 
 for(seed_index in 1:length(norm.train.files)) {
   
-  message(str_c("PLIER with data seed ", seed_index,
-                "out of ", length(norm.train.files), "..."))
+  message(str_c("PLIER with data seed", seed_index,
+                "out of", length(norm.train.files), "...",
+                sep = " "))
   
   #### read in data ------------------------------------------------------------
   
@@ -114,8 +115,10 @@ for(seed_index in 1:length(norm.train.files)) {
   doParallel::registerDoParallel(cl)
   
   # at each titration level (0-100% RNA-seq)
-  perc_seq <- as.character(seq(0, 100, 10))
-  norm_methods <- c("log", "npn", "qn", "tdm", "z")
+  #perc_seq <- as.character(seq(0, 100, 10))
+  #norm_methods <- c("log", "npn", "qn", "tdm", "z")
+  perc_seq <- as.character(seq(0, 100, 50))
+  norm_methods <- c("log", "z")
   plier_results_list <- foreach(ps = perc_seq, .packages = c("PLIER", "doParallel"), .export = c("check_all_same")) %dopar% {
     foreach(nm = norm_methods, .packages = c("PLIER", "doParallel"), .export = c("check_all_same")) %dopar% {
       
