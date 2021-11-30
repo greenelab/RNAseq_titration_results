@@ -80,6 +80,8 @@ convert_row_names <- function(expr, cancer_type){
 
 #### loop over data for each seed and get PLIER results ------------------------
 
+jaccard_list <- list()
+
 for(seed_index in 1:length(norm.train.files)) {
   
   message(str_c("PLIER with data seed ", seed_index,
@@ -147,8 +149,40 @@ for(seed_index in 1:length(norm.train.files)) {
     names(plier_results_list[[i]]) <- norm_methods
   }
   
-  # TODO NOW DO COMPARISON METRIC  
+  # Jaccard comparison metric to array and seq silver standards
+  array_silver <- plier_results_list[["0"]][["z"]][["summary"]] %>%
+    filter(FDR < 0.05) %>%
+    pull(pathway) %>%
+    unique()
+  seq_silver <- plier_results_list[["100"]][["z"]][["summary"]] %>%
+    filter(FDR < 0.05) %>%
+    pull(pathway) %>%
+    unique()
+  
+  for (percent_seq in perc_seq) {
+    for(normalization_method in norm_methods) {
+      if (is.data.frame(plier_results_list[[percent_seq]][[normalization_method]])) {
+        test_genes <- plier_results_list[[percent_seq]][[normalization_method]][["summary"]] %>%
+          filter(FDR < 0.05) %>%
+          pull(pathway) %>%
+          unique()
+        
+        array_jaccard <- length(intersect(array_silver, test_genes))/length(union(array_silver, test_genes))
+        seq_jaccard <- length(intersect(seq_silver, test_genes))/length(union(seq_silver, test_genes))
+        
+        jaccard_list[[percent_seq]][[normalization_method]] <- data.frame(silver = c("array", "seq"),
+                                                                          pseq = percent_seq,
+                                                                          nmeth = normalization_method,
+                                                                          jaccard = c(array_jaccard, seq_jaccard))
+      }
+    }
+  }
+  
 
 }
+
+jaccard_df <- as.data.frame(data.table::rbindlist(jaccard_list))
+
+readr::write_tsv(x = jaccard_df, path = here::here("test.tsv"))
 
 # TODO PLOT THAT
