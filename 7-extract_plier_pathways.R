@@ -157,11 +157,12 @@ for(seed_index in 1:length(norm.train.files)) {
                    path = str_c("plier_results_list.", seed_index, ".RDS"))
   
   # Jaccard comparison metric to array and seq silver standards
-  array_silver <- plier_results_list[["0"]][["z"]][["summary"]] %>%
+  # TODO what are best settings for silver standard?
+  array_silver <- plier_results_list[["0"]][["log"]][["summary"]] %>%
     filter(FDR < 0.05) %>%
     pull(pathway) %>%
     unique()
-  seq_silver <- plier_results_list[["100"]][["z"]][["summary"]] %>%
+  seq_silver <- plier_results_list[["100"]][["log"]][["summary"]] %>%
     filter(FDR < 0.05) %>%
     pull(pathway) %>%
     unique()
@@ -178,10 +179,9 @@ for(seed_index in 1:length(norm.train.files)) {
           array_jaccard <- length(intersect(array_silver, test_genes))/length(union(array_silver, test_genes))
           seq_jaccard <- length(intersect(seq_silver, test_genes))/length(union(seq_silver, test_genes))  
           
-          jaccard_list[[percent_seq]][[normalization_method]] <- data.frame(silver = c("array", "seq"),
-                                                                            pseq = percent_seq,
-                                                                            nmeth = normalization_method,
-                                                                            jaccard = c(array_jaccard, seq_jaccard))
+          jaccard_list[[seed_index]][[percent_seq]][[normalization_method]] <- data.frame(silver = c("array", "seq"),
+                                                                                          jaccard = c(array_jaccard,
+                                                                                                      seq_jaccard))
           
         } else {
           message(str_c("PLIER no genes", seed_index, percent_seq, normalization_method,
@@ -196,12 +196,16 @@ for(seed_index in 1:length(norm.train.files)) {
       }
     }
   }
-  
-
 }
 
-jaccard_df <- as.data.frame(data.table::rbindlist(jaccard_list))
+jaccard_df <- reshape2::melt(data = jaccard_list,
+                             id.vars = "silver",
+                             value.name = "jaccard") %>%
+  rename("seed_index" = "L3",
+         "pseq" = "L2",
+         "nmeth" = "L1")
 
-readr::write_tsv(x = jaccard_df, path = here::here("test.tsv"))
+readr::write_tsv(x = jaccard_df,
+                 path = here::here("test.tsv"))
 
 # TODO PLOT THAT
