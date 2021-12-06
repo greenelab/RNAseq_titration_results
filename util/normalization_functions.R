@@ -816,3 +816,38 @@ GetDataTablesForMixing <- function(array.data, seq.data,
   }
 }
 
+rescale_01 <- function(data_vector){
+  # rescale values in a vector to [0,1]
+  # Inputs: vector of numeric values
+  # Returns: recaled vector
+
+  # if all the values are the same, return 0 vector
+  if (check_all_same(data_vector)) {
+    return(rep(0, length(data_vector)))
+  } else {
+    min_value <- min(data_vector)
+    max_value <- max(data_vector)
+    recaled_values <- (data_vector - min_value)/(max_value - min_value)
+    return(recaled_values)
+  }
+}
+
+rescale_datatable <- function(data_table){
+  # recale each row of a data table to [0,1]
+  # applies recale_01() to each row
+  # Inputs: gene expression data table
+  #   first column of input is genes
+  #   remaining columns are expression values
+  # Returns: scaled gene expression data table
+  
+  data_matrix = data.matrix(data_table[, -1, with = F])
+  
+  # Rescale each row [0,1]
+  recaled_data_matrix = t(apply(data_matrix, 1, rescale_01))
+    
+  # Includ gene symbols in result
+  result = data.table(data.frame(data_table[,1], rescaled_data_matrix))
+  colnames(result) <- colnames(datatable)
+  return(result)
+  
+}
