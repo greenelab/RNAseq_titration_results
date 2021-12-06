@@ -847,7 +847,7 @@ rescale_datatable <- function(data_table){
     
   # Includ gene symbols in result
   result = data.table(data.frame(data_table[,1], rescaled_data_matrix))
-  colnames(result) <- colnames(datatable)
+  colnames(result) <- colnames(data_table)
   return(result)
   
 }
