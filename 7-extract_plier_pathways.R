@@ -100,11 +100,6 @@ for(seed_index in 1:length(norm.train.files)) {
                                          function(x) convert_row_names(expr = x,
                                                                        cancer_type = cancer_type))
   
-  #### get common gene set -----------------------------------------------------
-  
-  common.genes <- PLIER::commonRows(all.paths,
-                                    norm.train.list[["0"]][["z"]])
-  
   #### main --------------------------------------------------------------------
   
   # create an output list
@@ -123,22 +118,31 @@ for(seed_index in 1:length(norm.train.files)) {
     foreach(nm = norm_methods, .packages = c("PLIER", "doParallel"), .export = c("check_all_same")) %dopar% {
       
       if (nm %in% names(norm.train.list[[ps]])) {
-        if(any(apply(norm.train.list[[ps]][[nm]], 1, check_all_same))) {
-          c("Some rows all same value...") # TODO This shouldn't be happening?
-        } else {
-          # minimum k for PLIER = 2*num.pc
-          # TODO alternatively, should we just set one k for all data sets?
-          set.k <- 2*PLIER::num.pc(norm.train.list[[ps]][[nm]][common.genes, ])
-          
-          # PLIER main function
-          PLIER::PLIER(as.matrix(norm.train.list[[ps]][[nm]][common.genes, ]),
-                       all.paths[common.genes, ],
-                       k = set.k,
-                       trace = FALSE,
-                       scale = TRUE)
+        
+        # remove any rows with all the same value
+        all.same.indx <- which(apply(norm.train.list[[ps]][[nm]], 1,
+                               check_all_same))
+        if (length(all.same.indx) > 0) {
+          norm.train.list[[ps]][[nm]] <- norm.train.list[[ps]][[nm]][-all.same.indx, ]
         }
-      } else {
-        c("No data for this combination...") # TODO For downstream data handling, considering making NULL
+        
+        # get common genes
+        common.genes <- PLIER::commonRows(all.paths,
+                                          norm.train.list[[ps]][[nm]])      
+        
+        # minimum k for PLIER = 2*num.pc
+        # TODO alternatively, should we just set one k for all data sets?
+        set.k <- 2*PLIER::num.pc(norm.train.list[[ps]][[nm]][common.genes, ])
+        
+        # PLIER main function
+        PLIER::PLIER(as.matrix(norm.train.list[[ps]][[nm]][common.genes, ]),
+                     all.paths[common.genes, ],
+                     k = set.k,
+                     trace = FALSE,
+                     scale = TRUE)
+      }
+      else {
+        NA # return NA for easy check later 
       }
     }
   }
@@ -158,48 +162,57 @@ for(seed_index in 1:length(norm.train.files)) {
   
   # Jaccard comparison metric to array and seq silver standards
   # TODO what are best settings for silver standard?
-  array_silver <- plier_results_list[["0"]][["log"]][["summary"]] %>%
+  array_silver <- plier_results_list[["0"]][["z"]][["summary"]] %>%
     filter(FDR < 0.05) %>%
     pull(pathway) %>%
     unique()
-  seq_silver <- plier_results_list[["100"]][["log"]][["summary"]] %>%
+  seq_silver <- plier_results_list[["100"]][["z"]][["summary"]] %>%
     filter(FDR < 0.05) %>%
     pull(pathway) %>%
     unique()
   
+  # TODO length(array_silver) > 0 & length(seq_silver) > 0
+  
   for (percent_seq in perc_seq) {
     for(normalization_method in norm_methods) {
-      if (is.list(plier_results_list[[percent_seq]][[normalization_method]])) {
+      if (!is.na(plier_results_list[[percent_seq]][[normalization_method]])) {
+        
         test_genes <- plier_results_list[[percent_seq]][[normalization_method]][["summary"]] %>%
           filter(FDR < 0.05) %>%
           pull(pathway) %>%
           unique()
         
-        if (length(array_silver) > 0 & length(seq_silver) > 0 & length(test_genes) > 0) {
+        if (length(test_genes) > 0) {
+          
           array_jaccard <- length(intersect(array_silver, test_genes))/length(union(array_silver, test_genes))
           seq_jaccard <- length(intersect(seq_silver, test_genes))/length(union(seq_silver, test_genes))  
           
           jaccard_list[[seed_index]][[percent_seq]][[normalization_method]] <- data.frame(silver = c("array", "seq"),
+                                                                                          # TODO k = ,
+                                                                                          # TODO n_common_genes = ,
                                                                                           jaccard = c(array_jaccard,
                                                                                                       seq_jaccard))
           
         } else {
+          
           message(str_c("PLIER no genes", seed_index, percent_seq, normalization_method,
                         length(array_silver), length(seq_silver), length(test_genes),
                         sep = " "))
         }
         
       } else {
+        
         message(str_c("NO PLIER", seed_index, percent_seq, normalization_method,
                       plier_results_list[[percent_seq]][[normalization_method]],
                       sep = " "))
+        
       }
     }
   }
 }
 
 jaccard_df <- reshape2::melt(data = jaccard_list,
-                             id.vars = "silver",
+                             id.vars = c("silver", "k", "n_common_genes"),
                              value.name = "jaccard") %>%
   rename("seed_index" = "L3",
          "pseq" = "L2",
