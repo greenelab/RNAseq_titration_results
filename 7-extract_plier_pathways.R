@@ -67,6 +67,7 @@ all.paths <- PLIER::combinePaths(bloodCellMarkersIRISDMAP,
 #### Function for converting column to row names -------------------------------
 
 convert_row_names <- function(expr, cancer_type){
+  # TODO add documentation
   if (cancer_type == "GBM") {
     expr <- expr %>%
       mutate(gene = ensembldb::select(EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86,
@@ -76,6 +77,37 @@ convert_row_names <- function(expr, cancer_type){
   }
   column_to_rownames(expr,
                      var = "gene")
+}
+
+#### Function to get jaccard values from a list of PLIER results ---------------
+
+return_plier_jaccard <- function(test_PLIER, array_silver, seq_silver){
+  # TODO add documentation 
+  if (is.list(test_PLIER)) {
+    
+    test_genes <- test_PLIER[["summary"]] %>%
+      filter(FDR < 0.05) %>%
+      pull(pathway) %>%
+      unique()
+    
+    array_jaccard <- length(intersect(array_silver, test_genes))/length(union(array_silver, test_genes))
+    seq_jaccard <- length(intersect(seq_silver, test_genes))/length(union(seq_silver, test_genes))  
+    
+    data.frame(silver = c("array", "seq"),
+               n_silver = c(length(array_silver),
+                            length(seq_silver)),
+               n_test = length(test_genes),
+               n_intersect = c(length(intersect(array_silver, test_genes)),
+                               length(intersect(seq_silver, test_genes))),
+               n_union = c(length(union(array_silver, test_genes)),
+                           length(union(seq_silver, test_genes))),
+               n_common_genes = nrow(test_PLIER[["Z"]]),
+               k = ncol(test_PLIER[["Z"]]),
+               jaccard = c(array_jaccard,
+                           seq_jaccard))
+    
+    
+  }
 }
 
 #### loop over data for each seed and get PLIER results ------------------------
@@ -110,12 +142,15 @@ for(seed_index in 1:length(norm.train.files)) {
   doParallel::registerDoParallel(cl)
   
   # at each titration level (0-100% RNA-seq)
+  # TODO remove test conditions
   #perc_seq <- as.character(seq(0, 100, 10))
   #norm_methods <- c("log", "npn", "qn", "tdm", "z")
   perc_seq <- as.character(seq(0, 100, 50))
   norm_methods <- c("log", "z")
-  plier_results_list <- foreach(ps = perc_seq, .packages = c("PLIER", "doParallel"), .export = c("check_all_same")) %dopar% {
-    foreach(nm = norm_methods, .packages = c("PLIER", "doParallel"), .export = c("check_all_same")) %dopar% {
+  plier_results_list <- foreach(ps = perc_seq,
+                                .packages = c("PLIER", "doParallel"),
+                                .export = c("check_all_same")) %dopar% {
+    foreach(nm = norm_methods) %dopar% { #}, .packages = c("PLIER", "doParallel"), .export = c("check_all_same")) %dopar% {
       
       if (nm %in% names(norm.train.list[[ps]])) {
         
@@ -131,8 +166,9 @@ for(seed_index in 1:length(norm.train.files)) {
                                           norm.train.list[[ps]][[nm]])      
         
         # minimum k for PLIER = 2*num.pc
-        # TODO alternatively, should we just set one k for all data sets?
         set.k <- 2*PLIER::num.pc(norm.train.list[[ps]][[nm]][common.genes, ])
+        # TODO alternatively, should we just set one k for all data sets?
+        #set.k <- 50 # set k the be the same arbitrary value for all runs
         
         # PLIER main function
         PLIER::PLIER(as.matrix(norm.train.list[[ps]][[nm]][common.genes, ]),
@@ -156,12 +192,12 @@ for(seed_index in 1:length(norm.train.files)) {
     names(plier_results_list[[i]]) <- norm_methods
   }
   
-  # test: write out plier results
+  # TODO remove this test: write out plier results
   readr::write_rds(x = plier_results_list,
                    path = str_c("plier_results_list.", seed_index, ".RDS"))
   
   # Jaccard comparison metric to array and seq silver standards
-  # TODO what are best settings for silver standard?
+  # TODO what are best settings for silver standard? PLIER expects z-scored
   array_silver <- plier_results_list[["0"]][["z"]][["summary"]] %>%
     filter(FDR < 0.05) %>%
     pull(pathway) %>%
@@ -171,48 +207,24 @@ for(seed_index in 1:length(norm.train.files)) {
     pull(pathway) %>%
     unique()
   
-  # TODO length(array_silver) > 0 & length(seq_silver) > 0
+  # Check that silver standard pathways have non-zero length
+  if (length(array_silver) > 0 & length(seq_silver) > 0) {
   
-  for (percent_seq in perc_seq) {
-    for(normalization_method in norm_methods) {
-      if (!is.na(plier_results_list[[percent_seq]][[normalization_method]])) {
-        
-        test_genes <- plier_results_list[[percent_seq]][[normalization_method]][["summary"]] %>%
-          filter(FDR < 0.05) %>%
-          pull(pathway) %>%
-          unique()
-        
-        if (length(test_genes) > 0) {
-          
-          array_jaccard <- length(intersect(array_silver, test_genes))/length(union(array_silver, test_genes))
-          seq_jaccard <- length(intersect(seq_silver, test_genes))/length(union(seq_silver, test_genes))  
-          
-          jaccard_list[[seed_index]][[percent_seq]][[normalization_method]] <- data.frame(silver = c("array", "seq"),
-                                                                                          # TODO k = ,
-                                                                                          # TODO n_common_genes = ,
-                                                                                          jaccard = c(array_jaccard,
-                                                                                                      seq_jaccard))
-          
-        } else {
-          
-          message(str_c("PLIER no genes", seed_index, percent_seq, normalization_method,
-                        length(array_silver), length(seq_silver), length(test_genes),
-                        sep = " "))
-        }
-        
-      } else {
-        
-        message(str_c("NO PLIER", seed_index, percent_seq, normalization_method,
-                      plier_results_list[[percent_seq]][[normalization_method]],
-                      sep = " "))
-        
-      }
-    }
+    jaccard_list[[seed_index]] <- purrr::modify_depth(plier_results_list, 2,
+                                                      function(x) return_plier_jaccard(x, array_silver, seq_silver))
+    
+  } else {
+    
+    message(str_c("Silver standard array or seq significant pathways has non-zero length",
+                  seed_index, percent_seq, normalization_method,
+                  length(array_silver), length(seq_silver),
+                  sep = " "))
+    
   }
 }
 
 jaccard_df <- reshape2::melt(data = jaccard_list,
-                             id.vars = c("silver", "k", "n_common_genes"),
+                             id.vars = c("silver", "n_silver", "n_test", "n_intersect", "n_union", "n_common_genes", "k"),
                              value.name = "jaccard") %>%
   rename("seed_index" = "L3",
          "pseq" = "L2",
