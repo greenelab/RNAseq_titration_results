@@ -162,18 +162,22 @@ for(seed_index in 1:length(norm.train.files)) {
   perc_seq <- as.character(seq(0, 100, 50))
   norm_methods <- c("log", "z")
   plier_results_list <- foreach(ps = perc_seq,
-                                #.export = c("check_all_same")
-                                .packages = c("PLIER", "doParallel")) %dopar% {
-    foreach(nm = norm_methods) %dopar% { #}, .packages = c("PLIER", "doParallel"), .export = c("check_all_same")) %dopar% {
+                                .packages = c("PLIER", "doParallel")) %do% { #par% {
+    foreach(nm = norm_methods) %do% { #par% {
       
       if (nm %in% names(norm.train.list[[ps]])) {
         
+        message(c(seed_index, ps, nm))
+        
         # remove any rows with all the same value
         all.same.indx <- which(apply(norm.train.list[[ps]][[nm]], 1,
-                               check_all_same))
+                                     check_all_same))
+        message(length(all.same.indx))
+        message(nrow(norm.train.list[[ps]][[nm]]))
         if (length(all.same.indx) > 0) {
           norm.train.list[[ps]][[nm]] <- norm.train.list[[ps]][[nm]][-all.same.indx, ]
         }
+        message(nrow(norm.train.list[[ps]][[nm]]))
         
         # get common genes
         common.genes <- PLIER::commonRows(all.paths,
@@ -188,7 +192,6 @@ for(seed_index in 1:length(norm.train.files)) {
         PLIER::PLIER(as.matrix(norm.train.list[[ps]][[nm]][common.genes, ]),
                      all.paths[common.genes, ],
                      k = set.k,
-                     trace = FALSE,
                      scale = FALSE)
         
       } else {
