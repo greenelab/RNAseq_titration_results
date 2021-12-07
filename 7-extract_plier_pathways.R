@@ -1,4 +1,4 @@
-# S. Foltz Nov 2021
+# Steven Foltz Nov 2021
 # The purpose of this analysis is to use PLIER to identify expression pathways
 # in our data, using pure microarray and RNA-seq data as comparison standards
 # for data coming from different normalization methods and titration levels.
@@ -67,7 +67,12 @@ all.paths <- PLIER::combinePaths(bloodCellMarkersIRISDMAP,
 #### Function for converting column to row names -------------------------------
 
 convert_row_names <- function(expr, cancer_type){
-  # TODO add documentation
+  # If the cancer type is GBM, convert ENSG to gene symbols
+  # then convert the gene column to rownames
+  #
+  # Inputs: gene expression matrix with genes in first column, and cancer type
+  # Returns: modified gene expression matrix with gene names as row names
+  
   if (cancer_type == "GBM") {
     expr <- expr %>%
       mutate(gene = ensembldb::select(EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86,
@@ -75,14 +80,22 @@ convert_row_names <- function(expr, cancer_type){
                                       keytype = "GENEID",
                                       columns = "SYMBOL")$SYMBOL)
   }
+  
   column_to_rownames(expr,
                      var = "gene")
+  
 }
 
 #### Function to get jaccard values from a list of PLIER results ---------------
 
 return_plier_jaccard <- function(test_PLIER, array_silver, seq_silver){
-  # TODO add documentation 
+  # Given a set of PLIER results (which is a list), compare significant pathways
+  # to two silver sets of pathways defined by array and RNA-seq data only
+  # Jaccard similaritiy is defined as O(intersect)/O(union).
+  #
+  # Inputs: PLIER result, pathway set 1, pathway set 2
+  # Returns: data frame with two rows (array, seq) with stats for each overlap
+  
   if (is.list(test_PLIER)) {
     
     test_genes <- test_PLIER[["summary"]] %>%
@@ -108,6 +121,7 @@ return_plier_jaccard <- function(test_PLIER, array_silver, seq_silver){
     
     
   }
+  
 }
 
 #### loop over data for each seed and get PLIER results ------------------------
@@ -175,10 +189,12 @@ for(seed_index in 1:length(norm.train.files)) {
                      all.paths[common.genes, ],
                      k = set.k,
                      trace = FALSE,
-                     scale = TRUE)
-      }
-      else {
+                     scale = FALSE)
+        
+      } else {
+        
         NA # return NA for easy check later 
+        
       }
     }
   }
@@ -226,9 +242,9 @@ for(seed_index in 1:length(norm.train.files)) {
 jaccard_df <- reshape2::melt(data = jaccard_list,
                              id.vars = c("silver", "n_silver", "n_test", "n_intersect", "n_union", "n_common_genes", "k"),
                              value.name = "jaccard") %>%
-  rename("seed_index" = "L3",
+  rename("nmeth" = "L3",
          "pseq" = "L2",
-         "nmeth" = "L1")
+         "seed_index" = "L1")
 
 readr::write_tsv(x = jaccard_df,
                  path = here::here("test.tsv"))
