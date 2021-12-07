@@ -167,7 +167,7 @@ for(seed_index in 1:length(norm.train.files)) {
       
       if (nm %in% names(norm.train.list[[ps]])) {
         
-        message(c(seed_index, ps, nm))
+        message(str_c(seed_index, ps, nm, sep = " "))
         
         # remove any rows with all the same value
         all.same.indx <- which(apply(norm.train.list[[ps]][[nm]], 1,
@@ -182,12 +182,16 @@ for(seed_index in 1:length(norm.train.files)) {
         # get common genes
         common.genes <- PLIER::commonRows(all.paths,
                                           norm.train.list[[ps]][[nm]])      
+        message(length(common.genes))
         
         # minimum k for PLIER = 2*num.pc
         set.k <- 2*PLIER::num.pc(norm.train.list[[ps]][[nm]][common.genes, ])
         # TODO alternatively, should we just set one k for all data sets?
         #set.k <- 50 # set k the be the same arbitrary value for all runs
-        
+        message(set.k)
+        message(nrow(as.matrix(norm.train.list[[ps]][[nm]][common.genes, ])))
+        message(min(apply(norm.train.list[[ps]][[nm]], 1, sd)))
+        message(nrow(all.paths[common.genes, ]))
         # PLIER main function
         PLIER::PLIER(as.matrix(norm.train.list[[ps]][[nm]][common.genes, ]),
                      all.paths[common.genes, ],
