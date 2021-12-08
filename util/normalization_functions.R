@@ -31,7 +31,7 @@ LOGArrayOnly <- function(array.dt, zero.to.one = TRUE){
   array.dt <- NAToZero(array.dt)
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
-    array.dt <- TDM::zero_to_one_transform(array.dt)
+    array.dt <- rescale_datatable(array.dt)
   }
   return(array.dt)
 }
@@ -58,7 +58,7 @@ LOGSeqOnly <- function(seq.dt, zero.to.one = TRUE){
   # log.dt <- NAToZero(log.dt)
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
-    log.dt <- TDM::zero_to_one_transform(log.dt)
+    log.dt <- rescale_datatable(log.dt)
   }
   return(log.dt)
 }
@@ -89,7 +89,7 @@ QNSingleDT <- function(dt, zero.to.one = TRUE){
   # qn.dt <- NAToZero(qn.dt)
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
-    qn.dt <- TDM::zero_to_one_transform(qn.dt)
+    qn.dt <- rescale_datatable(qn.dt)
   }
   return(qn.dt)
 }
@@ -122,7 +122,7 @@ NPNSingleDT <- function(dt, zero.to.one = TRUE){
   # npn.dt <- NAToZero(npn.dt)
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
-    npn.dt <- zero_to_one_transform(npn.dt)
+    npn.dt <- rescale_datatable(npn.dt)
   }
   return(npn.dt)
 }
@@ -151,7 +151,7 @@ ZScoreSingleDT <- function(dt, zero.to.one = TRUE){
   # z.dt <- NAToZero(z.dt)
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
-    z.dt <- zero_to_one_transform(z.dt)
+    z.dt <- rescale_datatable(z.dt)
   }
   return(z.dt)
 }
@@ -183,7 +183,7 @@ QNZSingleDT <- function(dt, zero.to.one = TRUE){
   # z.dt <- NAToZero(z.dt)
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
-    z.dt <- zero_to_one_transform(z.dt)
+    z.dt <- rescale_datatable(z.dt)
   }
   return(z.dt)
 }
@@ -235,7 +235,7 @@ QNSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
   colnames(qn.targ) <- chartr(".", "-", colnames(qn.targ))
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
-    qn.targ <- TDM::zero_to_one_transform(qn.targ)
+    qn.targ <- rescale_datatable(qn.targ)
   }
   return(qn.targ)
 }
@@ -276,7 +276,7 @@ TDMSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
                                  log_target=TRUE)
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
-    tdm.targ <- TDM::zero_to_one_transform(tdm.targ)
+    tdm.targ <- rescale_datatable(tdm.targ)
   }
   return(tdm.targ)
 }
@@ -421,7 +421,7 @@ ZScoreProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   # z.dt <- NAToZero(z.dt)
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
-    z.dt <- TDM::zero_to_one_transform(z.dt)
+    z.dt <- rescale_datatable(z.dt)
   }
   return(z.dt)
 }
@@ -469,8 +469,8 @@ QNProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   # qn.seq <- NAToZero(qn.seq)
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
-    array.dt <- TDM::zero_to_one_transform(array.dt)
-    qn.seq <- TDM::zero_to_one_transform(qn.seq)
+    array.dt <- rescale_datatable(array.dt)
+    qn.seq <- rescale_datatable(qn.seq)
   }
   #  message("\tConcatenation...\n")
   qn.cat <- data.table(cbind(array.dt, qn.seq[, 2:ncol(qn.seq), with = F]))
@@ -526,7 +526,7 @@ QNZProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   # z.dt <- NAToZero(z.dt)
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
-    z.dt <- TDM::zero_to_one_transform(z.dt)
+    z.dt <- rescale_datatable(z.dt)
   }
   return(z.dt)
 }
@@ -577,7 +577,7 @@ NPNProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   # npn.cat <- NAToZero(npn.cat)
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
-    npn.cat <- TDM::zero_to_one_transform(npn.cat)
+    npn.cat <- rescale_datatable(npn.cat)
   }
   return(npn.cat)
 }
@@ -623,8 +623,8 @@ TDMProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   # tdm.seq <- NAToZero(tdm.seq)
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
-    array.dt <- TDM::zero_to_one_transform(array.dt)
-    tdm.seq <- TDM::zero_to_one_transform(tdm.seq)
+    array.dt <- rescale_datatable(array.dt)
+    tdm.seq <- rescale_datatable(tdm.seq)
   }
   #  message("\tConcatenation...\n")
   tdm.cat <- data.table(cbind(array.dt, tdm.seq[, 2:ncol(tdm.seq), with = F]))
@@ -666,8 +666,8 @@ LOGProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   # log.seq <- NAToZero(log.seq)
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
-    array.dt <- TDM::zero_to_one_transform(array.dt)
-    log.seq <- TDM::zero_to_one_transform(log.seq)
+    array.dt <- rescale_datatable(array.dt)
+    log.seq <- rescale_datatable(log.seq)
   }
   #  message("\tConcatenation...\n")
   log.cat <- data.table(cbind(array.dt, log.seq[, 2:ncol(log.seq), with = F]))
@@ -816,3 +816,38 @@ GetDataTablesForMixing <- function(array.data, seq.data,
   }
 }
 
+rescale_01 <- function(data_vector){
+  # rescale values in a vector to [0,1]
+  # Inputs: vector of numeric values
+  # Returns: rescaled vector
+
+  # if all the values are the same, return 0 vector
+  if (check_all_same(data_vector)) {
+    return(rep(0, length(data_vector)))
+  } else {
+    min_value <- min(data_vector)
+    max_value <- max(data_vector)
+    rescaled_values <- (data_vector - min_value)/(max_value - min_value)
+    return(rescaled_values)
+  }
+}
+
+rescale_datatable <- function(data_table){
+  # rescale each row of a data table to [0,1]
+  # applies rescale_01() to each row
+  # Inputs: gene expression data table
+  #   first column of input is genes
+  #   remaining columns are expression values
+  # Returns: scaled gene expression data table
+  
+  data_matrix = data.matrix(data_table[, -1, with = F])
+  
+  # Rescale each row [0,1]
+  rescaled_data_matrix = t(apply(data_matrix, 1, rescale_01))
+    
+  # Includ gene symbols in result
+  result = data.table(data.frame(data_table[,1], rescaled_data_matrix))
+  colnames(result) <- colnames(data_table)
+  return(result)
+  
+}
