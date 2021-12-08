@@ -217,6 +217,9 @@ for(seed_index in 1:length(norm.train.files)) {
     names(plier_results_list[[i]]) <- norm_methods
   }
   
+  
+  print(plier_results_list)
+  
   # TODO remove this test: write out plier results
   readr::write_rds(x = plier_results_list,
                    path = str_c("plier_results_list.", seed_index, ".RDS"))
