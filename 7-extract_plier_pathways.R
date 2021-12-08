@@ -198,7 +198,7 @@ for(seed_index in 1:length(norm.train.files)) {
                                      all.paths[common.genes, ],
                                      k = set.k,
                                      scale = FALSE),
-                 error = function(err) NA)
+                 error = function(err) message("hmmm"))
         
       } else {
         
