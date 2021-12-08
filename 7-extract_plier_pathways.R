@@ -193,10 +193,12 @@ for(seed_index in 1:length(norm.train.files)) {
         message(min(apply(norm.train.list[[ps]][[nm]], 1, sd)))
         message(nrow(all.paths[common.genes, ]))
         # PLIER main function
-        PLIER::PLIER(as.matrix(norm.train.list[[ps]][[nm]][common.genes, ]),
-                     all.paths[common.genes, ],
-                     k = set.k,
-                     scale = FALSE)
+        
+        tryCatch(expr = PLIER::PLIER(as.matrix(norm.train.list[[ps]][[nm]][common.genes, ]),
+                                     all.paths[common.genes, ],
+                                     k = set.k,
+                                     scale = FALSE),
+                 error = function(err) NA)
         
       } else {
         
