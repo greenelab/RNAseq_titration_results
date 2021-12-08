@@ -193,12 +193,12 @@ for(seed_index in 1:length(norm.train.files)) {
         message(min(apply(norm.train.list[[ps]][[nm]], 1, sd)))
         message(nrow(all.paths[common.genes, ]))
         # PLIER main function
-        
-        tryCatch(expr = PLIER::PLIER(as.matrix(norm.train.list[[ps]][[nm]][common.genes, ]),
-                                     all.paths[common.genes, ],
-                                     k = set.k,
-                                     scale = FALSE),
-                 error = function(err) message("hmmm"))
+        if (ps != "100" & nm != "z") {
+          PLIER::PLIER(as.matrix(norm.train.list[[ps]][[nm]][common.genes, ]),
+                       all.paths[common.genes, ],
+                       k = set.k,
+                       scale = FALSE)  
+        }
         
       } else {
         
@@ -225,12 +225,12 @@ for(seed_index in 1:length(norm.train.files)) {
                    path = str_c("plier_results_list.", seed_index, ".RDS"))
   
   # Jaccard comparison metric to array and seq silver standards
-  # TODO what are best settings for silver standard? PLIER expects z-scored
-  array_silver <- plier_results_list[["0"]][["z"]][["summary"]] %>%
+  # TODO what are best settings for silver standard?
+  array_silver <- plier_results_list[["0"]][["log"]][["summary"]] %>%
     filter(FDR < 0.05) %>%
     pull(pathway) %>%
     unique()
-  seq_silver <- plier_results_list[["100"]][["z"]][["summary"]] %>%
+  seq_silver <- plier_results_list[["100"]][["log"]][["summary"]] %>%
     filter(FDR < 0.05) %>%
     pull(pathway) %>%
     unique()
