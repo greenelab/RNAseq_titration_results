@@ -193,7 +193,9 @@ for(seed_index in 1:length(norm.train.files)) {
         message(min(apply(norm.train.list[[ps]][[nm]], 1, sd)))
         message(nrow(all.paths[common.genes, ]))
         # PLIER main function
-        if (ps != "100" & nm != "z") {
+        if (ps == "100" & nm == "z") {
+          NA
+        } else {
           PLIER::PLIER(as.matrix(norm.train.list[[ps]][[nm]][common.genes, ]),
                        all.paths[common.genes, ],
                        k = set.k,
