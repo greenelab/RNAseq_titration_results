@@ -156,42 +156,30 @@ for(seed_index in 1:length(norm.train.files)) {
   doParallel::registerDoParallel(cl)
   
   # at each titration level (0-100% RNA-seq)
-  # TODO remove test conditions
-  #perc_seq <- as.character(seq(0, 100, 10))
-  #norm_methods <- c("log", "npn", "qn", "tdm", "z")
-  perc_seq <- as.character(seq(0, 100, 50))
-  norm_methods <- c("log", "z")
+  perc_seq <- as.character(seq(0, 100, 10))
+  norm_methods <- c("log", "npn", "qn", "tdm", "z")
   plier_results_list <- foreach(ps = perc_seq,
-                                .packages = c("PLIER", "doParallel")) %do% { #par% {
-    foreach(nm = norm_methods) %do% { #par% {
+                                .packages = c("PLIER", "doParallel")) %dopar% {
+    foreach(nm = norm_methods) %dopar% {
       
       if (nm %in% names(norm.train.list[[ps]])) {
-        
-        message(str_c(seed_index, ps, nm, sep = " "))
         
         # remove any rows with all the same value
         all.same.indx <- which(apply(norm.train.list[[ps]][[nm]], 1,
                                      check_all_same))
-        message(length(all.same.indx))
-        message(nrow(norm.train.list[[ps]][[nm]]))
         if (length(all.same.indx) > 0) {
           norm.train.list[[ps]][[nm]] <- norm.train.list[[ps]][[nm]][-all.same.indx, ]
         }
-        message(nrow(norm.train.list[[ps]][[nm]]))
         
         # get common genes
         common.genes <- PLIER::commonRows(all.paths,
                                           norm.train.list[[ps]][[nm]])      
-        message(length(common.genes))
         
         # minimum k for PLIER = 2*num.pc
         set.k <- 2*PLIER::num.pc(norm.train.list[[ps]][[nm]][common.genes, ])
         # TODO alternatively, should we just set one k for all data sets?
         #set.k <- 50 # set k the be the same arbitrary value for all runs
-        message(set.k)
-        message(nrow(as.matrix(norm.train.list[[ps]][[nm]][common.genes, ])))
-        message(min(apply(norm.train.list[[ps]][[nm]], 1, sd)))
-        message(nrow(all.paths[common.genes, ]))
+        
         # PLIER main function
         PLIER::PLIER(as.matrix(norm.train.list[[ps]][[nm]][common.genes, ]),
                      all.paths[common.genes, ],
@@ -246,14 +234,19 @@ for(seed_index in 1:length(norm.train.files)) {
   }
 }
 
-jaccard_df <- reshape2::melt(data = jaccard_list,
-                             id.vars = c("silver", "n_silver", "n_test", "n_intersect", "n_union", "n_common_genes", "k"),
-                             value.name = "jaccard") %>%
-  rename("nmeth" = "L3",
-         "pseq" = "L2",
-         "seed_index" = "L1")
-
-readr::write_tsv(x = jaccard_df,
-                 path = here::here("test.tsv"))
-
-# TODO PLOT THAT
+if (length(jaccard_list) > 0) {
+  
+  jaccard_df <- reshape2::melt(data = jaccard_list,
+                               id.vars = c("silver", "n_silver", "n_test", "n_intersect", "n_union", "n_common_genes", "k"),
+                               value.name = "jaccard") %>%
+    rename("nmeth" = "L3",
+           "pseq" = "L2",
+           "seed_index" = "L1")
+  
+  readr::write_tsv(x = jaccard_df,
+                   path = here::here("test.tsv"))
+  
+  # TODO PLOT THAT
+}
+  
+  
