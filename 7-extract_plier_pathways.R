@@ -193,15 +193,11 @@ for(seed_index in 1:length(norm.train.files)) {
         message(min(apply(norm.train.list[[ps]][[nm]], 1, sd)))
         message(nrow(all.paths[common.genes, ]))
         # PLIER main function
-        if (ps == "100" & nm == "z") {
-          NA
-        } else {
-          PLIER::PLIER(as.matrix(norm.train.list[[ps]][[nm]][common.genes, ]),
-                       all.paths[common.genes, ],
-                       k = set.k,
-                       scale = FALSE)  
-        }
-        
+        PLIER::PLIER(as.matrix(norm.train.list[[ps]][[nm]][common.genes, ]),
+                     all.paths[common.genes, ],
+                     k = set.k,
+                     scale = TRUE)  
+
       } else {
         
         NA # return NA for easy check later 
@@ -218,9 +214,6 @@ for(seed_index in 1:length(norm.train.files)) {
   for (i in perc_seq) {
     names(plier_results_list[[i]]) <- norm_methods
   }
-  
-  
-  print(plier_results_list)
   
   # TODO remove this test: write out plier results
   readr::write_rds(x = plier_results_list,
