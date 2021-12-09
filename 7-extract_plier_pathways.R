@@ -30,7 +30,7 @@ file_identifier <- str_c(cancer_type, "subtype", sep = "_") # assuming subtype
 # set seed
 initial.seed <- opt$seed
 set.seed(initial.seed)
-message(paste("\nInitial seed set to:", initial.seed))
+message(paste("\nPLIER initial seed set to:", initial.seed))
 
 # define directories
 data.dir <- here::here("data")
@@ -38,7 +38,6 @@ norm.data.dir <- here::here("normalized_data")
 res.dir <- here::here("results")
 
 # define input files
-# finds first example of a subtypes file from cancer_type, does not rely on seed
 #norm.test.files <- file.path(norm.data.dir,
 #                            list.files(norm.data.dir,
 #                                       pattern = paste0(file_identifier,
@@ -47,10 +46,10 @@ norm.train.files <- file.path(norm.data.dir,
                              list.files(norm.data.dir,
                                         pattern = paste0(file_identifier,
                                                          "_array_seq_train_titrate_normalized_list_")))
-sample.files <- file.path(res.dir,
-                         list.files(res.dir,
-                                    pattern = paste0(file_identifier,
-                                                     "_matchedSamples_training_testing_split_labels_")))
+#sample.files <- file.path(res.dir,
+#                         list.files(res.dir,
+#                                    pattern = paste0(file_identifier,
+#                                                     "_matchedSamples_training_testing_split_labels_")))
 
 #### set up PLIER data ---------------------------------------------------------
 
@@ -96,31 +95,26 @@ return_plier_jaccard <- function(test_PLIER, array_silver, seq_silver){
   # Inputs: PLIER result, pathway set 1, pathway set 2
   # Returns: data frame with two rows (array, seq) with stats for each overlap
   
-  if (is.list(test_PLIER)) {
-    
-    test_genes <- test_PLIER[["summary"]] %>%
-      filter(FDR < 0.05) %>%
-      pull(pathway) %>%
-      unique()
-    
-    array_jaccard <- length(intersect(array_silver, test_genes))/length(union(array_silver, test_genes))
-    seq_jaccard <- length(intersect(seq_silver, test_genes))/length(union(seq_silver, test_genes))  
-    
-    data.frame(silver = c("array", "seq"),
-               n_silver = c(length(array_silver),
-                            length(seq_silver)),
-               n_test = length(test_genes),
-               n_intersect = c(length(intersect(array_silver, test_genes)),
-                               length(intersect(seq_silver, test_genes))),
-               n_union = c(length(union(array_silver, test_genes)),
-                           length(union(seq_silver, test_genes))),
-               n_common_genes = nrow(test_PLIER[["Z"]]),
-               k = ncol(test_PLIER[["Z"]]),
-               jaccard = c(array_jaccard,
-                           seq_jaccard))
-    
-    
-  }
+  test_genes <- test_PLIER[["summary"]] %>%
+    filter(FDR < 0.05) %>%
+    pull(pathway) %>%
+    unique()
+  
+  array_jaccard <- length(intersect(array_silver, test_genes))/length(union(array_silver, test_genes))
+  seq_jaccard <- length(intersect(seq_silver, test_genes))/length(union(seq_silver, test_genes))  
+  
+  data.frame(silver = c("array", "seq"),
+             n_silver = c(length(array_silver),
+                          length(seq_silver)),
+             n_test = length(test_genes),
+             n_intersect = c(length(intersect(array_silver, test_genes)),
+                             length(intersect(seq_silver, test_genes))),
+             n_union = c(length(union(array_silver, test_genes)),
+                         length(union(seq_silver, test_genes))),
+             n_common_genes = nrow(test_PLIER[["Z"]]),
+             k = ncol(test_PLIER[["Z"]]),
+             jaccard = c(array_jaccard,
+                         seq_jaccard))
   
 }
 
@@ -138,7 +132,7 @@ for(seed_index in 1:length(norm.train.files)) {
   
   #norm.test.list <- read_rds(norm.test.files[seed_index])
   norm.train.list <- read_rds(norm.train.files[seed_index])
-  sample.df <- read.delim(sample.files[seed_index])
+  #sample.df <- read.delim(sample.files[seed_index])
   
   # convert gene names column to row names
   # if GBM, also convert from GENEID to SYMBOL
@@ -156,8 +150,10 @@ for(seed_index in 1:length(norm.train.files)) {
   doParallel::registerDoParallel(cl)
   
   # at each titration level (0-100% RNA-seq)
-  perc_seq <- as.character(seq(0, 100, 10))
-  norm_methods <- c("log", "npn", "qn", "tdm", "z")
+  #perc_seq <- as.character(seq(0, 100, 10))
+  #norm_methods <- c("log", "npn", "qn", "tdm", "z")
+  perc_seq <- as.character(seq(0, 100, 50))
+  norm_methods <- c("log", "qn")
   plier_results_list <- foreach(ps = perc_seq,
                                 .packages = c("PLIER", "doParallel")) %dopar% {
     foreach(nm = norm_methods) %dopar% {
@@ -165,6 +161,7 @@ for(seed_index in 1:length(norm.train.files)) {
       if (nm %in% names(norm.train.list[[ps]])) {
         
         # remove any rows with all the same value
+        # TODO this may now be superfluous given fixed 0-1 rescaling issue
         all.same.indx <- which(apply(norm.train.list[[ps]][[nm]], 1,
                                      check_all_same))
         if (length(all.same.indx) > 0) {
@@ -177,18 +174,18 @@ for(seed_index in 1:length(norm.train.files)) {
         
         # minimum k for PLIER = 2*num.pc
         set.k <- 2*PLIER::num.pc(norm.train.list[[ps]][[nm]][common.genes, ])
-        # TODO alternatively, should we just set one k for all data sets?
+        # TODO alternatively, should we just set one k for all data sets? e.g.
         #set.k <- 50 # set k the be the same arbitrary value for all runs
         
         # PLIER main function
         PLIER::PLIER(as.matrix(norm.train.list[[ps]][[nm]][common.genes, ]),
                      all.paths[common.genes, ],
                      k = set.k,
-                     scale = TRUE)  
+                     scale = TRUE) # PLIER z-scores input values by row
 
       } else {
         
-        NA # return NA for easy check later 
+        NULL # return NULL for empty result; purrr will ignore this list element
         
       }
     }
@@ -203,11 +200,7 @@ for(seed_index in 1:length(norm.train.files)) {
     names(plier_results_list[[i]]) <- norm_methods
   }
   
-  # TODO remove this test: write out plier results
-  readr::write_rds(x = plier_results_list,
-                   path = str_c("plier_results_list.", seed_index, ".RDS"))
-  
-  # Jaccard comparison metric to array and seq silver standards
+  # Set  array and seq silver standards for Jaccard comparison metric
   # TODO what are best settings for silver standard?
   array_silver <- plier_results_list[["0"]][["log"]][["summary"]] %>%
     filter(FDR < 0.05) %>%
@@ -221,12 +214,13 @@ for(seed_index in 1:length(norm.train.files)) {
   # Check that silver standard pathways have non-zero length
   if (length(array_silver) > 0 & length(seq_silver) > 0) {
   
+    # Return pathway comparison for appropriate level of PLIER results list
     jaccard_list[[seed_index]] <- purrr::modify_depth(plier_results_list, 2,
                                                       function(x) return_plier_jaccard(x, array_silver, seq_silver))
     
   } else {
     
-    message(str_c("Silver standard array or seq significant pathways has non-zero length",
+    message(str_c("PLIER: Silver standard array or seq significant pathways has zero length",
                   seed_index, percent_seq, normalization_method,
                   length(array_silver), length(seq_silver),
                   sep = " "))
@@ -236,15 +230,19 @@ for(seed_index in 1:length(norm.train.files)) {
 
 if (length(jaccard_list) > 0) {
   
+  # melt jaccard list elements into one data frame
   jaccard_df <- reshape2::melt(data = jaccard_list,
-                               id.vars = c("silver", "n_silver", "n_test", "n_intersect", "n_union", "n_common_genes", "k"),
+                               id.vars = c("silver", "n_silver", "n_test",
+                                           "n_intersect", "n_union",
+                                           "n_common_genes", "k"),
                                value.name = "jaccard") %>%
-    rename("nmeth" = "L3",
-           "pseq" = "L2",
+    rename("nmeth" = "L3", # normalization method
+           "pseq" = "L2", # percentage RNA-seq
            "seed_index" = "L1")
   
   readr::write_tsv(x = jaccard_df,
-                   path = here::here("test.tsv"))
+                   path = file.path(res.dir,
+                                    str_c(file_identifier, "_PLIER_jaccard.tsv")))
   
   # TODO PLOT THAT
 }
