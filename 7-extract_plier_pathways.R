@@ -187,7 +187,6 @@ for (seed_index in 1:length(norm.train.files)) {
       if (nm %in% names(norm.train.list[[ps]])) {
         
         # remove any rows with all the same value
-        # TODO this may now be superfluous given fixed 0-1 rescaling issue
         all.same.indx <- which(apply(
           norm.train.list[[ps]][[nm]], 1,
           check_all_same
@@ -204,8 +203,6 @@ for (seed_index in 1:length(norm.train.files)) {
         
         # minimum k for PLIER = 2*num.pc
         set.k <- 2 * PLIER::num.pc(PLIER::rowNorm(norm.train.list[[ps]][[nm]][common.genes, ]))
-        # TODO alternatively, should we just set one k for all data sets? e.g.
-        # set.k <- 50 # set k the be the same arbitrary value for all runs
         
         # PLIER main function
         PLIER::PLIER(as.matrix(norm.train.list[[ps]][[nm]][common.genes, ]),
