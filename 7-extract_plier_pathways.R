@@ -95,22 +95,22 @@ return_plier_jaccard <- function(test_PLIER, array_silver, seq_silver){
   # Inputs: PLIER result, pathway set 1, pathway set 2
   # Returns: data frame with two rows (array, seq) with stats for each overlap
   
-  test_genes <- test_PLIER[["summary"]] %>%
+  test_pathways <- test_PLIER[["summary"]] %>%
     filter(FDR < 0.05) %>%
     pull(pathway) %>%
     unique()
   
-  array_jaccard <- length(intersect(array_silver, test_genes))/length(union(array_silver, test_genes))
-  seq_jaccard <- length(intersect(seq_silver, test_genes))/length(union(seq_silver, test_genes))  
+  array_jaccard <- length(intersect(array_silver, test_pathways))/length(union(array_silver, test_pathways))
+  seq_jaccard <- length(intersect(seq_silver, test_pathways))/length(union(seq_silver, test_pathways))  
   
   data.frame(silver = c("array", "seq"),
              n_silver = c(length(array_silver),
                           length(seq_silver)),
-             n_test = length(test_genes),
-             n_intersect = c(length(intersect(array_silver, test_genes)),
-                             length(intersect(seq_silver, test_genes))),
-             n_union = c(length(union(array_silver, test_genes)),
-                         length(union(seq_silver, test_genes))),
+             n_test = length(test_pathways),
+             n_intersect = c(length(intersect(array_silver, test_pathways)),
+                             length(intersect(seq_silver, test_pathways))),
+             n_union = c(length(union(array_silver, test_pathways)),
+                         length(union(seq_silver, test_pathways))),
              n_common_genes = nrow(test_PLIER[["Z"]]),
              k = ncol(test_PLIER[["Z"]]),
              jaccard = c(array_jaccard,
