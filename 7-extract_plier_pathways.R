@@ -173,7 +173,7 @@ for(seed_index in 1:length(norm.train.files)) {
                                           norm.train.list[[ps]][[nm]])      
         
         # minimum k for PLIER = 2*num.pc
-        set.k <- 2*PLIER::num.pc(norm.train.list[[ps]][[nm]][common.genes, ])
+        set.k <- 2*PLIER::num.pc(PLIER::rowNorm(norm.train.list[[ps]][[nm]][common.genes, ]))
         # TODO alternatively, should we just set one k for all data sets? e.g.
         #set.k <- 50 # set k the be the same arbitrary value for all runs
         
