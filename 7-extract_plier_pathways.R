@@ -8,10 +8,12 @@
 option_list <- list(
   optparse::make_option("--cancer_type",
                         default = NA_character_,
-                        help = "Cancer type"),
+                        help = "Cancer type"
+  ),
   optparse::make_option("--seed",
                         default = 8934,
-                        help = "Random seed")
+                        help = "Random seed"
+  )
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list = option_list))
@@ -38,15 +40,20 @@ norm.data.dir <- here::here("normalized_data")
 res.dir <- here::here("results")
 
 # define input files
-#norm.test.files <- file.path(norm.data.dir,
+# norm.test.files <- file.path(norm.data.dir,
 #                            list.files(norm.data.dir,
 #                                       pattern = paste0(file_identifier,
 #                                                        "_array_seq_test_data_normalized_list_")))
-norm.train.files <- file.path(norm.data.dir,
-                             list.files(norm.data.dir,
-                                        pattern = paste0(file_identifier,
-                                                         "_array_seq_train_titrate_normalized_list_")))
-#sample.files <- file.path(res.dir,
+norm.train.files <- file.path(
+  norm.data.dir,
+  list.files(norm.data.dir,
+             pattern = paste0(
+               file_identifier,
+               "_array_seq_train_titrate_normalized_list_"
+             )
+  )
+)
+# sample.files <- file.path(res.dir,
 #                         list.files(res.dir,
 #                                    pattern = paste0(file_identifier,
 #                                                     "_matchedSamples_training_testing_split_labels_")))
@@ -58,14 +65,16 @@ data(canonicalPathways)
 data(oncogenicPathways)
 data(svmMarkers)
 
-all.paths <- PLIER::combinePaths(bloodCellMarkersIRISDMAP,
-                                 canonicalPathways,
-                                 oncogenicPathways,
-                                 svmMarkers)
+all.paths <- PLIER::combinePaths(
+  bloodCellMarkersIRISDMAP,
+  canonicalPathways,
+  oncogenicPathways,
+  svmMarkers
+)
 
 #### Function for converting column to row names -------------------------------
 
-convert_row_names <- function(expr, cancer_type){
+convert_row_names <- function(expr, cancer_type) {
   # If the cancer type is GBM, convert ENSG to gene symbols
   # then convert the gene column to rownames
   #
@@ -77,17 +86,18 @@ convert_row_names <- function(expr, cancer_type){
       mutate(gene = ensembldb::select(EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86,
                                       keys = as.character(gene),
                                       keytype = "GENEID",
-                                      columns = "SYMBOL")$SYMBOL)
+                                      columns = "SYMBOL"
+      )$SYMBOL)
   }
   
   column_to_rownames(expr,
-                     var = "gene")
-  
+                     var = "gene"
+  )
 }
 
 #### Function to get jaccard values from a list of PLIER results ---------------
 
-return_plier_jaccard <- function(test_PLIER, array_silver, seq_silver){
+return_plier_jaccard <- function(test_PLIER, array_silver, seq_silver) {
   # Given a set of PLIER results (which is a list), compare significant pathways
   # to two silver sets of pathways defined by array and RNA-seq data only
   # Jaccard similaritiy is defined as O(intersect)/O(union).
@@ -100,45 +110,60 @@ return_plier_jaccard <- function(test_PLIER, array_silver, seq_silver){
     pull(pathway) %>%
     unique()
   
-  array_jaccard <- length(intersect(array_silver, test_pathways))/length(union(array_silver, test_pathways))
-  seq_jaccard <- length(intersect(seq_silver, test_pathways))/length(union(seq_silver, test_pathways))  
+  array_jaccard <- length(intersect(array_silver, test_pathways)) / length(union(array_silver, test_pathways))
+  seq_jaccard <- length(intersect(seq_silver, test_pathways)) / length(union(seq_silver, test_pathways))
   
-  data.frame(silver = c("array", "seq"),
-             n_silver = c(length(array_silver),
-                          length(seq_silver)),
-             n_test = length(test_pathways),
-             n_intersect = c(length(intersect(array_silver, test_pathways)),
-                             length(intersect(seq_silver, test_pathways))),
-             n_union = c(length(union(array_silver, test_pathways)),
-                         length(union(seq_silver, test_pathways))),
-             n_common_genes = nrow(test_PLIER[["Z"]]),
-             k = ncol(test_PLIER[["Z"]]),
-             jaccard = c(array_jaccard,
-                         seq_jaccard))
-  
+  data.frame(
+    silver = c("array", "seq"),
+    n_silver = c(
+      length(array_silver),
+      length(seq_silver)
+    ),
+    n_test = length(test_pathways),
+    n_intersect = c(
+      length(intersect(array_silver, test_pathways)),
+      length(intersect(seq_silver, test_pathways))
+    ),
+    n_union = c(
+      length(union(array_silver, test_pathways)),
+      length(union(seq_silver, test_pathways))
+    ),
+    n_common_genes = nrow(test_PLIER[["Z"]]),
+    k = ncol(test_PLIER[["Z"]]),
+    jaccard = c(
+      array_jaccard,
+      seq_jaccard
+    )
+  )
 }
 
 #### loop over data for each seed and get PLIER results ------------------------
 
 jaccard_list <- list()
 
-for(seed_index in 1:length(norm.train.files)) {
-  
+for (seed_index in 1:length(norm.train.files)) {
   message(str_c("PLIER with data seed", seed_index,
                 "out of", length(norm.train.files), "...",
-                sep = " "))
+                sep = " "
+  ))
   
   #### read in data ------------------------------------------------------------
   
-  #norm.test.list <- read_rds(norm.test.files[seed_index])
+  # norm.test.list <- read_rds(norm.test.files[seed_index])
   norm.train.list <- read_rds(norm.train.files[seed_index])
-  #sample.df <- read.delim(sample.files[seed_index])
+  # sample.df <- read.delim(sample.files[seed_index])
   
   # convert gene names column to row names
   # if GBM, also convert from GENEID to SYMBOL
-  norm.train.list <- purrr::modify_depth(norm.train.list, 2,
-                                         function(x) convert_row_names(expr = x,
-                                                                       cancer_type = cancer_type))
+  norm.train.list <- purrr::modify_depth(
+    norm.train.list, 2,
+    function(x) {
+      convert_row_names(
+        expr = x,
+        cancer_type = cancer_type
+      )
+    }
+  )
   
   #### main --------------------------------------------------------------------
   
@@ -150,43 +175,46 @@ for(seed_index in 1:length(norm.train.files)) {
   doParallel::registerDoParallel(cl)
   
   # at each titration level (0-100% RNA-seq)
-  #perc_seq <- as.character(seq(0, 100, 10))
-  #norm_methods <- c("log", "npn", "qn", "tdm", "z")
+  # perc_seq <- as.character(seq(0, 100, 10))
+  # norm_methods <- c("log", "npn", "qn", "tdm", "z")
   perc_seq <- as.character(seq(0, 100, 50))
   norm_methods <- c("log", "qn")
-  plier_results_list <- foreach(ps = perc_seq,
-                                .packages = c("PLIER", "doParallel")) %dopar% {
+  plier_results_list <- foreach(
+    ps = perc_seq,
+    .packages = c("PLIER", "doParallel")
+  ) %dopar% {
     foreach(nm = norm_methods) %dopar% {
-      
       if (nm %in% names(norm.train.list[[ps]])) {
         
         # remove any rows with all the same value
         # TODO this may now be superfluous given fixed 0-1 rescaling issue
-        all.same.indx <- which(apply(norm.train.list[[ps]][[nm]], 1,
-                                     check_all_same))
+        all.same.indx <- which(apply(
+          norm.train.list[[ps]][[nm]], 1,
+          check_all_same
+        ))
         if (length(all.same.indx) > 0) {
           norm.train.list[[ps]][[nm]] <- norm.train.list[[ps]][[nm]][-all.same.indx, ]
         }
         
         # get common genes
-        common.genes <- PLIER::commonRows(all.paths,
-                                          norm.train.list[[ps]][[nm]])      
+        common.genes <- PLIER::commonRows(
+          all.paths,
+          norm.train.list[[ps]][[nm]]
+        )
         
         # minimum k for PLIER = 2*num.pc
-        set.k <- 2*PLIER::num.pc(PLIER::rowNorm(norm.train.list[[ps]][[nm]][common.genes, ]))
+        set.k <- 2 * PLIER::num.pc(PLIER::rowNorm(norm.train.list[[ps]][[nm]][common.genes, ]))
         # TODO alternatively, should we just set one k for all data sets? e.g.
-        #set.k <- 50 # set k the be the same arbitrary value for all runs
+        # set.k <- 50 # set k the be the same arbitrary value for all runs
         
         # PLIER main function
         PLIER::PLIER(as.matrix(norm.train.list[[ps]][[nm]][common.genes, ]),
                      all.paths[common.genes, ],
                      k = set.k,
-                     scale = TRUE) # PLIER z-scores input values by row
-
+                     scale = TRUE
+        ) # PLIER z-scores input values by row
       } else {
-        
         NULL # return NULL for empty result; purrr will ignore this list element
-        
       }
     }
   }
@@ -213,38 +241,46 @@ for(seed_index in 1:length(norm.train.files)) {
   
   # Check that silver standard pathways have non-zero length
   if (length(array_silver) > 0 & length(seq_silver) > 0) {
-  
+    
     # Return pathway comparison for appropriate level of PLIER results list
-    jaccard_list[[seed_index]] <- purrr::modify_depth(plier_results_list, 2,
-                                                      function(x) return_plier_jaccard(x, array_silver, seq_silver))
-    
+    jaccard_list[[seed_index]] <- purrr::modify_depth(
+      plier_results_list, 2,
+      function(x) return_plier_jaccard(x, array_silver, seq_silver)
+    )
   } else {
-    
     message(str_c("PLIER: Silver standard array or seq significant pathways has zero length",
                   seed_index, percent_seq, normalization_method,
                   length(array_silver), length(seq_silver),
-                  sep = " "))
-    
+                  sep = " "
+    ))
   }
 }
 
 if (length(jaccard_list) > 0) {
   
   # melt jaccard list elements into one data frame
-  jaccard_df <- reshape2::melt(data = jaccard_list,
-                               id.vars = c("silver", "n_silver", "n_test",
-                                           "n_intersect", "n_union",
-                                           "n_common_genes", "k"),
-                               value.name = "jaccard") %>%
-    rename("nmeth" = "L3", # normalization method
-           "pseq" = "L2", # percentage RNA-seq
-           "seed_index" = "L1")
+  jaccard_df <- reshape2::melt(
+    data = jaccard_list,
+    id.vars = c(
+      "silver", "n_silver", "n_test",
+      "n_intersect", "n_union",
+      "n_common_genes", "k"
+    ),
+    value.name = "jaccard"
+  ) %>%
+    rename(
+      "nmeth" = "L3", # normalization method
+      "pseq" = "L2", # percentage RNA-seq
+      "seed_index" = "L1"
+    )
   
-  readr::write_tsv(x = jaccard_df,
-                   path = file.path(res.dir,
-                                    str_c(file_identifier, "_PLIER_jaccard.tsv")))
+  readr::write_tsv(
+    x = jaccard_df,
+    path = file.path(
+      res.dir,
+      str_c(file_identifier, "_PLIER_jaccard.tsv")
+    )
+  )
   
   # TODO PLOT THAT
 }
-  
-  
