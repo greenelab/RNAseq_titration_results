@@ -175,7 +175,7 @@ seq.test <-
 array.test.norm.list <-
   SinglePlatformNormalizationWrapper(array.test,
                                      platform = "array",
-                                     add.untransformed = TRUE,
+                                     add.untransformed = FALSE,
                                      add.qn.z = TRUE)
 
 # seq normalization
@@ -255,7 +255,7 @@ seq.test.norm.list[["z"]] <- ZScoreSingleDT(seq.test)
 seq.test.norm.list[["un"]] <- seq.test
 
 # QN-Z seq test data
-seq.test.norm.list[["qn-z"]] <- QNZSingleDT(seq.test, zto)
+seq.test.norm.list[["qn-z"]] <- QNZSingleDT(seq.test)
 
 # combine array and seq test data into a list
 test.norm.list <- list(array = array.test.norm.list,
