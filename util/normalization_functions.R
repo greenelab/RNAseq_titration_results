@@ -326,7 +326,7 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
     }
     # should untransformed (log2 scale, not zero_to_one) array data be added?
     if (add.untransformed){
-      norm.list[["un"]] <- LOGArrayOnly(dt, zto = FALSE)
+      norm.list[["un"]] <- LOGArrayOnly(dt, zero.to.one = FALSE)
     }
   } else if (platform == "seq") {
     norm.list[["log"]] <- LOGSeqOnly(dt, zto)
