@@ -132,7 +132,9 @@ norm.titrate.list <- list()
 # single platform array normalization
 norm.titrate.list[["0"]] <-
   SinglePlatformNormalizationWrapper(titrate.mix.dt.list[[1]]$array,
-                                     platform = "array")
+                                     platform = "array",
+                                     add.untransformed = TRUE,
+                                     add.qn.z = TRUE)
 
 # parallel backend
 cl <- parallel::makeCluster(detectCores() - 1)
@@ -142,7 +144,9 @@ doParallel::registerDoParallel(cl)
 norm.titrate.list[2:10] <-
   foreach(n = 2:10) %dopar% {
     NormalizationWrapper(titrate.mix.dt.list[[n]]$array,
-                         titrate.mix.dt.list[[n]]$seq)
+                         titrate.mix.dt.list[[n]]$seq,
+                         add.untransformed = TRUE,
+                         add.qn.z = TRUE)
   }
 
 # stop parallel backend
@@ -153,7 +157,9 @@ names(norm.titrate.list)[2:10] <- names(titrate.mix.dt.list)[2:10]
 # single platform seq normalization
 norm.titrate.list[["100"]] <-
   SinglePlatformNormalizationWrapper(titrate.mix.dt.list[[11]]$seq,
-                                     platform = "seq")
+                                     platform = "seq",
+                                     add.untransformed = TRUE,
+                                     add.qn.z = TRUE)
 
 # save train data
 saveRDS(norm.titrate.list, file = file.path(norm.data.dir, norm.train.object))
@@ -167,7 +173,10 @@ seq.test <-
 
 # array normalization
 array.test.norm.list <-
-  SinglePlatformNormalizationWrapper(array.test, platform = "array")
+  SinglePlatformNormalizationWrapper(array.test,
+                                     platform = "array",
+                                     add.untransformed = TRUE,
+                                     add.qn.z = TRUE)
 
 # seq normalization
 # initialize list to hold normalized seq data
@@ -241,6 +250,12 @@ rm(seq.tdm.list)
 
 # z-score seq test data
 seq.test.norm.list[["z"]] <- ZScoreSingleDT(seq.test)
+
+# untransformed seq test data
+seq.test.norm.list[["un"]] <- seq.test
+
+# QN-Z seq test data
+seq.test.norm.list[["qn-z"]] <- QNZSingleDT(seq.test, zto)
 
 # combine array and seq test data into a list
 test.norm.list <- list(array = array.test.norm.list,
