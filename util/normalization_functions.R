@@ -305,12 +305,14 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
   #              if zero.to.one = TRUE zero to one transformed, data.tables
   #
 
+  ### Commented out to allow for log2-scaled array data to be added as
+  ### untransformed negative control at 0% RNA-seq
   # error-handling
-  if (platform == "array" & add.untransformed) {
-    warning("If add.transformed = TRUE, must be RNA-seq data (platform = seq).\n
-             Setting add.untransformed to FALSE...")
-    add.untransformed <- FALSE
-  }
+  #if (platform == "array" & add.untransformed) {
+  #  warning("If add.transformed = TRUE, must be RNA-seq data (platform = seq).\n
+  #           Setting add.untransformed to FALSE...")
+  #  add.untransformed <- FALSE
+  #}
 
   norm.list <- list()
   if (platform == "array") {
@@ -321,6 +323,10 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
     # should quantile normalized data followed by z-transformation be added?
     if (add.qn.z) {
       norm.list[["qn-z"]] <- QNZSingleDT(norm.list$log, zto)
+    }
+    # should untransformed (log2 scale, not zero_to_one) array data be added?
+    if (add.untransformed){
+      norm.list[["un"]] <- LOGArrayOnly(dt, zto = FALSE)
     }
   } else if (platform == "seq") {
     norm.list[["log"]] <- LOGSeqOnly(dt, zto)
