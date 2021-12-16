@@ -133,7 +133,7 @@ norm.titrate.list <- list()
 norm.titrate.list[["0"]] <-
   SinglePlatformNormalizationWrapper(titrate.mix.dt.list[[1]]$array,
                                      platform = "array",
-                                     add.untransformed = FALSE,
+                                     add.untransformed = TRUE,
                                      add.qn.z = TRUE)
 
 # parallel backend
@@ -175,7 +175,7 @@ seq.test <-
 array.test.norm.list <-
   SinglePlatformNormalizationWrapper(array.test,
                                      platform = "array",
-                                     add.untransformed = FALSE,
+                                     add.untransformed = TRUE,
                                      add.qn.z = TRUE)
 
 # seq normalization
