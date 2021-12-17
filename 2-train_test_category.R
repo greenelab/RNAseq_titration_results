@@ -112,7 +112,8 @@ message(paste("Random seed for resampling:", resample.seed), appendLF=TRUE)
 
 train.model.list <-
   foreach(n = 1:length(restr.train.list)) %do% {  # foreach norm method
-    foreach(m = 1:length(category.norm.list)) %dopar% {  # foreach % seq level
+    foreach(m = 1:length(category.norm.list)) %do% { #par% {  # foreach % seq level
+      message(str_c(n, m, sep = " "))
       TrainThreeModels(dt = restr.train.list[[n]][[m]],
                        category = category.norm.list[[m]],
                        seed = resample.seed,
@@ -147,6 +148,7 @@ restr.train.list$tdm$`0` <- NULL
 restr.train.list$tdm$`100` <- NULL
 
 # get training kappa stats and write to file
+message("gets here 1")
 train.kappa.df <- PredictWrapper(train.model.list = train.model.list,
                                  pred.list = restr.train.list,
                                  sample.df = sample.train.test,
@@ -158,6 +160,7 @@ write.table(train.kappa.df, file = train.kappa.file, sep = "\t",
 #### predictions - test data ---------------------------------------------------
 
 # get predictions on array test data as a data frame
+message("gets here 2")
 array.kappa.df <- PredictWrapper(train.model.list = train.model.list,
                                  pred.list = norm.test.list$array,
                                  sample.df = sample.train.test,
@@ -177,6 +180,7 @@ for(i in 1:length(train.model.list[[5]])){
 norm.test.list$seq$tdm$`100` <- NULL
 
 # get predictions on RNA-seq test data as a data frame
+message("gets here 3")
 seq.kappa.df <- PredictWrapper(train.model.list = train.model.list,
                                pred.list = norm.test.list$seq,
                                sample.df = sample.train.test,
