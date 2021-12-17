@@ -342,7 +342,7 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
       # by design, untransformed data should not be zero to one transformed,
       # so just add the data.table (dt) that contains RNA-seq data (RSEM)
       # to the list
-      norm.list[["un"]] <- data.matrix(dt)
+      norm.list[["un"]] <- dt
     }
   } else {
     stop("platform parameter should be set to 'array' or 'seq'")
