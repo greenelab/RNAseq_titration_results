@@ -326,7 +326,7 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
     }
     # should untransformed (log2 scale, not zero_to_one) array data be added?
     if (add.untransformed){
-      norm.list[["un"]] <- LOGArrayOnly(dt, zero.to.one = FALSE)
+      norm.list[["un"]] <- UnNoZTOProcessing(array.dt = dt)
     }
   } else if (platform == "seq") {
     norm.list[["log"]] <- LOGSeqOnly(dt, zto)
@@ -680,7 +680,7 @@ LOGProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   return(log.cat)
 }
 
-UnNoZTOProcessing <- function(array.dt, seq.dt) {
+UnNoZTOProcessing <- function(array.dt = NULL, seq.dt = NULL) {
   # This function takes array data and RNA-seq count data and combines them
   # with no transformation to the RNA-seq data ("untransformed") and no
   # zero to one transformation. It should be regarded as a negative control.
@@ -697,10 +697,47 @@ UnNoZTOProcessing <- function(array.dt, seq.dt) {
   #   dt.cat: data.table that contains concatenated array data and untransformed
   #           RNA-seq data, zero to one transformation is not applied
   #
-  dt.cat <- data.table(cbind(array.dt, seq.dt[, 2:ncol(seq.dt),
-                                              with=F]))
-  return(dt.cat)
-
+  
+  array.dt.null <- is.null(array.dt)
+  seq.dt.null <- is.null(seq.dt)
+  if (all(array.dt.null, seq.dt.null)) {
+    stop("Cannot have array.dt and seq.dt both NULL in UnNoZTOProcessing()")
+  }
+  
+  if (array.dt.null & !seq.dt.null) {
+    
+    return(seq.dt) # don't need to do anything to to seq.dt
+    
+  } else {
+    
+    gene_vector <- array.dt[,1]  
+    array_column_names <- colnames(array.dt)
+    
+    array.dt <- LOGArrayOnly(array.dt, # does nothing if already LOG data
+                             zero.to.one = FALSE)
+    
+    array_matrix <- data.matrix(array.dt[, -1, with = F])
+    
+    if (seq.dt.null) {
+      
+      un_datatable <- data.table(data.frame(gene_vector, array_matrix))
+      colnames(un_datatable) <- array_column_names
+      
+    } else {
+      
+      seq_column_names <- colnames(seq.dt)[-1]
+      
+      un_datatable <- data.table(data.frame(gene_vector,
+                                            array_matrix,
+                                            seq.dt[ , -1, with = F]))
+      
+      colnames(un_datatable) <- c(array_column_names, seq_column_names)
+      
+    }
+    
+    return(un_datatable)
+    
+  }
 }
 
 NormalizationWrapper <- function(array.dt, seq.dt,
