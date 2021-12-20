@@ -1,6 +1,6 @@
 # Steven Foltz Nov 2021
 # The purpose of this analysis is to use PLIER to identify expression pathways
-# in our data, using pure microarray and RNA-seq data as comparison standards
+# in our data, and quantify the rate of return for significant PLIER pathways
 # for data coming from different normalization methods and titration levels.
 #
 # USAGE: Rscript 7-extract_plier_pathways.R --cancer_type --seed
@@ -71,6 +71,7 @@ all.paths <- PLIER::combinePaths(
   oncogenicPathways,
   svmMarkers
 )
+PLIER_pathways <- colnames(all.paths)
 
 #### Function for converting column to row names -------------------------------
 
@@ -95,9 +96,9 @@ convert_row_names <- function(expr, cancer_type) {
   )
 }
 
-#### Function to get jaccard values from a list of PLIER results ---------------
+#### Functions to get jaccard values from a list of PLIER results ---------------
 
-return_plier_jaccard <- function(test_PLIER, array_silver, seq_silver) {
+return_plier_jaccard_silver <- function(test_PLIER, array_silver, seq_silver) {
   # Given a set of PLIER results (which is a list), compare significant pathways
   # to two silver sets of pathways defined by array and RNA-seq data only
   # Jaccard similaritiy is defined as O(intersect)/O(union).
@@ -134,6 +135,31 @@ return_plier_jaccard <- function(test_PLIER, array_silver, seq_silver) {
       array_jaccard,
       seq_jaccard
     )
+  )
+}
+
+return_plier_jaccard_global <- function(test_PLIER, global_pathways) {
+  # Given a set of PLIER results (which is a list), compare significant pathways
+  # to a global set of pathways defined by the existing PLIER pathways
+  # Jaccard similaritiy is defined as O(intersect)/O(union).
+  #
+  # Inputs: PLIER result, global pathways
+  # Returns: data frame with one row with stats for each overlap
+  
+  test_pathways <- test_PLIER[["summary"]] %>%
+    filter(FDR < 0.05) %>%
+    pull(pathway) %>%
+    unique()
+  
+  global_jaccard <- length(intersect(global_pathways, test_pathways)) / length(global_pathways)
+  
+  data.frame(
+    n_global = length(global_pathways),
+    n_test = length(test_pathways),
+    n_intersect = length(intersect(global_pathways, test_pathways)),
+    n_common_genes = nrow(test_PLIER[["Z"]]),
+    k = ncol(test_PLIER[["Z"]]),
+    jaccard = global_jaccard
   )
 }
 
@@ -175,10 +201,8 @@ for (seed_index in 1:length(norm.train.files)) {
   doParallel::registerDoParallel(cl)
   
   # at each titration level (0-100% RNA-seq)
-  # perc_seq <- as.character(seq(0, 100, 10))
-  # norm_methods <- c("log", "npn", "qn", "tdm", "z")
-  perc_seq <- as.character(seq(0, 100, 50))
-  norm_methods <- c("log", "qn")
+  perc_seq <- as.character(seq(0, 100, 10))
+  norm_methods <- c("log", "npn", "qn", "qn-z", "tdm", "un", "z")
   plier_results_list <- foreach(
     ps = perc_seq,
     .packages = c("PLIER", "doParallel")
@@ -225,32 +249,11 @@ for (seed_index in 1:length(norm.train.files)) {
     names(plier_results_list[[i]]) <- norm_methods
   }
   
-  # Set  array and seq silver standards for Jaccard comparison metric
-  # TODO what are best settings for silver standard?
-  array_silver <- plier_results_list[["0"]][["log"]][["summary"]] %>%
-    filter(FDR < 0.05) %>%
-    pull(pathway) %>%
-    unique()
-  seq_silver <- plier_results_list[["100"]][["log"]][["summary"]] %>%
-    filter(FDR < 0.05) %>%
-    pull(pathway) %>%
-    unique()
-  
-  # Check that silver standard pathways have non-zero length
-  if (length(array_silver) > 0 & length(seq_silver) > 0) {
-    
-    # Return pathway comparison for appropriate level of PLIER results list
-    jaccard_list[[seed_index]] <- purrr::modify_depth(
-      plier_results_list, 2,
-      function(x) return_plier_jaccard(x, array_silver, seq_silver)
-    )
-  } else {
-    message(str_c("PLIER: Silver standard array or seq significant pathways has zero length",
-                  seed_index, percent_seq, normalization_method,
-                  length(array_silver), length(seq_silver),
-                  sep = " "
-    ))
-  }
+  # Return pathway comparison for appropriate level of PLIER results list
+  jaccard_list[[seed_index]] <- purrr::modify_depth(
+    plier_results_list, 2,
+    function(x) return_plier_jaccard_global(x, PLIER_pathways)
+  )
 }
 
 if (length(jaccard_list) > 0) {
@@ -259,8 +262,7 @@ if (length(jaccard_list) > 0) {
   jaccard_df <- reshape2::melt(
     data = jaccard_list,
     id.vars = c(
-      "silver", "n_silver", "n_test",
-      "n_intersect", "n_union",
+      "n_global", "n_test", "n_intersect",
       "n_common_genes", "k"
     ),
     value.name = "jaccard"
