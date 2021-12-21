@@ -202,10 +202,12 @@ for (seed_index in 1:length(norm.train.files)) {
   
   # at each titration level (0-100% RNA-seq)
   perc_seq <- as.character(seq(0, 100, 10))
-  norm_methods <- c("log", "npn", "qn", "qn-z", "tdm", "un", "z")
+  #norm_methods <- c("log", "npn", "qn", "qn-z", "tdm", "un", "z")
+  norm_methods <- c("un", "z")
   plier_results_list <- foreach(
     ps = perc_seq,
-    .packages = c("PLIER", "doParallel")
+    .packages = c("PLIER", "doParallel"),
+    .errorhandling = "pass"
   ) %dopar% {
     foreach(nm = norm_methods) %dopar% {
       if (nm %in% names(norm.train.list[[ps]])) {
@@ -232,8 +234,8 @@ for (seed_index in 1:length(norm.train.files)) {
         PLIER::PLIER(as.matrix(norm.train.list[[ps]][[nm]][common.genes, ]),
                      all.paths[common.genes, ],
                      k = set.k,
-                     scale = TRUE
-        ) # PLIER z-scores input values by row
+                     scale = TRUE # PLIER z-scores input values by row
+        )
       } else {
         NULL # return NULL for empty result; purrr will ignore this list element
       }
@@ -248,6 +250,9 @@ for (seed_index in 1:length(norm.train.files)) {
   for (i in perc_seq) {
     names(plier_results_list[[i]]) <- norm_methods
   }
+  
+  write_rds(x = plier_results_list,
+            path = str_c("plier.", seed_index, ".rds"))
   
   # Return pathway comparison for appropriate level of PLIER results list
   jaccard_list[[seed_index]] <- purrr::modify_depth(
