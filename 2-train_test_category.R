@@ -168,9 +168,9 @@ write.table(array.kappa.df, file = array.kappa.file, sep = "\t",
 
 # for the 0 perc seq level of the titration, the model tested on log transformed
 # array data (100% array data) should be tested on the TDM transformed seq data
-for(i in 1:length(train.model.list[[5]])){
-  train.model.list[[5]][[i]]$`0` <- train.model.list[["log"]][[i]]$`0`
-  train.model.list[[5]][[i]] <- train.model.list[["tdm"]][[i]][c(10, 1:9)]
+for(i in 1:length(train.model.list[["tdm"]])){
+  train.model.list[["tdm"]][[i]]$`0` <- train.model.list[["log"]][[i]]$`0`
+  train.model.list[["tdm"]][[i]] <- train.model.list[["tdm"]][[i]][c(10, 1:9)]
 }
 
 # get rid of 100 tdm list, it's NULL
