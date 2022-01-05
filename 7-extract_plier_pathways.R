@@ -109,7 +109,7 @@ check_failure_to_converge <- function(plier_result) {
       stop("PLIER run failed for reason other than system is computationally singular")
     }
   } else {
-    x # return the plier result as is
+    plier_result # return the plier result as is
   }
 }
 
