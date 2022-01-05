@@ -103,7 +103,7 @@ check_failure_to_converge <- function(plier_result) {
   # if the plier result contained an error message
   if ("message" %in% names(plier_result)) {
     # and if that error massage refers to convergence failure
-    if (str_detect(x$message, "system is computationally singular")) {
+    if (str_detect(plier_result$message, "system is computationally singular")) {
       NA # return NA
     } else { # PLIER failed for another reason and we need to know about that
       stop("PLIER run failed for reason other than system is computationally singular")
