@@ -201,15 +201,18 @@ for (seed_index in 1:length(norm.train.files)) {
   doParallel::registerDoParallel(cl)
   
   # at each titration level (0-100% RNA-seq)
-  perc_seq <- as.character(seq(0, 100, 10))
+  #perc_seq <- as.character(seq(0, 100, 10))
   #norm_methods <- c("log", "npn", "qn", "qn-z", "tdm", "un", "z")
+  perc_seq <- as.character(seq(40, 50, 10))
   norm_methods <- c("un", "z")
   plier_results_list <- foreach(
     ps = perc_seq,
-    .packages = c("PLIER", "doParallel"),
-    .errorhandling = "pass"
+    .packages = c("PLIER", "doParallel")
   ) %dopar% {
-    foreach(nm = norm_methods) %dopar% {
+    foreach(
+      nm = norm_methods,
+      .errorhandling = "pass" # let pass on inside loop
+    ) %dopar% {
       if (nm %in% names(norm.train.list[[ps]])) {
         
         # remove any rows with all the same value
@@ -250,6 +253,8 @@ for (seed_index in 1:length(norm.train.files)) {
   for (i in perc_seq) {
     names(plier_results_list[[i]]) <- norm_methods
   }
+  
+  # TODO check for failure to converge, write message, set to NULL
   
   write_rds(x = plier_results_list,
             path = str_c("plier.", seed_index, ".rds"))
