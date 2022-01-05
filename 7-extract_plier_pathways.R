@@ -96,71 +96,121 @@ convert_row_names <- function(expr, cancer_type) {
   )
 }
 
+#### Function to check if a PLIER model converged or not
+
+check_failure_to_converge <- function(plier_result) {
+
+  # if the plier result contained an error message
+  if ("message" %in% names(plier_result)) {
+    # and if that error massage refers to convergence failure
+    if (str_detect(x$message, "system is computationally singular")) {
+      NA # return NA
+    } else { # PLIER failed for another reason and we need to know about that
+      stop("PLIER run failed for reason other than system is computationally singular")
+    }
+  } else {
+    x # return the plier result as is
+  }
+}
+
 #### Functions to get jaccard values from a list of PLIER results ---------------
 
 return_plier_jaccard_silver <- function(test_PLIER, array_silver, seq_silver) {
   # Given a set of PLIER results (which is a list), compare significant pathways
   # to two silver sets of pathways defined by array and RNA-seq data only
-  # Jaccard similaritiy is defined as O(intersect)/O(union).
-  #
+  # Jaccard similaritiy is defined as O(intersect)/O(union). If the input is not
+  # a properly completed PLIER result, then return all NAs.
+  # 
   # Inputs: PLIER result, pathway set 1, pathway set 2
   # Returns: data frame with two rows (array, seq) with stats for each overlap
   
-  test_pathways <- test_PLIER[["summary"]] %>%
-    filter(FDR < 0.05) %>%
-    pull(pathway) %>%
-    unique()
-  
-  array_jaccard <- length(intersect(array_silver, test_pathways)) / length(union(array_silver, test_pathways))
-  seq_jaccard <- length(intersect(seq_silver, test_pathways)) / length(union(seq_silver, test_pathways))
-  
-  data.frame(
-    silver = c("array", "seq"),
-    n_silver = c(
-      length(array_silver),
-      length(seq_silver)
-    ),
-    n_test = length(test_pathways),
-    n_intersect = c(
-      length(intersect(array_silver, test_pathways)),
-      length(intersect(seq_silver, test_pathways))
-    ),
-    n_union = c(
-      length(union(array_silver, test_pathways)),
-      length(union(seq_silver, test_pathways))
-    ),
-    n_common_genes = nrow(test_PLIER[["Z"]]),
-    k = ncol(test_PLIER[["Z"]]),
-    jaccard = c(
-      array_jaccard,
-      seq_jaccard
+  if ("summary" %in% names(test_PLIER)) {
+    
+    test_pathways <- test_PLIER[["summary"]] %>%
+      filter(FDR < 0.05) %>%
+      pull(pathway) %>%
+      unique()
+    
+    array_jaccard <- length(intersect(array_silver, test_pathways)) / length(union(array_silver, test_pathways))
+    seq_jaccard <- length(intersect(seq_silver, test_pathways)) / length(union(seq_silver, test_pathways))
+    
+    data.frame(
+      silver = c("array", "seq"),
+      n_silver = c(
+        length(array_silver),
+        length(seq_silver)
+      ),
+      n_test = length(test_pathways),
+      n_intersect = c(
+        length(intersect(array_silver, test_pathways)),
+        length(intersect(seq_silver, test_pathways))
+      ),
+      n_union = c(
+        length(union(array_silver, test_pathways)),
+        length(union(seq_silver, test_pathways))
+      ),
+      n_common_genes = nrow(test_PLIER[["Z"]]),
+      k = ncol(test_PLIER[["Z"]]),
+      jaccard = c(
+        array_jaccard,
+        seq_jaccard
+      )
     )
-  )
+  } else {
+    
+    data.frame(
+      silver = NA,
+      n_silver = NA,
+      n_test = NA,
+      n_intersect = NA,
+      n_union = NA,
+      n_common_genes = NA,
+      k = NA,
+      jaccard = NA
+    )  
+    
+  }
 }
 
 return_plier_jaccard_global <- function(test_PLIER, global_pathways) {
   # Given a set of PLIER results (which is a list), compare significant pathways
   # to a global set of pathways defined by the existing PLIER pathways
-  # Jaccard similaritiy is defined as O(intersect)/O(union).
+  # Jaccard similaritiy is defined as O(intersect)/O(union). If the input is not
+  # a properly completed PLIER result, then return all NAs.
   #
   # Inputs: PLIER result, global pathways
   # Returns: data frame with one row with stats for each overlap
   
-  test_pathways <- test_PLIER[["summary"]] %>%
-    filter(FDR < 0.05) %>%
-    pull(pathway) %>%
-    unique()
-  
-  global_jaccard <- length(intersect(global_pathways, test_pathways)) / length(global_pathways)
-  
-  data.frame(
-    n_global = length(global_pathways),
-    n_test = length(test_pathways),
-    n_intersect = length(intersect(global_pathways, test_pathways)),
-    n_common_genes = nrow(test_PLIER[["Z"]]),
-    k = ncol(test_PLIER[["Z"]]),
-    jaccard = global_jaccard
-  )
+  if ("summary" %in% names(test_PLIER)) {
+    
+    test_pathways <- test_PLIER[["summary"]] %>%
+      filter(FDR < 0.05) %>%
+      pull(pathway) %>%
+      unique()
+    
+    global_jaccard <- length(intersect(global_pathways, test_pathways)) / length(global_pathways)
+    
+    data.frame(
+      n_global = length(global_pathways),
+      n_test = length(test_pathways),
+      n_intersect = length(intersect(global_pathways, test_pathways)),
+      n_common_genes = nrow(test_PLIER[["Z"]]),
+      k = ncol(test_PLIER[["Z"]]),
+      jaccard = global_jaccard
+    ) 
+    
+  } else {
+    
+    data.frame(
+      n_global = NA,
+      n_test = NA,
+      n_intersect = NA,
+      n_common_genes = NA,
+      k = NA,
+      jaccard = NA
+    )
+    
+  }
 }
 
 #### loop over data for each seed and get PLIER results ------------------------
@@ -254,7 +304,11 @@ for (seed_index in 1:length(norm.train.files)) {
     names(plier_results_list[[i]]) <- norm_methods
   }
   
-  # TODO check for failure to converge, write message, set to NULL
+  # Check for failure to converge, and set to NA
+  
+  plier_results_list <- purrr::modify_depth(plier_results_list, 2,
+                                            check_failure_to_converge
+  )
   
   write_rds(x = plier_results_list,
             path = str_c("plier.", seed_index, ".rds"))
