@@ -290,7 +290,7 @@ for (seed_index in 1:length(norm.train.files)) {
                      scale = TRUE # PLIER z-scores input values by row
         )
       } else {
-        NULL # return NULL for empty result; purrr will ignore this list element
+        NA # NA for no data at this ps nm combination (0% and 100% TDM)
       }
     }
   }
