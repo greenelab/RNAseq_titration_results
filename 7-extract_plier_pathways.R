@@ -304,14 +304,16 @@ for (seed_index in 1:length(norm.train.files)) {
     names(plier_results_list[[i]]) <- norm_methods
   }
   
+  # write test file
+  
+  write_rds(x = plier_results_list,
+            path = str_c("plier.", seed_index, ".rds"))
+  
   # Check for failure to converge, and set to NA
   
   plier_results_list <- purrr::modify_depth(plier_results_list, 2,
                                             check_failure_to_converge
   )
-  
-  #write_rds(x = plier_results_list,
-  #          path = str_c("plier.", seed_index, ".rds"))
   
   # Return pathway comparison for appropriate level of PLIER results list
   jaccard_list[[seed_index]] <- purrr::modify_depth(
