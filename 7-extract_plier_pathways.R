@@ -251,10 +251,10 @@ for (seed_index in 1:length(norm.train.files)) {
   doParallel::registerDoParallel(cl)
   
   # at each titration level (0-100% RNA-seq)
-  #perc_seq <- as.character(seq(0, 100, 10))
-  #norm_methods <- c("log", "npn", "qn", "qn-z", "tdm", "un", "z")
-  perc_seq <- as.character(seq(40, 50, 10))
-  norm_methods <- c("un", "z")
+  perc_seq <- as.character(seq(0, 100, 10))
+  norm_methods <- c("log", "npn", "qn", "qn-z", "tdm", "un", "z")
+  #perc_seq <- as.character(seq(40, 50, 10))
+  #norm_methods <- c("un", "z")
   plier_results_list <- foreach(
     ps = perc_seq,
     .packages = c("PLIER", "doParallel")
@@ -310,8 +310,8 @@ for (seed_index in 1:length(norm.train.files)) {
                                             check_failure_to_converge
   )
   
-  write_rds(x = plier_results_list,
-            path = str_c("plier.", seed_index, ".rds"))
+  #write_rds(x = plier_results_list,
+  #          path = str_c("plier.", seed_index, ".rds"))
   
   # Return pathway comparison for appropriate level of PLIER results list
   jaccard_list[[seed_index]] <- purrr::modify_depth(
