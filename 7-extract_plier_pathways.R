@@ -322,7 +322,7 @@ for (seed_index in 1:length(norm.train.files)) {
   # Check for failure to converge, and set to NA
   
   plier_results_list <- purrr::modify_depth(plier_results_list, 2,
-                                            check_plier_failure
+                                            check_plier_failure_to_converge
   )
   
   # Return pathway comparison for appropriate level of PLIER results list
