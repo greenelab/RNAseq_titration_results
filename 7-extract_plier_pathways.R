@@ -96,14 +96,15 @@ convert_row_names <- function(expr, cancer_type) {
   )
 }
 
-#### Function to check if a PLIER model converged or not
+#### Failure of PLIER to converge may manifest in different error messages...
 
-check_failure_to_converge <- function(plier_result) {
+check_plier_failure_to_converge <- function(plier_result) {
 
   # if the plier result contained an error message
   if ("message" %in% names(plier_result)) {
-    # and if that error massage refers to convergence failure
-    if (str_detect(plier_result$message, "system is computationally singular")) {
+    # and if that error massage refers to convergence failure directly or indirectly
+    if (str_detect(plier_result$message, "system is computationally singular") | 
+        str_detect(plier_result$message, "subscript out of bounds")) {
       NA # return NA
     } else { # PLIER failed for another reason and we need to know about that
       stop("PLIER run failed for reason other than system is computationally singular")
@@ -312,7 +313,7 @@ for (seed_index in 1:length(norm.train.files)) {
   # Check for failure to converge, and set to NA
   
   plier_results_list <- purrr::modify_depth(plier_results_list, 2,
-                                            check_failure_to_converge
+                                            check_plier_failure
   )
   
   # Return pathway comparison for appropriate level of PLIER results list
