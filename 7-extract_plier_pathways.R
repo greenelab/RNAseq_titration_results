@@ -224,91 +224,100 @@ for (seed_index in 1:length(norm.train.files)) {
                 sep = " "
   ))
   
-  #### read in data ------------------------------------------------------------
-  
-  # norm.test.list <- read_rds(norm.test.files[seed_index])
-  norm.train.list <- read_rds(norm.train.files[seed_index])
-  # sample.df <- read.delim(sample.files[seed_index])
-  
-  # convert gene names column to row names
-  # if GBM, also convert from GENEID to SYMBOL
-  norm.train.list <- purrr::modify_depth(
-    norm.train.list, 2,
-    function(x) {
-      convert_row_names(
-        expr = x,
-        cancer_type = cancer_type
-      )
-    }
-  )
-  
-  #### main --------------------------------------------------------------------
-  
-  # create an output list
-  plier_results_list <- list()
-  
-  # parallel backend
-  cl <- parallel::makeCluster(detectCores() - 1)
-  doParallel::registerDoParallel(cl)
-  
-  # at each titration level (0-100% RNA-seq)
-  perc_seq <- as.character(seq(0, 100, 10))
-  norm_methods <- c("log", "npn", "qn", "qn-z", "tdm", "un", "z")
-  #perc_seq <- as.character(seq(40, 50, 10))
-  #norm_methods <- c("un", "z")
-  plier_results_list <- foreach(
-    ps = perc_seq,
-    .packages = c("PLIER", "doParallel")
-  ) %dopar% {
-    foreach(
-      nm = norm_methods,
-      .errorhandling = "pass" # let pass on inside loop
+  if (file.exists(str_c("plier.", seed_index, ".rds"))) {
+    
+    plier_results_list <- read_rds(str_c("plier.", seed_index, ".rds"))
+    
+  } else {
+    
+    
+    #### read in data ------------------------------------------------------------
+    
+    # norm.test.list <- read_rds(norm.test.files[seed_index])
+    norm.train.list <- read_rds(norm.train.files[seed_index])
+    # sample.df <- read.delim(sample.files[seed_index])
+    
+    # convert gene names column to row names
+    # if GBM, also convert from GENEID to SYMBOL
+    norm.train.list <- purrr::modify_depth(
+      norm.train.list, 2,
+      function(x) {
+        convert_row_names(
+          expr = x,
+          cancer_type = cancer_type
+        )
+      }
+    )
+    
+    #### main --------------------------------------------------------------------
+    
+    # create an output list
+    plier_results_list <- list()
+    
+    # parallel backend
+    cl <- parallel::makeCluster(detectCores() - 1)
+    doParallel::registerDoParallel(cl)
+    
+    # at each titration level (0-100% RNA-seq)
+    perc_seq <- as.character(seq(0, 100, 10))
+    norm_methods <- c("log", "npn", "qn", "qn-z", "tdm", "un", "z")
+    #perc_seq <- as.character(seq(40, 50, 10))
+    #norm_methods <- c("un", "z")
+    plier_results_list <- foreach(
+      ps = perc_seq,
+      .packages = c("PLIER", "doParallel")
     ) %dopar% {
-      if (nm %in% names(norm.train.list[[ps]])) {
-        
-        # remove any rows with all the same value
-        all.same.indx <- which(apply(
-          norm.train.list[[ps]][[nm]], 1,
-          check_all_same
-        ))
-        if (length(all.same.indx) > 0) {
-          norm.train.list[[ps]][[nm]] <- norm.train.list[[ps]][[nm]][-all.same.indx, ]
+      foreach(
+        nm = norm_methods,
+        .errorhandling = "pass" # let pass on inside loop
+      ) %dopar% {
+        if (nm %in% names(norm.train.list[[ps]])) {
+          
+          # remove any rows with all the same value
+          all.same.indx <- which(apply(
+            norm.train.list[[ps]][[nm]], 1,
+            check_all_same
+          ))
+          if (length(all.same.indx) > 0) {
+            norm.train.list[[ps]][[nm]] <- norm.train.list[[ps]][[nm]][-all.same.indx, ]
+          }
+          
+          # get common genes
+          common.genes <- PLIER::commonRows(
+            all.paths,
+            norm.train.list[[ps]][[nm]]
+          )
+          
+          # minimum k for PLIER = 2*num.pc
+          set.k <- 2 * PLIER::num.pc(PLIER::rowNorm(norm.train.list[[ps]][[nm]][common.genes, ]))
+          
+          # PLIER main function
+          PLIER::PLIER(as.matrix(norm.train.list[[ps]][[nm]][common.genes, ]),
+                       all.paths[common.genes, ],
+                       k = set.k,
+                       scale = TRUE # PLIER z-scores input values by row
+          )
+        } else {
+          NA # NA for no data at this ps nm combination (0% and 100% TDM)
         }
-        
-        # get common genes
-        common.genes <- PLIER::commonRows(
-          all.paths,
-          norm.train.list[[ps]][[nm]]
-        )
-        
-        # minimum k for PLIER = 2*num.pc
-        set.k <- 2 * PLIER::num.pc(PLIER::rowNorm(norm.train.list[[ps]][[nm]][common.genes, ]))
-        
-        # PLIER main function
-        PLIER::PLIER(as.matrix(norm.train.list[[ps]][[nm]][common.genes, ]),
-                     all.paths[common.genes, ],
-                     k = set.k,
-                     scale = TRUE # PLIER z-scores input values by row
-        )
-      } else {
-        NA # NA for no data at this ps nm combination (0% and 100% TDM)
       }
     }
+    
+    # stop parallel backend
+    parallel::stopCluster(cl)
+    
+    # renames list levels
+    names(plier_results_list) <- perc_seq
+    for (i in perc_seq) {
+      names(plier_results_list[[i]]) <- norm_methods
+    }
+    
+    # write test file
+    
+    write_rds(x = plier_results_list,
+              path = str_c("plier.", seed_index, ".rds"))
+  
   }
-  
-  # stop parallel backend
-  parallel::stopCluster(cl)
-  
-  # renames list levels
-  names(plier_results_list) <- perc_seq
-  for (i in perc_seq) {
-    names(plier_results_list[[i]]) <- norm_methods
-  }
-  
-  # write test file
-  
-  write_rds(x = plier_results_list,
-            path = str_c("plier.", seed_index, ".rds"))
   
   # Check for failure to converge, and set to NA
   
