@@ -704,12 +704,14 @@ UnNoZTOProcessing <- function(array.dt = NULL, seq.dt = NULL) {
     stop("Cannot have array.dt and seq.dt both NULL in UnNoZTOProcessing()")
   }
   
+  # If the only input is seq data, there is nothing to be done -- just return it
   if (array.dt.null & !seq.dt.null) {
     
     return(seq.dt) # don't need to do anything to to seq.dt
     
-  } else {
+  } else { # if there is array data, we need to do something to it
     
+    # extract the gene vector and array column names
     gene_vector <- array.dt[,1]  
     array_column_names <- colnames(array.dt)
     
@@ -718,19 +720,21 @@ UnNoZTOProcessing <- function(array.dt = NULL, seq.dt = NULL) {
     
     array_matrix <- data.matrix(array.dt[, -1, with = F])
     
+    # if there is no seq data, set up the returned object with just array
     if (seq.dt.null) {
       
       un_datatable <- data.table(data.frame(gene_vector, array_matrix))
       colnames(un_datatable) <- array_column_names
       
-    } else {
+    } else { # if there is both seq and array data to combine
       
+      # extract seq column names, without the gene column
       seq_column_names <- colnames(seq.dt)[-1]
-      
+  
+      # combine gene, array, and seq data    
       un_datatable <- data.table(data.frame(gene_vector,
                                             array_matrix,
                                             seq.dt[ , -1, with = F]))
-      
       colnames(un_datatable) <- c(array_column_names, seq_column_names)
       
     }
