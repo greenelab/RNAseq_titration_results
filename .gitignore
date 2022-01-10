@@ -10,3 +10,4 @@ normalized_data
 models
 results/reconstructed_data
 .Rproj.user
+RNAseq_titration_results.Rproj
