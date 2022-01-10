@@ -305,12 +305,14 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
   #              if zero.to.one = TRUE zero to one transformed, data.tables
   #
 
+  ### Commented out to allow for log2-scaled array data to be added as
+  ### untransformed negative control at 0% RNA-seq
   # error-handling
-  if (platform == "array" & add.untransformed) {
-    warning("If add.transformed = TRUE, must be RNA-seq data (platform = seq).\n
-             Setting add.untransformed to FALSE...")
-    add.untransformed <- FALSE
-  }
+  #if (platform == "array" & add.untransformed) {
+  #  warning("If add.transformed = TRUE, must be RNA-seq data (platform = seq).\n
+  #           Setting add.untransformed to FALSE...")
+  #  add.untransformed <- FALSE
+  #}
 
   norm.list <- list()
   if (platform == "array") {
@@ -321,6 +323,10 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
     # should quantile normalized data followed by z-transformation be added?
     if (add.qn.z) {
       norm.list[["qn-z"]] <- QNZSingleDT(norm.list$log, zto)
+    }
+    # should untransformed (log2 scale, not zero_to_one) array data be added?
+    if (add.untransformed){
+      norm.list[["un"]] <- UnNoZTOProcessing(array.dt = dt)
     }
   } else if (platform == "seq") {
     norm.list[["log"]] <- LOGSeqOnly(dt, zto)
@@ -674,7 +680,7 @@ LOGProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   return(log.cat)
 }
 
-UnNoZTOProcessing <- function(array.dt, seq.dt) {
+UnNoZTOProcessing <- function(array.dt = NULL, seq.dt = NULL) {
   # This function takes array data and RNA-seq count data and combines them
   # with no transformation to the RNA-seq data ("untransformed") and no
   # zero to one transformation. It should be regarded as a negative control.
@@ -691,10 +697,51 @@ UnNoZTOProcessing <- function(array.dt, seq.dt) {
   #   dt.cat: data.table that contains concatenated array data and untransformed
   #           RNA-seq data, zero to one transformation is not applied
   #
-  dt.cat <- data.table(cbind(array.dt, seq.dt[, 2:ncol(seq.dt),
-                                              with=F]))
-  return(dt.cat)
-
+  
+  array.dt.null <- is.null(array.dt)
+  seq.dt.null <- is.null(seq.dt)
+  if (all(array.dt.null, seq.dt.null)) {
+    stop("Cannot have array.dt and seq.dt both NULL in UnNoZTOProcessing()")
+  }
+  
+  # If the only input is seq data, there is nothing to be done -- just return it
+  if (array.dt.null & !seq.dt.null) {
+    
+    return(seq.dt) # don't need to do anything to to seq.dt
+    
+  } else { # if there is array data, we need to do something to it
+    
+    # extract the gene vector and array column names
+    gene_vector <- array.dt[,1]  
+    array_column_names <- colnames(array.dt)
+    
+    array.dt <- LOGArrayOnly(array.dt, # does nothing if already LOG data
+                             zero.to.one = FALSE)
+    
+    array_matrix <- data.matrix(array.dt[, -1, with = F])
+    
+    # if there is no seq data, set up the returned object with just array
+    if (seq.dt.null) {
+      
+      un_datatable <- data.table(data.frame(gene_vector, array_matrix))
+      colnames(un_datatable) <- array_column_names
+      
+    } else { # if there is both seq and array data to combine
+      
+      # extract seq column names, without the gene column
+      seq_column_names <- colnames(seq.dt)[-1]
+  
+      # combine gene, array, and seq data    
+      un_datatable <- data.table(data.frame(gene_vector,
+                                            array_matrix,
+                                            seq.dt[ , -1, with = F]))
+      colnames(un_datatable) <- c(array_column_names, seq_column_names)
+      
+    }
+    
+    return(un_datatable)
+    
+  }
 }
 
 NormalizationWrapper <- function(array.dt, seq.dt,
