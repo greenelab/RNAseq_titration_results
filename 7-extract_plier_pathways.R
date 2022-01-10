@@ -40,10 +40,6 @@ norm.data.dir <- here::here("normalized_data")
 res.dir <- here::here("results")
 
 # define input files
-# norm.test.files <- file.path(norm.data.dir,
-#                            list.files(norm.data.dir,
-#                                       pattern = paste0(file_identifier,
-#                                                        "_array_seq_test_data_normalized_list_")))
 norm.train.files <- file.path(
   norm.data.dir,
   list.files(norm.data.dir,
@@ -53,10 +49,6 @@ norm.train.files <- file.path(
              )
   )
 )
-# sample.files <- file.path(res.dir,
-#                         list.files(res.dir,
-#                                    pattern = paste0(file_identifier,
-#                                                     "_matchedSamples_training_testing_split_labels_")))
 
 #### set up PLIER data ---------------------------------------------------------
 
@@ -71,6 +63,7 @@ all.paths <- PLIER::combinePaths(
   oncogenicPathways,
   svmMarkers
 )
+
 PLIER_pathways <- colnames(all.paths)
 
 #### Function for converting column to row names -------------------------------
@@ -119,7 +112,7 @@ check_plier_failure_to_converge <- function(plier_result) {
 return_plier_jaccard_silver <- function(test_PLIER, array_silver, seq_silver) {
   # Given a set of PLIER results (which is a list), compare significant pathways
   # to two silver sets of pathways defined by array and RNA-seq data only
-  # Jaccard similaritiy is defined as O(intersect)/O(union). If the input is not
+  # Jaccard similarity is defined as O(intersect)/O(union). If the input is not
   # a properly completed PLIER result, then return all NAs.
   # 
   # Inputs: PLIER result, pathway set 1, pathway set 2
@@ -176,7 +169,7 @@ return_plier_jaccard_silver <- function(test_PLIER, array_silver, seq_silver) {
 return_plier_jaccard_global <- function(test_PLIER, global_pathways) {
   # Given a set of PLIER results (which is a list), compare significant pathways
   # to a global set of pathways defined by the existing PLIER pathways
-  # Jaccard similaritiy is defined as O(intersect)/O(union). If the input is not
+  # Jaccard similarity is defined as O(intersect)/O(union). If the input is not
   # a properly completed PLIER result, then return all NAs.
   #
   # Inputs: PLIER result, global pathways
@@ -224,113 +217,102 @@ for (seed_index in 1:length(norm.train.files)) {
                 sep = " "
   ))
   
-  if (file.exists(str_c("plier.", seed_index, ".rds"))) {
-    
-    plier_results_list <- read_rds(str_c("plier.", seed_index, ".rds"))
-    
-  } else {
-    
-    
-    #### read in data ------------------------------------------------------------
-    
-    # norm.test.list <- read_rds(norm.test.files[seed_index])
-    norm.train.list <- read_rds(norm.train.files[seed_index])
-    # sample.df <- read.delim(sample.files[seed_index])
-    
-    # convert gene names column to row names
-    # if GBM, also convert from GENEID to SYMBOL
-    norm.train.list <- purrr::modify_depth(
-      norm.train.list, 2,
-      function(x) {
-        convert_row_names(
-          expr = x,
-          cancer_type = cancer_type
-        )
-      }
-    )
-    
-    #### main --------------------------------------------------------------------
-    
-    # create an output list
-    plier_results_list <- list()
-    
-    # parallel backend
-    cl <- parallel::makeCluster(detectCores() - 1)
-    doParallel::registerDoParallel(cl)
-    
-    # at each titration level (0-100% RNA-seq)
-    perc_seq <- as.character(seq(0, 100, 10))
-    norm_methods <- c("log", "npn", "qn", "qn-z", "tdm", "un", "z")
-    #perc_seq <- as.character(seq(40, 50, 10))
-    #norm_methods <- c("un", "z")
-    plier_results_list <- foreach(
-      ps = perc_seq,
-      .packages = c("PLIER", "doParallel")
-    ) %dopar% {
-      foreach(
-        nm = norm_methods,
-        .errorhandling = "pass" # let pass on inside loop
-      ) %dopar% {
-        if (nm %in% names(norm.train.list[[ps]])) {
-          
-          # remove any rows with all the same value
-          all.same.indx <- which(apply(
-            norm.train.list[[ps]][[nm]], 1,
-            check_all_same
-          ))
-          if (length(all.same.indx) > 0) {
-            norm.train.list[[ps]][[nm]] <- norm.train.list[[ps]][[nm]][-all.same.indx, ]
-          }
-          
-          # get common genes
-          common.genes <- PLIER::commonRows(
-            all.paths,
-            norm.train.list[[ps]][[nm]]
-          )
-          
-          # minimum k for PLIER = 2*num.pc
-          set.k <- 2 * PLIER::num.pc(PLIER::rowNorm(norm.train.list[[ps]][[nm]][common.genes, ]))
-          
-          # PLIER main function
-          PLIER::PLIER(as.matrix(norm.train.list[[ps]][[nm]][common.genes, ]),
-                       all.paths[common.genes, ],
-                       k = set.k,
-                       scale = TRUE # PLIER z-scores input values by row
-          )
-        } else {
-          NA # NA for no data at this ps nm combination (0% and 100% TDM)
-        }
-      }
-    }
-    
-    # stop parallel backend
-    parallel::stopCluster(cl)
-    
-    # renames list levels
-    names(plier_results_list) <- perc_seq
-    for (i in perc_seq) {
-      names(plier_results_list[[i]]) <- norm_methods
-    }
-    
-    # write test file
-    
-    write_rds(x = plier_results_list,
-              path = str_c("plier.", seed_index, ".rds"))
+  #### read in data ------------------------------------------------------------
   
+  norm.train.list <- read_rds(norm.train.files[seed_index])
+  
+  # convert gene names column to row names
+  # if GBM, also convert from GENEID to SYMBOL
+  norm.train.list <- purrr::modify_depth(
+    norm.train.list, 2,
+    function(x) {
+      convert_row_names(
+        expr = x,
+        cancer_type = cancer_type
+      )
+    }
+  )
+  
+  #### main --------------------------------------------------------------------
+  
+  # create an output list
+  plier_results_list <- list()
+  
+  # parallel backend
+  cl <- parallel::makeCluster(detectCores() - 1)
+  doParallel::registerDoParallel(cl)
+  
+  # at each titration level (0-100% RNA-seq)
+  perc_seq <- as.character(seq(0, 100, 10))
+  norm_methods <- c("log", "npn", "qn", "qn-z", "tdm", "un", "z")
+  
+  plier_results_list <- foreach(
+    ps = perc_seq,
+    .packages = c("PLIER", "doParallel")
+  ) %dopar% {
+    foreach(
+      nm = norm_methods,
+      .errorhandling = "pass" # let pass on inside loop
+    ) %dopar% {
+      if (nm %in% names(norm.train.list[[ps]])) {
+        
+        # remove any rows with all the same value
+        all.same.indx <- which(apply(
+          norm.train.list[[ps]][[nm]], 1,
+          check_all_same
+        ))
+        if (length(all.same.indx) > 0) {
+          norm.train.list[[ps]][[nm]] <- norm.train.list[[ps]][[nm]][-all.same.indx, ]
+        }
+        
+        # get common genes
+        common.genes <- PLIER::commonRows(
+          all.paths,
+          norm.train.list[[ps]][[nm]]
+        )
+        
+        # minimum k for PLIER = 2*num.pc
+        set.k <- 2 * PLIER::num.pc(PLIER::rowNorm(norm.train.list[[ps]][[nm]][common.genes, ]))
+        
+        # PLIER main function
+        PLIER::PLIER(as.matrix(norm.train.list[[ps]][[nm]][common.genes, ]),
+                     all.paths[common.genes, ],
+                     k = set.k,
+                     scale = TRUE # PLIER z-scores input values by row
+        )
+      } else {
+        NA # NA for no data at this ps nm combination (0% and 100% TDM)
+      }
+    }
   }
   
-  # Check for failure to converge, and set to NA
+  # stop parallel backend
+  parallel::stopCluster(cl)
   
-  plier_results_list <- purrr::modify_depth(plier_results_list, 2,
-                                            check_plier_failure_to_converge
-  )
+  # renames list levels
+  names(plier_results_list) <- perc_seq
+  for (i in perc_seq) {
+    names(plier_results_list[[i]]) <- norm_methods
+  }
   
-  # Return pathway comparison for appropriate level of PLIER results list
-  jaccard_list[[seed_index]] <- purrr::modify_depth(
-    plier_results_list, 2,
-    function(x) return_plier_jaccard_global(x, PLIER_pathways)
-  )
+  # write test file
+  
+  write_rds(x = plier_results_list,
+            path = str_c("plier.", seed_index, ".rds"))
+  
 }
+
+# Check for failure to converge, and set to NA
+
+plier_results_list <- purrr::modify_depth(plier_results_list, 2,
+                                          check_plier_failure_to_converge
+)
+
+# Return pathway comparison for appropriate level of PLIER results list
+jaccard_list[[seed_index]] <- purrr::modify_depth(
+  plier_results_list, 2,
+  function(x) return_plier_jaccard_global(x, PLIER_pathways)
+)
 
 if (length(jaccard_list) > 0) {
   
