@@ -1,4 +1,4 @@
-NAToZero <- function(dt, un=0) suppressWarnings(gdata::NAToUnknown(dt, un))
+NAToZero <- function(dt, un=0, force = TRUE) suppressWarnings(gdata::NAToUnknown(dt, un))
 
 #### single platform functions -------------------------------------------------
 LOGArrayOnly <- function(array.dt, zero.to.one = TRUE){
