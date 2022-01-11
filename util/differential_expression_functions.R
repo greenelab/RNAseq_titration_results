@@ -241,14 +241,14 @@ GetGeneSetStats <- function(silver.set,
     rownames_to_column(var = "gene") %>%
     select(gene, adj.P.Val) %>%
     rename("silver.adj.P.Val" = "adj.P.Val") %>%
-    mutate(silver_group = as.integer(silver.adj.P.Val < 0.05))
+    mutate(silver_group = as.integer(silver.adj.P.Val < cutoff))
   
   # do the same with our experimental setting
   experimental_df <- top.table %>%
     rownames_to_column(var = "gene") %>%
     select(gene, adj.P.Val) %>%
     rename("experimental.adj.P.Val" = "adj.P.Val") %>%
-    mutate(experimental_group = as.integer(experimental.adj.P.Val < 0.05))
+    mutate(experimental_group = as.integer(experimental.adj.P.Val < cutoff))
     
   # join those data sets together to match up gene names
   combined_df <- silver_df %>%
