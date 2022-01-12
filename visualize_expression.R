@@ -95,9 +95,10 @@ plot_matched_expression <- function(array_values, seq_values,
   
   if (method_title != "UN") {
     this_plot <- this_plot +
-      coord_fixed() +
-      scale_x_continuous(limits = c(0,1)) +
-      scale_y_continuous(limits = c(0,1))
+      coord_fixed()
+  } else {
+    this_plot <- this_plot +
+      scale_y_continuous(trans = "log10")
   }
   
   ggsave(plot = this_plot,
