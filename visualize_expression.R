@@ -91,8 +91,14 @@ plot_matched_expression <- function(array_values, seq_values,
     labs(x = "Microarray expression values",
          y = "RNA-seq expression values",
          title = method_title) +
-    coord_fixed() +
     theme_minimal()
+  
+  if (method_title != "UN") {
+    this_plot <- this_plot +
+      coord_fixed() +
+      scale_x_continuous(limits = c(0,1)) +
+      scale_y_continuous(limits = c(0,1))
+  }
   
   ggsave(plot = this_plot,
          filename = file.path(output_directory,
