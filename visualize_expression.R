@@ -69,13 +69,8 @@ plot_matched_expression <- function(array_values, seq_values,
   # Outputs:
   #   a PDF of the plot is saved to output_directory
   
-  if (method_title == "UN") {
-    this_plot <- ggplot(mapping = aes(x = array_values,
-                                      y = log2(seq_values + 1)))
-  } else {
-    this_plot <- ggplot(mapping = aes(x = array_values,
+  this_plot <- ggplot(mapping = aes(x = array_values,
                                       y = seq_values))
-  }
     
   if (plot_type == "point") {
     this_plot <- this_plot +
