@@ -123,7 +123,7 @@ for (nm in norm_methods) {
   }
   
   # get vector of RNA-seq values
-  if (nm %in% c("qn", "qn-z", "tdm")) { # test data for normalization methods qn and tdm varies with RNA-seq % in training data
+  if (nm %in% c("qn", "tdm")) { # test data for normalization methods qn and tdm varies with RNA-seq % in training data
     for (pct_rna_seq in as.character(seq(0, 100, 10))) {
       if (!is.null(normalized_test_data$seq[[nm]][[pct_rna_seq]])) { # TDM is NULL at 100% RNA-seq
         seq_values <- as.vector(as.matrix(normalized_test_data$seq[[nm]][[pct_rna_seq]][gene_rows_included, -1]))
@@ -136,7 +136,7 @@ for (nm in norm_methods) {
                                 viz.dir, file_identifier)
       }
     }
-  } else { # test data for normalization methods other than qn, qn-z, and tdm do not vary with RNA-seq % in training data
+  } else { # test data for normalization methods other than qn and tdm do not vary with RNA-seq % in training data
     seq_values <- as.vector(as.matrix(normalized_test_data$seq[[nm]][gene_rows_included, -1]))
     method_title <- str_to_upper(nm)
     plot_matched_expression(array_values, seq_values,
