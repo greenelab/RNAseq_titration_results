@@ -1,5 +1,5 @@
 # S. Foltz Oct 2021
-# The purpose of this script is to visualize normalzied gene expression
+# The purpose of this script is to visualize normalized gene expression
 # and compare values from matched microarray and RNA-seq samples
 # USAGE: Rscript visualize_expression.R --cancer_type --predictor --null_model --seed
 
@@ -65,8 +65,8 @@ plot_matched_expression <- function(array_values, seq_values,
   #   method_title = something informative that will define the plot title and output filename
   #   plot_type = either 'point' or 'hex' depending on the desired plot type
   #   output_directory = output directory of PDF
-  #   filename_lead = start of the output fileaname
-  # Ouputs:
+  #   filename_lead = start of the output filename
+  # Outputs:
   #   a PDF of the plot is saved to output_directory
   
   this_plot <- ggplot(mapping = aes(x = array_values,
@@ -123,12 +123,11 @@ for (nm in norm_methods) {
   }
   
   # get vector of RNA-seq values
-  if (nm %in% c("qn", "tdm")) { # test data for normalization methods qn and tdm varies with RNA-seq % in training data
+  if (nm %in% c("qn", "qn-z", "tdm")) { # test data for normalization methods qn and tdm varies with RNA-seq % in training data
     for (pct_rna_seq in as.character(seq(0, 100, 10))) {
       if (!is.null(normalized_test_data$seq[[nm]][[pct_rna_seq]])) { # TDM is NULL at 100% RNA-seq
         seq_values <- as.vector(as.matrix(normalized_test_data$seq[[nm]][[pct_rna_seq]][gene_rows_included, -1]))
         method_title <- str_c(str_to_upper(nm), pct_rna_seq, sep = "_")
-        print(method_title)
         plot_matched_expression(array_values, seq_values,
                                 method_title, plot_type = "point",
                                 viz.dir, file_identifier)
@@ -137,10 +136,9 @@ for (nm in norm_methods) {
                                 viz.dir, file_identifier)
       }
     }
-  } else { # test data for normalization methods other than qn and tdm do not vary with RNA-seq % in training data
+  } else { # test data for normalization methods other than qn, qn-z, and tdm do not vary with RNA-seq % in training data
     seq_values <- as.vector(as.matrix(normalized_test_data$seq[[nm]][gene_rows_included, -1]))
     method_title <- str_to_upper(nm)
-    print(method_title)
     plot_matched_expression(array_values, seq_values,
                             method_title, plot_type = "point",
                             viz.dir, file_identifier)
