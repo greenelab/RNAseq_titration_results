@@ -71,7 +71,7 @@ plot_matched_expression <- function(array_values, seq_values,
   
   if (method_title == "UN") {
     this_plot <- ggplot(mapping = aes(x = array_values,
-                                      y = log10(seq_values + 1)))
+                                      y = log2(seq_values + 1)))
   } else {
     this_plot <- ggplot(mapping = aes(x = array_values,
                                       y = seq_values))
