@@ -236,25 +236,41 @@ for (seed_index in 1:length(norm.train.files)) {
   
   #### main --------------------------------------------------------------------
   
-  # create an output list
-  plier_results_list <- list()
-  
   # parallel backend
   cl <- parallel::makeCluster(detectCores() - 1)
   doParallel::registerDoParallel(cl)
   
-  # at each titration level (0-100% RNA-seq)
-  perc_seq <- as.character(seq(0, 100, 10))
-  norm_methods <- c("log", "npn", "qn", "qn-z", "tdm", "un", "z")
+  # create an output list
+  plier_results_list <- list()
+  
+  # at different titration levels (0-100% RNA-seq) and normalization methods
+  # generate the PLIER results for array alone, seq alone, and array + seq combo
+  
+  #perc_seq <- as.character(seq(0, 100, 10))
+  perc_seq <- "50"
+  norm_methods <- c("log", "npn", "qn", "qn-z", "tdm", "z", "array_only", "seq_only") # "un"
   
   plier_results_list <- foreach(
     ps = perc_seq,
     .packages = c("PLIER", "doParallel")
-  ) %dopar% {
+  ) %do% {
+    
+    message(str_c("\tPLIER combined samples at ", ps, "% RNA-seq"))
+
+    # get array and seq sample columns     
+    array_only_columns_tf <- names(norm.train.list[["0"]][["log"]]) %in%
+      names(norm.train.list[[ps]][["raw.array"]])
+    seq_only_columns_tf <- c(TRUE, !array_only_columns_tf[-1]) # -1 for gene column
+    
+    # add array only and seq only data to each % RNA-seq
+    norm.train.list[[ps]][["array_only"]] <- norm.train.list[["0"]][["log"]][,array_only_columns_tf]
+    norm.train.list[[ps]][["seq_only"]] <- norm.train.list[["100"]][["log"]][,seq_only_columns_tf]
+    
     foreach(
       nm = norm_methods,
       .errorhandling = "pass" # let pass on inside loop
     ) %dopar% {
+      
       if (nm %in% names(norm.train.list[[ps]])) {
         
         # remove any rows with all the same value
