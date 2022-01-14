@@ -220,9 +220,8 @@ for (seed_index in 1:length(norm.train.files)) {
   
   #### read in data ------------------------------------------------------------
   
-  message("here1")
   norm.train.list <- read_rds(norm.train.files[seed_index])
-  message("here2")
+  
   # convert gene names column to row names
   # if GBM, also convert from GENEID to SYMBOL
   norm.train.list <- purrr::modify_depth(
@@ -234,13 +233,13 @@ for (seed_index in 1:length(norm.train.files)) {
       )
     }
   )
-  message("here3")
+
   #### main --------------------------------------------------------------------
   
   # parallel backend
   cl <- parallel::makeCluster(detectCores() - 1)
   doParallel::registerDoParallel(cl)
-  message("here4")
+
   # create an output list
   plier_results_list <- list()
   
@@ -248,72 +247,70 @@ for (seed_index in 1:length(norm.train.files)) {
   # generate the PLIER results for array alone, seq alone, and array + seq combo
   
   perc_seq <- as.character(seq(0, 100, 50))
-  message("here5")
+
   plier_results_list <- foreach(
     ps = perc_seq,
     .packages = c("PLIER", "doParallel")
   ) %do% {
-    message("here6")
     message(str_c("  PLIER at ", ps, "% RNA-seq"))
-    message("here7")
+
     if (ps %in% c("0", "100")) { # no need to add array_only or seq_only
-      message("here8")
+
       norm_methods <- c("log", "npn", "qn", "qn-z", "tdm", "z")
-      message("here9")
+
     } else {
-      message("here10")
+
       norm_methods <- c("log", "npn", "qn", "qn-z", "tdm", "z",
                         "array_only", "seq_only")
-      message("here11")
+
       # get array and seq sample columns     
       array_only_columns_tf <- names(norm.train.list[["0"]][["log"]]) %in%
         names(norm.train.list[[ps]][["raw.array"]])
-      message("here12")
+
       seq_only_columns_tf <- !array_only_columns_tf
-      message("here13")
-      
+
       # add array only and seq only data to each % RNA-seq
       norm.train.list[[ps]][["array_only"]] <- norm.train.list[["0"]][["log"]][,array_only_columns_tf]
       norm.train.list[[ps]][["seq_only"]] <- norm.train.list[["100"]][["log"]][,seq_only_columns_tf]
-      message("here14")
+
     }
-    message("here15")
+
     foreach(
       nm = norm_methods,
       .packages = c("PLIER", "doParallel"),
       .errorhandling = "pass" # let pass on inside loop
     ) %dopar% {
-      message("here16")
+
       if (nm %in% names(norm.train.list[[ps]])) {
-        message("here17")
+
         # remove any rows with all the same value
         all.same.indx <- which(apply(
           norm.train.list[[ps]][[nm]], 1,
           check_all_same
         ))
-        message("here18")
+
         if (length(all.same.indx) > 0) {
           norm.train.list[[ps]][[nm]] <- norm.train.list[[ps]][[nm]][-all.same.indx, ]
         }
-        message("here19")
+
         # get common genes
         common.genes <- PLIER::commonRows(
           all.paths,
           norm.train.list[[ps]][[nm]]
         )
-        message("here20")
+
         # minimum k for PLIER = 2*num.pc
         set.k <- 2 * PLIER::num.pc(PLIER::rowNorm(norm.train.list[[ps]][[nm]][common.genes, ]))
-        message("here21")
+
         # PLIER main function
         PLIER::PLIER(as.matrix(norm.train.list[[ps]][[nm]][common.genes, ]),
                      all.paths[common.genes, ],
                      k = set.k,
                      scale = TRUE # PLIER z-scores input values by row
         )
-        message("here22")
+
       } else {
-        message("here23")
+
         NA # NA for no data at this ps nm combination (0% and 100% TDM)
       }
     }
