@@ -255,7 +255,7 @@ for (seed_index in 1:length(norm.train.files)) {
     
     message(str_c("  PLIER at ", ps, "% RNA-seq"))
     
-    if (perc_seq %in% c("0", "100")) { # no need to add array_only or seq_only
+    if (ps %in% c("0", "100")) { # no need to add array_only or seq_only
       
       norm_methods <- c("log", "npn", "qn", "qn-z", "tdm", "z")
       
