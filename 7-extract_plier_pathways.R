@@ -246,28 +246,37 @@ for (seed_index in 1:length(norm.train.files)) {
   # at different titration levels (0-100% RNA-seq) and normalization methods
   # generate the PLIER results for array alone, seq alone, and array + seq combo
   
-  #perc_seq <- as.character(seq(0, 100, 10))
-  perc_seq <- "50"
-  norm_methods <- c("log", "npn", "qn", "qn-z", "tdm", "z", "array_only", "seq_only") # "un"
+  perc_seq <- as.character(seq(0, 100, 50))
   
   plier_results_list <- foreach(
     ps = perc_seq,
-    .packages = c("PLIER", "doParallel")
   ) %do% {
     
-    message(str_c("\tPLIER combined samples at ", ps, "% RNA-seq"))
-
-    # get array and seq sample columns     
-    array_only_columns_tf <- names(norm.train.list[["0"]][["log"]]) %in%
-      names(norm.train.list[[ps]][["raw.array"]])
-    seq_only_columns_tf <- !array_only_columns_tf
+    message(str_c("  PLIER at ", ps, "% RNA-seq"))
     
-    # add array only and seq only data to each % RNA-seq
-    norm.train.list[[ps]][["array_only"]] <- norm.train.list[["0"]][["log"]][,array_only_columns_tf]
-    norm.train.list[[ps]][["seq_only"]] <- norm.train.list[["100"]][["log"]][,seq_only_columns_tf]
+    if (perc_seq %in% c("0", "100")) { # no need to add array_only or seq_only
+      
+      norm_methods <- c("log", "npn", "qn", "qn-z", "tdm", "z")
+      
+    } else {
+      
+      norm_methods <- c("log", "npn", "qn", "qn-z", "tdm", "z",
+                        "array_only", "seq_only")
+      
+      # get array and seq sample columns     
+      array_only_columns_tf <- names(norm.train.list[["0"]][["log"]]) %in%
+        names(norm.train.list[[ps]][["raw.array"]])
+      seq_only_columns_tf <- !array_only_columns_tf
+      
+      # add array only and seq only data to each % RNA-seq
+      norm.train.list[[ps]][["array_only"]] <- norm.train.list[["0"]][["log"]][,array_only_columns_tf]
+      norm.train.list[[ps]][["seq_only"]] <- norm.train.list[["100"]][["log"]][,seq_only_columns_tf]
+      
+    }
     
     foreach(
       nm = norm_methods,
+      .packages = c("PLIER", "doParallel"),
       .errorhandling = "pass" # let pass on inside loop
     ) %dopar% {
       
@@ -311,12 +320,6 @@ for (seed_index in 1:length(norm.train.files)) {
   for (i in perc_seq) {
     names(plier_results_list[[i]]) <- norm_methods
   }
-  
-  # write test file
-  
-  write_rds(x = plier_results_list,
-            path = str_c("plier.", seed_index, ".rds"))
-  
 }
 
 # Check for failure to converge, and set to NA
