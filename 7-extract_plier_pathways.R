@@ -260,7 +260,7 @@ for (seed_index in 1:length(norm.train.files)) {
     # get array and seq sample columns     
     array_only_columns_tf <- names(norm.train.list[["0"]][["log"]]) %in%
       names(norm.train.list[[ps]][["raw.array"]])
-    seq_only_columns_tf <- c(TRUE, !array_only_columns_tf[-1]) # -1 for gene column
+    seq_only_columns_tf <- !array_only_columns_tf[-1]
     
     # add array only and seq only data to each % RNA-seq
     norm.train.list[[ps]][["array_only"]] <- norm.train.list[["0"]][["log"]][,array_only_columns_tf]
