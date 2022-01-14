@@ -250,6 +250,7 @@ for (seed_index in 1:length(norm.train.files)) {
   
   plier_results_list <- foreach(
     ps = perc_seq,
+    .packages = c("PLIER", "doParallel"),
   ) %do% {
     
     message(str_c("  PLIER at ", ps, "% RNA-seq"))
