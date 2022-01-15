@@ -247,6 +247,9 @@ for (seed_index in 1:length(norm.train.files)) {
   # generate the PLIER results for array alone, seq alone, and array + seq combo
   
   perc_seq <- as.character(seq(0, 100, 50))
+  norm_methods_if_0_100 <- c("log", "npn", "qn", "qn-z", "tdm", "z")
+  norm_methods_else <- c("log", "npn", "qn", "qn-z", "tdm", "z",
+                         "array_only", "seq_only")
 
   plier_results_list <- foreach(
     ps = perc_seq,
@@ -256,12 +259,11 @@ for (seed_index in 1:length(norm.train.files)) {
 
     if (ps %in% c("0", "100")) { # no need to add array_only or seq_only
 
-      norm_methods <- c("log", "npn", "qn", "qn-z", "tdm", "z")
+      norm_methods <- norm_methods_if_0_100
 
     } else {
 
-      norm_methods <- c("log", "npn", "qn", "qn-z", "tdm", "z",
-                        "array_only", "seq_only")
+      norm_methods <- norm_methods_else
 
       # get array and seq sample columns     
       array_only_columns_tf <- names(norm.train.list[["0"]][["log"]]) %in%
@@ -322,7 +324,11 @@ for (seed_index in 1:length(norm.train.files)) {
   # renames list levels
   names(plier_results_list) <- perc_seq
   for (i in perc_seq) {
-    names(plier_results_list[[i]]) <- norm_methods
+    if (i %in% c("0", "100")) {
+      names(plier_results_list[[i]]) <- norm_methods_if_0_100
+    } else {
+      names(plier_results_list[[i]]) <- norm_methods_else  
+    }
   }
 }
 
