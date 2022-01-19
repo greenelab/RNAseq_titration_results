@@ -237,7 +237,8 @@ for (seed_index in 1:length(norm.train.files)) {
   #### main --------------------------------------------------------------------
   
   # parallel backend
-  cl <- parallel::makeCluster(detectCores() - 1)
+  #cl <- parallel::makeCluster(detectCores() - 1)
+  cl <- parallel::makeCluster(floor(detectCores()/2))
   doParallel::registerDoParallel(cl)
 
   # create an output list
@@ -247,7 +248,7 @@ for (seed_index in 1:length(norm.train.files)) {
   # generate the PLIER results for array alone, seq alone, and array + seq combo
   
   perc_seq <- as.character(seq(0, 100, 50))
-  norm_methods_if_0_100 <- c("log", "npn", "qn", "qn-z", "tdm", "z")
+  norm_methods_if_0_100 <- c("log")
   norm_methods_else <- c("log", "npn", "qn", "qn-z", "tdm", "z",
                          "array_only", "seq_only")
 
@@ -327,7 +328,7 @@ for (seed_index in 1:length(norm.train.files)) {
     if (i %in% c("0", "100")) {
       names(plier_results_list[[i]]) <- norm_methods_if_0_100
     } else {
-      names(plier_results_list[[i]]) <- norm_methods_else  
+      names(plier_results_list[[i]]) <- norm_methods_else
     }
   }
   
