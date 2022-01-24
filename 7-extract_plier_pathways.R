@@ -237,7 +237,6 @@ for (seed_index in 1:length(norm.train.files)) {
   #### main --------------------------------------------------------------------
   
   # parallel backend
-  #cl <- parallel::makeCluster(detectCores() - 1)
   cl <- parallel::makeCluster(floor(detectCores()/2))
   doParallel::registerDoParallel(cl)
 
