@@ -254,8 +254,8 @@ QNZSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
   #	  zero.to.one: logical - should the data be zero to one transformed?
   #
   # Returns:
-  #   qnz.targ: quantile normalized (quantiles from array data), z-scored,
-  #             zero to one transformed if zero.to.one = TRUE, data.table
+  #   qnz.dt: quantile normalized (quantiles from array data), z-scored,
+  #           zero to one transformed if zero.to.one = TRUE, data.table
   #
   require(data.table)
   # Error-handling
