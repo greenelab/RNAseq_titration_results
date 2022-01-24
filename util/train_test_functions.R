@@ -293,7 +293,7 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
         trained.model <- model.list[[seq.lvl]]
         # if pred.data.list is a list (has different sequencing levels),
         # loop through the list -- this will be the case for RNA-seq hold out
-        # data for TDM and QN methods, as well as training data and
+        # data for TDM, QN, and QN-Z methods, as well as training data and
         # reconstructed data
         if (class(pred.data.list) == "list") {
           # for some cases of TDM normalized data, not every seq level is
