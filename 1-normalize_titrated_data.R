@@ -234,7 +234,7 @@ seq.qnz.list[["0"]] <- QNZSingleWithRef(ref.dt = norm.titrate.list$`0`$log,
 # data (this is LOG data, but only the array samples)
 seq.qnz.list[2:10] <-
   foreach(i = 2:10) %dopar% {
-    QNZingleWithRef(ref.dt = norm.titrate.list[[i]]$raw.array,
+    QNZSingleWithRef(ref.dt = norm.titrate.list[[i]]$raw.array,
                     targ.dt = seq.test)
   }
 names(seq.qnz.list)[2:10] <- names(norm.titrate.list)[2:10]
