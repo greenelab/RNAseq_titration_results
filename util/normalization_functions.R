@@ -240,6 +240,64 @@ QNSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
   return(qn.targ)
 }
 
+QNZSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
+  # This function takes array gene expression data.table as a reference and
+  # an RNA-seq expression data.table ('target') and returns the quantile
+  # normalized, z-scored, zero to one transformed (if zero.to.one = TRUE) RNA-seq
+  # expression data.table
+  #
+  # Args:
+  #   ref.dt: array data.table where the first column contains gene identifiers,
+  #           the columns are samples, rows are gene measurements
+  #   targ.dt: RNA-seq data.table where the first column contains gene
+  #            identifiers, the columns are samples, rows are gene measurements
+  #	  zero.to.one: logical - should the data be zero to one transformed?
+  #
+  # Returns:
+  #   qnz.dt: quantile normalized (quantiles from array data), z-scored,
+  #           zero to one transformed if zero.to.one = TRUE, data.table
+  #
+  require(data.table)
+  # Error-handling
+  ref.is.dt <- "data.table" %in% class(ref.dt)
+  targ.is.dt <- "data.table" %in% class(targ.dt)
+  any.not.dt <- !(any(c(ref.is.dt, targ.is.dt)))
+  if (any.not.dt) {
+    stop("ref.dt and targ.dt must both be data.tables")
+  }
+  if (!(all(ref.dt[[1]] %in% targ.dt[[1]]))) {
+    stop("Gene identifiers in data.tables must match")
+  }
+  ref.values <- data.frame(ref.dt[, 2:ncol(ref.dt), with = F])
+  target.values <- data.frame(targ.dt[, 2:ncol(targ.dt), with = F])
+  #  message("Quantile normalization...\n")
+  # get target object "reference" for the quantile normalization
+  qn.ref <-
+    preprocessCore::normalize.quantiles.determine.target(
+      data.matrix(ref.values),
+      target.length = nrow(ref.values))
+  
+  # quantile normalize the data, against reference (array) distribution, using
+  # replacement, not averaging
+  qn.targ <-
+    preprocessCore::normalize.quantiles.use.target(data.matrix(target.values),
+                                                   qn.ref,
+                                                   copy = F)
+  
+  # z-score the quantile normalized seq values
+  qnz.targ <- t(apply(qn.targ, 1, function(x) scale(as.numeric(x))))
+  
+  #  message("\tConcatenation...\n")
+  qnz.dt <- data.table(cbind(targ.dt[[1]], qnz.targ))
+  
+  colnames(qnz.dt) <- chartr(".", "-", colnames(qnz.dt))
+  #  message("\tZero to one transformation...\n")
+  if (zero.to.one) {
+    qnz.dt <- rescale_datatable(qnz.dt)
+  }
+  return(qnz.dt)
+}
+
 TDMSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
   # This function takes array gene expression data.table as a reference and
   # an RNA-seq expression data.table ('target') and returns the TDM

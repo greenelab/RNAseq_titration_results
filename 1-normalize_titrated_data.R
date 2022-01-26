@@ -218,6 +218,37 @@ seq.qn.list[["100"]] <- QNSingleDT(seq.test)
 seq.test.norm.list[["qn"]] <- seq.qn.list
 rm(seq.qn.list)
 
+# start parallel backend
+cl <- parallel::makeCluster(detectCores() - 1)
+doParallel::registerDoParallel(cl)
+
+# QN-Z -- requires reference data
+# initialize list to hold QN data
+seq.qnz.list <- list()
+
+# for 0% seq - use 0% LOG array data
+seq.qnz.list[["0"]] <- QNZSingleWithRef(ref.dt = norm.titrate.list$`0`$log,
+                                        targ.dt = seq.test)
+
+# for 10-90% seq - use the "raw array" training data at each level of sequencing
+# data (this is LOG data, but only the array samples)
+seq.qnz.list[2:10] <-
+  foreach(i = 2:10) %dopar% {
+    QNZSingleWithRef(ref.dt = norm.titrate.list[[i]]$raw.array,
+                    targ.dt = seq.test)
+  }
+names(seq.qnz.list)[2:10] <- names(norm.titrate.list)[2:10]
+
+# stop parallel back end
+parallel::stopCluster(cl)
+
+# QNZ 100% seq by itself (preProcessCore::normalize.quantiles)
+seq.qnz.list[["100"]] <- QNZSingleDT(seq.test)
+
+# add QNZ seq data to list of normalized test data
+seq.test.norm.list[["qn-z"]] <- seq.qnz.list
+rm(seq.qnz.list)
+
 # start parallel back end
 cl <- parallel::makeCluster(detectCores() - 1)
 doParallel::registerDoParallel(cl)
@@ -253,9 +284,6 @@ seq.test.norm.list[["z"]] <- ZScoreSingleDT(seq.test)
 
 # untransformed seq test data
 seq.test.norm.list[["un"]] <- seq.test
-
-# QN-Z seq test data
-seq.test.norm.list[["qn-z"]] <- QNZSingleDT(seq.test)
 
 # combine array and seq test data into a list
 test.norm.list <- list(array = array.test.norm.list,
