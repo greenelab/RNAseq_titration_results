@@ -37,11 +37,12 @@ file_identifier <- str_c(cancer_type, "subtype", sep = "_") # we are only workin
 # define directories
 res.dir <- here::here("results")
 plots.dir <- here::here("plots")
+plots.data.dir <- file.path(plot.dir, "data_used_in_plots")
 
 #### plot Subtype v. Other results ---------------------------------------------
 
 # subtype v. other fit objects
-subtype_vs_others.fit.list <- readRDS(file.path(res.dir, "differential_expression",
+subtype_vs_others.fit.list <- readRDS(file.path(plots.data.dir,
                                                 paste0(file_identifier, "_titration_differential_exp_eBayes_fits_",
                                                        subtype_vs_others, "vOther.RDS")))
 
@@ -71,7 +72,7 @@ subtypes_combination <- stringr::str_c(two_subtypes, collapse = "v")
 subtypes_combination_nice <- stringr::str_c(two_subtypes, collapse = " vs. ")
 
 last_subtype.fit.list <- readRDS(file.path(
-  res.dir, "differential_expression",
+  plots.data.dir,
   paste0(file_identifier, "_titration_differential_exp_eBayes_fits_",
          subtypes_combination, ".RDS")))
 

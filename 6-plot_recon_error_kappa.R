@@ -36,6 +36,7 @@ file_identifier <- ifelse(null_model,
 
 # define directories
 plot.dir <- here::here("plots")
+plot.data.dir <- file.path(plot.dir, "data_used_in_plots")
 rcn.res.dir <- here::here("results", "reconstructed_data")
 
 # define input files
@@ -48,6 +49,8 @@ error.files <- list.files(rcn.res.dir, pattern = paste0(file_identifier, "_recon
 # define output files
 kap.plot.file.lead <- file.path(plot.dir, paste0(file_identifier, "_kappa_reconstructed_data_"))
 err.plot.file.lead <- file.path(plot.dir, paste0(file_identifier, "_reconstruction_error_"))
+kap.plot.data.file.lead <- file.path(plot.data.dir, paste0(file_identifier, "_kappa_reconstructed_data_"))
+err.plot.data.file.lead <- file.path(plot.data.dir, paste0(file_identifier, "_reconstruction_error_"))
 
 #### plot kappa stats ----------------------------------------------------------
 
@@ -88,9 +91,19 @@ kappa.master.df$Platform <- as.factor(kappa.master.df$Platform)
 # for each normalization method, plot kappa stats
 norm.methods <- levels(kappa.master.df$Normalization)
 for (norm in norm.methods) {
+  
   plot.nm <- paste0(kap.plot.file.lead, norm, ".pdf")  # each norm method
+  plot.data.nm <- paste0(kap.plot.data.file.lead, norm, ".tsv")  # each norm method
+  
   # violin plot is saved as a PDF
-  ggplot(kappa.master.df[which(kappa.master.df$Normalization == norm), ],
+  
+  plot_df <- kappa.master.df[which(kappa.master.df$Normalization == norm), ]
+  
+  write.table(plot_df,
+              file = plot.data.nm,
+              quote = FALSE, sep = "\t", row.names = FALSE)
+  
+  ggplot(plot_df,
          aes(x = Perc.seq, y = Kappa, color = Platform,
              fill = Platform)) +
     facet_wrap(Reconstruction ~ Classifier, ncol = 3) +
@@ -163,9 +176,19 @@ colnames(error.mean.df) <- c("Gene", "Perc_seq", "Normalization",
 # for each normalization method, plot reconstruction error
 norm.methods <- levels(error.mean.df$Normalization)
 for (norm in norm.methods) {
+  
   plot.nm <- paste0(err.plot.file.lead, norm, ".pdf")  # each norm method
+  plot.data.nm <- paste0(err.plot.data.file.lead, norm, ".tsv")  # each norm method
+  
   # violin plot is saved as a PDF
-  ggplot(error.mean.df[which(error.mean.df$Normalization == norm), ],
+  
+  plot_df <- error.mean.df[which(error.mean.df$Normalization == norm), ]
+  
+  write.table(plot_df,
+              file = plot.data.nm,
+              quote = FALSE, sep = "\t", row.names = FALSE)
+  
+  ggplot(plot_df,
          aes(Perc_seq, y = Mean_Value, color = Platform, fill = Platform)) +
     facet_wrap(~ Method, ncol = 2) +
     theme_bw() +

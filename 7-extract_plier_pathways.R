@@ -38,7 +38,8 @@ message(paste("\nPLIER initial seed set to:", initial.seed))
 data.dir <- here::here("data")
 norm.data.dir <- here::here("normalized_data")
 res.dir <- here::here("results")
-plots.dir <- here::here("plots")
+plot.dir <- here::here("plots")
+plot.data.dir <- file.path(plot.dir, "data_used_in_plots")
 
 # define input files
 norm.train.files <- file.path(
@@ -372,8 +373,18 @@ if (length(jaccard_list) > 0) {
   # Plot results
   
   plot_filename = file.path(
-    plots.dir,
+    plot.dir,
     str_c(file_identifier, "_PLIER_jaccard.pdf")
+  )
+  
+  plot_data_filename = file.path(
+    plot.data.dir,
+    str_c(file_identifier, "_PLIER_jaccard.tsv")
+  )
+  
+  readr::write_tsv(
+    x = jaccard_df,
+    path = plot_data.filename
   )
   
   jaccard_df %>%

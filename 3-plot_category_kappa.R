@@ -33,6 +33,7 @@ file_identifier <- str_c(cancer_type, predictor, sep = "_")
 
 # define directories
 plot.dir <- here::here("plots")
+plot.data.dir <- file.path(plot.dir, "data_used_in_plots")
 res.dir <- here::here("results")
 
 # list array and seq files from results directory
@@ -151,7 +152,21 @@ for (cls in cls.methods) {
                                                        pattern = " ",
                                                        replacement = "_"),
                               "_VIOLIN_test.pdf"))
-  ggplot(test.df[which(test.df$Classifier == cls), ],
+  
+  plot.data.nm <- file.path(plot.data.dir,
+                       paste0(plot.file.lead, # includes file_identifier and delta/not delta
+                              stringr::str_replace_all(cls,
+                                                       pattern = " ",
+                                                       replacement = "_"),
+                              "_VIOLIN_test.tsv"))
+  
+  plot_df <- test.df[which(test.df$Classifier == cls), ]
+  
+  write.table(plot_df,
+              file = plot.data.nm,
+              quote = FALSE, sep = "\t", row.names = FALSE)
+  
+  ggplot(plot_df,
          aes(x = Perc.Seq, y = Kappa, color = Platform, fill = Platform)) +
     facet_wrap(~ Normalization, ncol = 5) +
     geom_violin(colour = "black", position = position_dodge(0.8),

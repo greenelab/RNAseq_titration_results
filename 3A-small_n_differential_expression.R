@@ -42,7 +42,8 @@ message(paste("\nInitial seed set to:", initial.seed))
 data.dir <- here::here("data")
 res.dir <- here::here("results")
 deg.dir <- file.path(res.dir, "differential_expression")
-
+plot.dir <- here::here("plots")
+plot.data.dir <- file.path(plot.dir, "data_used_in_plots")
 
 # define input files
 seq.file <- file.path(data.dir,
@@ -186,6 +187,14 @@ stats.df <- pivot_wider(stats.df,
 
 write.table(stats.df,
             file = file.path(deg.dir,
+                             paste0(file_identifier,
+                                    "_small_n_",
+                                    subtypes_combination,
+                                    "_results.tsv")),
+            sep = "\t", quote = FALSE, row.names = FALSE)
+
+write.table(stats.df,
+            file = file.path(plot.data.dir,
                              paste0(file_identifier,
                                     "_small_n_",
                                     subtypes_combination,

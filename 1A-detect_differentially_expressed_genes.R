@@ -49,6 +49,7 @@ data.dir <- here::here("data")
 res.dir <- here::here("results")
 norm.dir <- here::here("normalized_data")
 deg.dir <- file.path(res.dir, "differential_expression")
+plot.data.dir <- here::here("plots/data_used_in_plots")
 
 # define input files
 seq.file <- file.path(data.dir,
@@ -71,6 +72,17 @@ two_subtypes.rds <- file.path(deg.dir,
                                      stringr::str_c(two_subtypes, collapse = "v"), ".RDS"))
 norm.rds <- file.path(norm.dir,
                       paste0(file_identifier, "_titration_no_ZTO_transform_with_UN.RDS"))
+
+
+# define output files used for plotting
+subtype_vs_others.plot_data.rds <- file.path(plot.data.dir,
+                                             paste0(file_identifier,
+                                                    "_titration_differential_exp_eBayes_fits_",
+                                                    subtype_vs_others, "vOther.RDS"))
+two_subtypes.plot_data.rds <- file.path(plot.data.dir,
+                                        paste0(file_identifier,
+                                               "_titration_differential_exp_eBayes_fits_",
+                                               stringr::str_c(two_subtypes, collapse = "v"), ".RDS"))
 
 #### read in data --------------------------------------------------------------
 
@@ -179,6 +191,7 @@ fit.results.list <- GetFiteBayesList(norm.list = norm.titrate.list,
                                      design.list = design.mat.list)
 # save fit results to RDS
 saveRDS(fit.results.list, file = subtype_vs_others.rds)
+saveRDS(fit.results.list, file = subtype_vs_others.plot_data.rds)
 
 #### Subtype v. Subtype --------------------------------------------------------
 # remove all samples that are not in these subtypes
@@ -203,3 +216,4 @@ last_subtype.fit.results.list <- GetFiteBayesList(norm.list = pruned.norm.list,
 
 # save fit results to file
 saveRDS(last_subtype.fit.results.list, file = two_subtypes.rds)
+saveRDS(last_subtype.fit.results.list, file = two_subtypes.plot_data.rds)
