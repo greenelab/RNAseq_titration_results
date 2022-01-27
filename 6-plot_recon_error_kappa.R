@@ -36,7 +36,7 @@ file_identifier <- ifelse(null_model,
 
 # define directories
 plot.dir <- here::here("plots")
-plot.data.dir <- file.path(plot.dir, "data_used_in_plots")
+plot.data.dir <- file.path(plot.dir, "data")
 rcn.res.dir <- here::here("results", "reconstructed_data")
 
 # define input files

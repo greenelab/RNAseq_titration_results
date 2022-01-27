@@ -33,7 +33,7 @@ file_identifier <- str_c(cancer_type, predictor, sep = "_")
 
 # define directories
 plot.dir <- here::here("plots")
-plot.data.dir <- file.path(plot.dir, "data_used_in_plots")
+plot.data.dir <- file.path(plot.dir, "data")
 res.dir <- here::here("results")
 
 # list array and seq files from results directory

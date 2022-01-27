@@ -39,7 +39,7 @@ data.dir <- here::here("data")
 norm.data.dir <- here::here("normalized_data")
 res.dir <- here::here("results")
 plot.dir <- here::here("plots")
-plot.data.dir <- file.path(plot.dir, "data_used_in_plots")
+plot.data.dir <- file.path(plot.dir, "data")
 
 # define input files
 norm.train.files <- file.path(

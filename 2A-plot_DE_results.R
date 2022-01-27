@@ -37,7 +37,7 @@ file_identifier <- str_c(cancer_type, "subtype", sep = "_") # we are only workin
 # define directories
 res.dir <- here::here("results")
 plots.dir <- here::here("plots")
-plots.data.dir <- file.path(plot.dir, "data_used_in_plots")
+plots.data.dir <- file.path(plot.dir, "data")
 
 #### plot Subtype v. Other results ---------------------------------------------
 

@@ -43,7 +43,7 @@ data.dir <- here::here("data")
 res.dir <- here::here("results")
 deg.dir <- file.path(res.dir, "differential_expression")
 plot.dir <- here::here("plots")
-plot.data.dir <- file.path(plot.dir, "data_used_in_plots")
+plot.data.dir <- file.path(plot.dir, "data")
 
 # define input files
 seq.file <- file.path(data.dir,

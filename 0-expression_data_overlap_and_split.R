@@ -44,7 +44,7 @@ split.seed <- sample(1:10000, 1)
 # define directories
 data.dir <- here::here("data")
 plot.dir <- here::here("plots")
-plot.data.dir <- file.path(plot.dir, "data_used_in_plots")
+plot.data.dir <- file.path(plot.dir, "data"))
 res.dir <- here::here("results")
 
 # name input files
