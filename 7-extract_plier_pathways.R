@@ -233,55 +233,86 @@ for (seed_index in 1:length(norm.train.files)) {
       )
     }
   )
-  
+
   #### main --------------------------------------------------------------------
   
+  # parallel backend
+  cl <- parallel::makeCluster(floor(detectCores()/2))
+  doParallel::registerDoParallel(cl)
+
   # create an output list
   plier_results_list <- list()
   
-  # parallel backend
-  cl <- parallel::makeCluster(detectCores() - 1)
-  doParallel::registerDoParallel(cl)
+  # at different titration levels (0-100% RNA-seq) and normalization methods
+  # generate the PLIER results for array alone, seq alone, and array + seq combo
   
-  # at each titration level (0-100% RNA-seq)
-  perc_seq <- as.character(seq(0, 100, 10))
-  norm_methods <- c("log", "npn", "qn", "qn-z", "tdm", "un", "z")
-  
+  perc_seq <- as.character(seq(0, 100, 50))
+  norm_methods_if_0_100 <- c("log")
+  norm_methods_else <- c("log", "npn", "qn", "qn-z", "tdm", "z",
+                         "array_only", "seq_only")
+
   plier_results_list <- foreach(
     ps = perc_seq,
     .packages = c("PLIER", "doParallel")
-  ) %dopar% {
+  ) %do% {
+    message(str_c("  PLIER at ", ps, "% RNA-seq"))
+
+    if (ps %in% c("0", "100")) { # no need to add array_only or seq_only
+
+      norm_methods <- norm_methods_if_0_100
+
+    } else {
+
+      norm_methods <- norm_methods_else
+
+      # get array and seq sample columns     
+      array_only_columns_tf <- names(norm.train.list[["0"]][["log"]]) %in%
+        names(norm.train.list[[ps]][["raw.array"]])
+
+      seq_only_columns_tf <- !array_only_columns_tf
+
+      # add array only and seq only data to each % RNA-seq
+      norm.train.list[[ps]][["array_only"]] <- norm.train.list[["0"]][["log"]][,array_only_columns_tf]
+      norm.train.list[[ps]][["seq_only"]] <- norm.train.list[["100"]][["log"]][,seq_only_columns_tf]
+
+    }
+
     foreach(
       nm = norm_methods,
+      .packages = c("PLIER", "doParallel"),
       .errorhandling = "pass" # let pass on inside loop
     ) %dopar% {
+
       if (nm %in% names(norm.train.list[[ps]])) {
-        
+
         # remove any rows with all the same value
         all.same.indx <- which(apply(
           norm.train.list[[ps]][[nm]], 1,
           check_all_same
         ))
+
         if (length(all.same.indx) > 0) {
           norm.train.list[[ps]][[nm]] <- norm.train.list[[ps]][[nm]][-all.same.indx, ]
         }
-        
+
         # get common genes
         common.genes <- PLIER::commonRows(
           all.paths,
           norm.train.list[[ps]][[nm]]
         )
-        
+
         # minimum k for PLIER = 2*num.pc
         set.k <- 2 * PLIER::num.pc(PLIER::rowNorm(norm.train.list[[ps]][[nm]][common.genes, ]))
-        
+
         # PLIER main function
         PLIER::PLIER(as.matrix(norm.train.list[[ps]][[nm]][common.genes, ]),
                      all.paths[common.genes, ],
                      k = set.k,
                      scale = TRUE # PLIER z-scores input values by row
         )
+
       } else {
+
         NA # NA for no data at this ps nm combination (0% and 100% TDM)
       }
     }
@@ -293,27 +324,25 @@ for (seed_index in 1:length(norm.train.files)) {
   # renames list levels
   names(plier_results_list) <- perc_seq
   for (i in perc_seq) {
-    names(plier_results_list[[i]]) <- norm_methods
+    if (i %in% c("0", "100")) {
+      names(plier_results_list[[i]]) <- norm_methods_if_0_100
+    } else {
+      names(plier_results_list[[i]]) <- norm_methods_else
+    }
   }
   
-  # write test file
+  # Check for failure to converge, and set to NA
+  plier_results_list <- purrr::modify_depth(plier_results_list, 2,
+                                            check_plier_failure_to_converge
+  )
   
-  write_rds(x = plier_results_list,
-            path = str_c("plier.", seed_index, ".rds"))
+  # Return pathway comparison for appropriate level of PLIER results list
+  jaccard_list[[seed_index]] <- purrr::modify_depth(
+    plier_results_list, 2,
+    function(x) return_plier_jaccard_global(x, PLIER_pathways)
+  )
   
 }
-
-# Check for failure to converge, and set to NA
-
-plier_results_list <- purrr::modify_depth(plier_results_list, 2,
-                                          check_plier_failure_to_converge
-)
-
-# Return pathway comparison for appropriate level of PLIER results list
-jaccard_list[[seed_index]] <- purrr::modify_depth(
-  plier_results_list, 2,
-  function(x) return_plier_jaccard_global(x, PLIER_pathways)
-)
 
 if (length(jaccard_list) > 0) {
   
