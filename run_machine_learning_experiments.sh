@@ -24,7 +24,10 @@ else
   Rscript classifier_repeat_wrapper.R --cancer_type $cancer_type --predictor $predictor --n_repeats 10
 fi
 
-# Run the unsupervised analyses
-Rscript 4-ica_pca_feature_reconstruction.R --cancer_type $cancer_type --predictor $predictor --n_components 50
-Rscript 5-predict_category_reconstructed_data.R --cancer_type $cancer_type --predictor $predictor
-Rscript 6-plot_recon_error_kappa.R --cancer_type $cancer_type --predictor $predictor
+# Run the unsupervised analyses using subtype models
+if [ $predictor == "subtype" ]; then
+  Rscript 4-ica_pca_feature_reconstruction.R --cancer_type $cancer_type --predictor $predictor --n_components 50
+  Rscript 5-predict_category_reconstructed_data.R --cancer_type $cancer_type --predictor $predictor
+  Rscript 6-plot_recon_error_kappa.R --cancer_type $cancer_type --predictor $predictor
+  Rscript 7-extract_plier_pathways.R --cancer_type $cancer_type
+fi
