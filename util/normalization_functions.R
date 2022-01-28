@@ -290,7 +290,7 @@ QNZSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
   #  message("\tConcatenation...\n")
   qnz.dt <- data.table(cbind(targ.dt[[1]], qnz.targ))
   
-  colnames(qnz.dt) <- chartr(".", "-", colnames(qnz.dt))
+  colnames(qnz.dt) <- chartr(".", "-", colnames(targ.dt))
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
     qnz.dt <- rescale_datatable(qnz.dt)
