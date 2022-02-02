@@ -186,14 +186,6 @@ stats.df <- pivot_wider(stats.df,
                         values_from = "value")
 
 write.table(stats.df,
-            file = file.path(deg.dir,
-                             paste0(file_identifier,
-                                    "_small_n_",
-                                    subtypes_combination,
-                                    "_results.tsv")),
-            sep = "\t", quote = FALSE, row.names = FALSE)
-
-write.table(stats.df,
             file = file.path(plot.data.dir,
                              paste0(file_identifier,
                                     "_small_n_",
