@@ -193,10 +193,6 @@ if (null_model) {
   }
 }
 
-write.table(lbl.df,
-            file = file.path(res.dir, train.test.labels),
-            quote = FALSE, sep = "\t", row.names = FALSE)
-
 #### plot category distributions ------------------------------------------------
 cbPalette <- c("#000000", "#E69F00", "#56B4E9",
                "#009E73", "#F0E442","#0072B2", "#D55E00", "#CC79A7")
