@@ -193,6 +193,10 @@ if (null_model) {
   }
 }
 
+write.table(lbl.df,
+            file = file.path(res.dir, train.test.labels),
+            quote = FALSE, sep = "\t", row.names = FALSE)
+
 #### plot category distributions ------------------------------------------------
 cbPalette <- c("#000000", "#E69F00", "#56B4E9",
                "#009E73", "#F0E442","#0072B2", "#D55E00", "#CC79A7")
@@ -203,7 +207,7 @@ plot.df <- lbl.df %>%
   bind_rows(lbl.df %>% mutate(split = "whole")) %>%
   mutate(initial_seed = initial.seed)
 
-write.table(plot.df,
+write.table(plot.df, # seem like this is sufficiently different from lbl.df
             file = file.path(plot.data.dir, category.distribtion.plot.data),
             quote = FALSE, sep = "\t", row.names = FALSE)
 
