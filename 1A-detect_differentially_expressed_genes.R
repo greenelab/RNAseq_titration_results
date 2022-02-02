@@ -49,7 +49,6 @@ data.dir <- here::here("data")
 res.dir <- here::here("results")
 norm.dir <- here::here("normalized_data")
 deg.dir <- file.path(res.dir, "differential_expression")
-plot.data.dir <- here::here("plots/data")
 
 # define input files
 seq.file <- file.path(data.dir,
@@ -62,27 +61,35 @@ smpl.file <- file.path(res.dir,
                                                    "_matchedSamples_training_testing_split_labels_"))[1])
 
 # define output files
+subtype_vs_others_lead <- paste0(file_identifier,
+                                 "_titration_differential_exp_eBayes_fits_",
+                                 subtype_vs_others, "vOther")
+two_subtypes_lead <- paste0(file_identifier,
+                            "_titration_differential_exp_eBayes_fits_",
+                            stringr::str_c(two_subtypes, collapse = "v"))
+
 subtype_vs_others.rds <- file.path(deg.dir,
-                                   paste0(file_identifier,
-                                          "_titration_differential_exp_eBayes_fits_",
-                                          subtype_vs_others, "vOther.RDS"))
+                                   paste0(subtype_vs_others_lead, ".RDS"))
 two_subtypes.rds <- file.path(deg.dir,
-                              paste0(file_identifier,
-                                     "_titration_differential_exp_eBayes_fits_",
-                                     stringr::str_c(two_subtypes, collapse = "v"), ".RDS"))
+                              paste0(two_subtypes_lead, ".RDS"))
+
+subtype_vs_others.propDE_file <- file.path(plot.data.dir,
+                                           paste0(subtype_vs_others_lead,
+                                                  ".propDE.tsv"))
+two_subtypes.propDE_file <- file.path(plot.data.dir,
+                                      paste0(two_subtypes_lead,
+                                             ".propDE.tsv"))
+
+subtype_vs_others.silver_file <- file.path(plot.data.dir,
+                                           paste0(subtype_vs_others_lead,
+                                                  ".silver.tsv"))
+two_subtypes.silver_file <- file.path(plot.data.dir,
+                                      paste0(two_subtypes_lead,
+                                             ".silver.tsv"))
+
 norm.rds <- file.path(norm.dir,
-                      paste0(file_identifier, "_titration_no_ZTO_transform_with_UN.RDS"))
-
-
-# define output files used for plotting
-subtype_vs_others.plot_data.rds <- file.path(plot.data.dir,
-                                             paste0(file_identifier,
-                                                    "_titration_differential_exp_eBayes_fits_",
-                                                    subtype_vs_others, "vOther.RDS"))
-two_subtypes.plot_data.rds <- file.path(plot.data.dir,
-                                        paste0(file_identifier,
-                                               "_titration_differential_exp_eBayes_fits_",
-                                               stringr::str_c(two_subtypes, collapse = "v"), ".RDS"))
+                      paste0(file_identifier,
+                             "_titration_no_ZTO_transform_with_UN.RDS"))
 
 #### read in data --------------------------------------------------------------
 
@@ -191,7 +198,32 @@ fit.results.list <- GetFiteBayesList(norm.list = norm.titrate.list,
                                      design.list = design.mat.list)
 # save fit results to RDS
 saveRDS(fit.results.list, file = subtype_vs_others.rds)
-saveRDS(fit.results.list, file = subtype_vs_others.plot_data.rds)
+
+# write top.table.list to results directory
+adjust.method <- "BH"
+two_subtypes.top.table.list <- 
+  lapply(last_subtype.fit.results.list,  # for each level of % seq
+         function(x)
+           lapply(x, # for each normalization method
+                  function(y) GetAllGenesTopTable(y, adjust = adjust.method)))
+
+# write proportion DE to plot data directory
+subtype_vs_others.proportion_de <- GetDataProportionDE(
+  subtype_vs_others.top.table.list,
+  adjust.method = "BH", cutoff = 0.05)
+
+write.table(x = subtype_vs_others.proportion_de, 
+            file = subtype_vs_others.propDE_file,
+            quote = FALSE, sep = "\t", row.names = FALSE)
+
+# write stats for comparison to silver standard to plot data directory
+subtype_vs_others.silver <- GetDataSilverStandardStats(
+  subtype_vs_others.top.table.list,
+  cutoff = 0.05)
+
+write.table(subtype_vs_others.silver,
+            file = subtype_vs_others.silver_file,
+            quote = FALSE, sep = "\t", row.names = FALSE)
 
 #### Subtype v. Subtype --------------------------------------------------------
 # remove all samples that are not in these subtypes
@@ -215,5 +247,30 @@ last_subtype.fit.results.list <- GetFiteBayesList(norm.list = pruned.norm.list,
                                                   design.list = last_subtype.design.list)
 
 # save fit results to file
-saveRDS(last_subtype.fit.results.list, file = two_subtypes.rds)
-saveRDS(last_subtype.fit.results.list, file = two_subtypes.plot_data.rds)
+saveRDS(last_subtype.fit.results.list,
+        file = two_subtypes.rds)
+
+# get top.table.list
+adjust.method <- "BH"
+two_subtypes.top.table.list <- 
+  lapply(last_subtype.fit.results.list,  # for each level of % seq
+         function(x)
+           lapply(x, # for each normalization method
+                  function(y) GetAllGenesTopTable(y, adjust = adjust.method)))
+
+# write proportion DE to plot data directory
+two_subtypes.proportion_de <- GetDataProportionDE(two_subtypes.top.table.list,
+                                     adjust.method = "BH", cutoff = 0.05)
+
+write.table(x = two_subtypes.proportion_de, 
+            file = two_subtypes.propDE_file,
+            quote = FALSE, sep = "\t", row.names = FALSE)
+
+# write stats for comparison to silver standard to plot data directory
+two_subtypes.silver <- GetDataSilverStandardStats(
+  two_subtypes.top.table.list,
+  cutoff = 0.05)
+
+write.table(two_subtypes.silver,
+            file = two_subtypes.silver_file,
+            quote = FALSE, sep = "\t", row.names = FALSE)

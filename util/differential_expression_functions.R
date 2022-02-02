@@ -284,6 +284,43 @@ GetGeneSetStats <- function(silver.set,
                     "spearman" = spearman))
 }
 
+GetDataProportionDE <- function(top.table.list,
+                                adjust.method = "BH", cutoff = 0.05) {
+  # from a top.table.list, return the proportion of genes that are
+  # considered differentially expressed under a user-specified adjusted p
+  # cutoff (FDR < 5% by default)
+  #
+  # Args:
+  #   top.table.list: a nested list from GetAllGenesTopTable()
+  #   adjust.method: how should the p-values be adjusted for multiple
+  #                  hypothesis testing?
+  #   cutoff = what adjusted p-value cutoff to use
+  #
+  # Returns
+  #   A data frame with the proportion of genes differentially expressed
+  #
+  
+  # how many genes are differentially expressed @ cutoff
+  deg.count.count.list <-
+    lapply(top.table.list,  # for each level of % seq
+           function(x) lapply(x,  # for each normalization method
+                              function(y) sum(y$adj.P.Val < cutoff)))
+  # get DEG counts as data.frame
+  deg.count.df <- reshape2::melt(deg.count.count.list)
+  
+  # get proportion differentially expressed genes
+  deg.count.df$value <- deg.count.df$value / dim(top.table.list[[1]][[1]])[1]
+  colnames(deg.count.df) <- c("perc.ltdeg.count", "normalization", "perc.seq")
+  
+  # order % seq so bar plot displays 0-100
+  deg.count.df$perc.seq <- factor(deg.count.df$perc.seq,
+                                  levels = seq(0, 100, 10))
+  
+  # capitalize normalization methods for display
+  deg.count.df$normalization <- as.factor(toupper(deg.count.df$normalization))
+  
+  return(deg.count.df)
+}
 
 PlotProportionDE <- function(fit.list, adjust.method = "BH", cutoff = 0.05) {
   # from a list of limma fits, plot the proportion of genes that are
@@ -340,6 +377,67 @@ PlotProportionDE <- function(fit.list, adjust.method = "BH", cutoff = 0.05) {
     scale_fill_manual(values = cbPalette)
 
   return(list("top.table.list" = top.table.list, "plot" = p))
+}
+
+GetDataSilverStandardStats <- function(top.table.list,
+                                       cutoff = 0.05){
+  # Given a list of top tables, get data to plot the Jaccard similarity, Rand index, and
+  # Spearman rho between the "silver standards" and all other experiments
+  #
+  # Args:
+  #   top.table.list: list of limma::topTable objects from GetAllGenesTopTable
+  #   cutoff: adjusted p-value threshold to be used
+  #
+  # Returns:
+  #   Jaccard similarity line plot
+  #   Rand index line plot
+  #   Spearman rank correlation line plot
+  
+  ### "silver standards" ###
+  
+  # 100% RNA-seq data RSEM using limma::voom processing step
+  #top.table.list$`100`$un
+  
+  # LOG 100% array data
+  #top.table.list$`0`$log
+  
+  # how similiar are DEG results to the RNA-seq silver standard?
+  seq.stats.list <-
+    lapply(top.table.list,
+           function(x) lapply(x,
+                              function(y) GetGeneSetStats(top.table.list$`100`$un,
+                                                          y, cutoff = cutoff)))
+  seq.stats.df <- reshape2::melt(seq.stats.list,
+                                 id.vars = c("jaccard", "rand", "spearman"))
+  
+  # how similiar are DEG results to the microarray silver standard?
+  array.stats.list <-
+    lapply(top.table.list,
+           function(x) lapply(x,
+                              function(y) GetGeneSetStats(top.table.list$`0`$log,
+                                                          y, cutoff = cutoff)))
+  array.stats.df <- reshape2::melt(array.stats.list,
+                                   id.vars = c("jaccard", "rand", "spearman"))
+  
+  # combine seq and array similarity results
+  array.stats.df <- cbind(array.stats.df, rep("Microarray", nrow(array.stats.df)))
+  seq.stats.df <- cbind(seq.stats.df, rep("RNA-seq", nrow(seq.stats.df)))
+  colnames(seq.stats.df) <- colnames(array.stats.df) <- c("jaccard",
+                                                          "rand",
+                                                          "spearman",
+                                                          "normalization",
+                                                          "perc.seq",
+                                                          "platform")
+  mstr.df <- rbind(array.stats.df, seq.stats.df)
+  
+  # order % seq so plot displays 0-100
+  mstr.df$perc.seq <- factor(mstr.df$perc.seq, levels = seq(0, 100, 10))
+  
+  # capitalize normalization methods for display
+  mstr.df$normalization <- as.factor(toupper(mstr.df$normalization))
+  
+  return(mstr.df)
+  
 }
 
 PlotSilverStandardStats <- function(top.table.list, title,
