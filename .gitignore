@@ -10,7 +10,7 @@ normalized_data
 models
 results
 plots/main/*.pdf
-plots/supplement/*.pdf
+plots/supplementary/*.pdf
 .Rproj.user
 RNAseq_titration_results.Rproj
 ._RNAseq_titration_results.Rproj
