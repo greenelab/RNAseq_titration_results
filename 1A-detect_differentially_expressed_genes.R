@@ -203,7 +203,7 @@ saveRDS(fit.results.list, file = subtype_vs_others.rds)
 # write top.table.list to results directory
 adjust.method <- "BH"
 two_subtypes.top.table.list <- 
-  lapply(last_subtype.fit.results.list,  # for each level of % seq
+  lapply(fit.results.list,  # for each level of % seq
          function(x)
            lapply(x, # for each normalization method
                   function(y) GetAllGenesTopTable(y, adjust = adjust.method)))
