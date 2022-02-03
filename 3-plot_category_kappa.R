@@ -152,8 +152,8 @@ test.df$Classifier <- car::recode(test.df$Classifier,
 test.df$Normalization <- as.factor(toupper(test.df$Normalization))
 test.df$Classifier <- as.factor(test.df$Classifier)
 
-readr::write_tsv(x = test.df,
-                 file = test.df.filename) # delta or not delta in file name
+readr::write_tsv(test.df,
+                 test.df.filename) # delta or not delta in file name
 
 # get summary data.frame + write to file
 summary.df <- test.df %>%
