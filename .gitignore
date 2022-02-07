@@ -8,6 +8,9 @@
 data
 normalized_data
 models
-results/reconstructed_data
+results
+plots/main/*.pdf
+plots/supplementary/*.pdf
 .Rproj.user
 RNAseq_titration_results.Rproj
+._RNAseq_titration_results.Rproj

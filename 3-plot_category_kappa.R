@@ -33,6 +33,7 @@ file_identifier <- str_c(cancer_type, predictor, sep = "_")
 
 # define directories
 plot.dir <- here::here("plots")
+plot.data.dir <- file.path(plot.dir, "data")
 res.dir <- here::here("results")
 
 # list array and seq files from results directory
@@ -63,11 +64,20 @@ if (null_model) {
 plot.file.lead <- ifelse(null_model,
                          paste0(file_identifier, "_train_3_models_delta_kappa_"),
                          paste0(file_identifier, "_train_3_models_kappa_"))
+
+test.df.filename <- ifelse(null_model,
+                              file.path(plot.data.dir,
+                                        paste0(file_identifier,
+                                               "_train_3_models_delta_kappa.tsv")),
+                              file.path(plot.data.dir,
+                                        paste0(file_identifier,
+                                               "_train_3_models_kappa.tsv")))
+
 summary.df.filename <- ifelse(null_model,
-                              file.path(res.dir,
+                              file.path(plot.data.dir,
                                         paste0(file_identifier,
                                                "_train_3_models_delta_kappa_summary_table.tsv")),
-                              file.path(res.dir,
+                              file.path(plot.data.dir,
                                  paste0(file_identifier,
                                         "_train_3_models_kappa_summary_table.tsv")))
 
@@ -125,6 +135,7 @@ if (null_model) {
 test.df <- cbind(rbind(array.df, seq.df),
                  c(rep("Microarray", nrow(array.df)),
                    rep("RNA-seq", nrow(seq.df))))
+
 colnames(test.df) <- c("Kappa", "Perc.Seq", "Classifier",
                        "Normalization", "Platform")
 
@@ -139,10 +150,25 @@ test.df$Classifier <- car::recode(test.df$Classifier,
 
 # capitalize norm methods
 test.df$Normalization <- as.factor(toupper(test.df$Normalization))
+test.df$Classifier <- as.factor(test.df$Classifier)
+
+readr::write_tsv(test.df,
+                 test.df.filename) # delta or not delta in file name
+
+# get summary data.frame + write to file
+summary.df <- test.df %>%
+  dplyr::group_by(Classifier, Normalization, Platform, Perc.Seq) %>%
+  dplyr::summarise(Median = median(Kappa),
+                   Mean = mean(Kappa),
+                   SD = sd(Kappa)) %>%
+  dplyr::ungroup()
+
+readr::write_tsv(summary.df,
+                 summary.df.filename) # delta or not delta in file name
 
 # plot performance of a classifier/model type on all normalization method in a
 # single plot
-test.df$Classifier <- as.factor(test.df$Classifier)
+
 cls.methods <- unique(test.df$Classifier)
 for (cls in cls.methods) {
   plot.nm <- file.path(plot.dir,
@@ -151,7 +177,17 @@ for (cls in cls.methods) {
                                                        pattern = " ",
                                                        replacement = "_"),
                               "_VIOLIN_test.pdf"))
-  ggplot(test.df[which(test.df$Classifier == cls), ],
+  
+  plot.data.nm <- file.path(plot.data.dir,
+                       paste0(plot.file.lead, # includes file_identifier and delta/not delta
+                              stringr::str_replace_all(cls,
+                                                       pattern = " ",
+                                                       replacement = "_"),
+                              "_VIOLIN_test.tsv"))
+  
+  plot_df <- test.df[which(test.df$Classifier == cls), ]
+  
+  ggplot(plot_df,
          aes(x = Perc.Seq, y = Kappa, color = Platform, fill = Platform)) +
     facet_wrap(~ Normalization, ncol = 5) +
     geom_violin(colour = "black", position = position_dodge(0.8),
@@ -171,13 +207,3 @@ for (cls in cls.methods) {
     theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
   ggsave(plot.nm, plot = last_plot(), height = 3.5, width = 15)
 }
-
-# get summary data.frame + write to file
-summary.df <- test.df %>%
-  dplyr::group_by(Classifier, Normalization, Platform, Perc.Seq) %>%
-  dplyr::summarise(Median = median(Kappa),
-                   Mean = mean(Kappa),
-                   SD = sd(Kappa)) %>%
-  dplyr::ungroup()
-readr::write_tsv(summary.df,
-                 summary.df.filename) # delta or not delta in file name
