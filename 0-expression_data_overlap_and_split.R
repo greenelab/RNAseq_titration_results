@@ -44,6 +44,7 @@ split.seed <- sample(1:10000, 1)
 # define directories
 data.dir <- here::here("data")
 plot.dir <- here::here("plots")
+plot.data.dir <- file.path(plot.dir, "data")
 res.dir <- here::here("results")
 
 # name input files
@@ -55,6 +56,9 @@ clin.filename <- paste0("combined_clinical_data.", cancer_type, ".tsv")
 category.distribtion.plot <- paste0(file_identifier,
                                     "_dist_split_stacked_bar_",
                                     initial.seed, ".pdf")
+category.distribtion.plot.data <- paste0(file_identifier,
+                                         "_dist_split_stacked_bar_",
+                                         initial.seed, ".tsv")
 train.test.labels <- paste0(file_identifier,
                             "_matchedSamples_training_testing_split_labels_",
                             initial.seed, ".tsv")
@@ -200,7 +204,12 @@ cbPalette <- c("#000000", "#E69F00", "#56B4E9",
 plot.df <- lbl.df %>%
   mutate(split = case_when(split == "train" ~ "train (2/3)",
                            split == "test" ~ "test (1/3)")) %>%
-  bind_rows(lbl.df %>% mutate(split = "whole"))
+  bind_rows(lbl.df %>% mutate(split = "whole")) %>%
+  mutate(initial_seed = initial.seed)
+
+write.table(plot.df, # seem like this is sufficiently different from lbl.df
+            file = file.path(plot.data.dir, category.distribtion.plot.data),
+            quote = FALSE, sep = "\t", row.names = FALSE)
 
 plot.nm <- file.path(plot.dir, category.distribtion.plot)
 ggplot(plot.df, aes(x = split, fill = category)) +
