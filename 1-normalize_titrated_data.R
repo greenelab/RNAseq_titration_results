@@ -137,7 +137,8 @@ norm.titrate.list[["0"]] <-
                                      add.qn.z = TRUE)
 
 # parallel backend
-cl <- parallel::makeCluster(detectCores() - 1)
+#cl <- parallel::makeCluster(detectCores() - 1)
+cl <- parallel::makeCluster(7)
 doParallel::registerDoParallel(cl)
 
 # 'mixed' both platform normalization
@@ -188,7 +189,8 @@ seq.test.norm.list[["log"]] <- LOGSeqOnly(seq.test)
 seq.test.norm.list[["npn"]] <- NPNSingleDT(seq.test)
 
 # start parallel backend
-cl <- parallel::makeCluster(detectCores() - 1)
+#cl <- parallel::makeCluster(detectCores() - 1)
+cl <- parallel::makeCluster(7)
 doParallel::registerDoParallel(cl)
 
 # QN -- requires reference data
@@ -219,7 +221,8 @@ seq.test.norm.list[["qn"]] <- seq.qn.list
 rm(seq.qn.list)
 
 # start parallel backend
-cl <- parallel::makeCluster(detectCores() - 1)
+#cl <- parallel::makeCluster(detectCores() - 1)
+cl <- parallel::makeCluster(7)
 doParallel::registerDoParallel(cl)
 
 # QN-Z -- requires reference data
@@ -250,7 +253,8 @@ seq.test.norm.list[["qn-z"]] <- seq.qnz.list
 rm(seq.qnz.list)
 
 # start parallel back end
-cl <- parallel::makeCluster(detectCores() - 1)
+#cl <- parallel::makeCluster(detectCores() - 1)
+cl <- parallel::makeCluster(7)
 doParallel::registerDoParallel(cl)
 
 # TDM normalization -- requires references

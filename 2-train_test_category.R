@@ -104,7 +104,8 @@ set.seed(folds.seed)
 folds.list <- lapply(category.norm.list, function(x) createFolds(x, k = 5))
 
 # parallel backend
-cl <- makeCluster(detectCores()-1)
+#cl <- makeCluster(detectCores()-1)
+cl <- parallel::makeCluster(7)
 registerDoParallel(cl)
 
 resample.seed <- sample(1:10000, 1)
