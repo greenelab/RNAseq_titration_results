@@ -21,7 +21,10 @@ option_list <- list(
   optparse::make_option("--null_model",
                         action = "store_true",
                         default = FALSE,
-                        help = "Refer to models with permuted dependent variable (within subtype if predictor is a gene)")
+                        help = "Refer to models with permuted dependent variable (within subtype if predictor is a gene)"),
+  optparse::make_option("--ncores",
+                        default = NA_integer_,
+                        help = "Set the number of cores to use")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
@@ -39,6 +42,9 @@ null_model <- opt$null_model
 file_identifier <- ifelse(null_model,
                           str_c(cancer_type, predictor, "null", sep = "_"),
                           str_c(cancer_type, predictor, sep = "_"))
+ncores <- min(parallel::detectCores() - 1,
+              opt$ncores,
+              na.rm = TRUE)
 
 # set seed
 filename.seed <- as.integer(opt$seed1)
@@ -137,8 +143,7 @@ norm.titrate.list[["0"]] <-
                                      add.qn.z = TRUE)
 
 # parallel backend
-#cl <- parallel::makeCluster(detectCores() - 1)
-cl <- parallel::makeCluster(7)
+cl <- parallel::makeCluster(ncores)
 doParallel::registerDoParallel(cl)
 
 # 'mixed' both platform normalization
@@ -189,8 +194,7 @@ seq.test.norm.list[["log"]] <- LOGSeqOnly(seq.test)
 seq.test.norm.list[["npn"]] <- NPNSingleDT(seq.test)
 
 # start parallel backend
-#cl <- parallel::makeCluster(detectCores() - 1)
-cl <- parallel::makeCluster(7)
+cl <- parallel::makeCluster(ncores)
 doParallel::registerDoParallel(cl)
 
 # QN -- requires reference data
@@ -221,8 +225,7 @@ seq.test.norm.list[["qn"]] <- seq.qn.list
 rm(seq.qn.list)
 
 # start parallel backend
-#cl <- parallel::makeCluster(detectCores() - 1)
-cl <- parallel::makeCluster(7)
+cl <- parallel::makeCluster(ncores)
 doParallel::registerDoParallel(cl)
 
 # QN-Z -- requires reference data
@@ -253,8 +256,7 @@ seq.test.norm.list[["qn-z"]] <- seq.qnz.list
 rm(seq.qnz.list)
 
 # start parallel back end
-#cl <- parallel::makeCluster(detectCores() - 1)
-cl <- parallel::makeCluster(7)
+cl <- parallel::makeCluster(ncores)
 doParallel::registerDoParallel(cl)
 
 # TDM normalization -- requires references

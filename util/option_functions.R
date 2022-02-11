@@ -56,6 +56,11 @@ check_options <- function(opt) {
                                               " (", dirname(opt[[option]]), ") ",
                                               "does not exist.")
       }
+    } else if (option == "ncores") {
+      if (!is.integer(opt[[option]])) {
+        my_errors[[option]] <- stringr::str_c("\nNumber of cores given for --", option,
+                                              " must be an integer.")
+      }
     }
   }
 
