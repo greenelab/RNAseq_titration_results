@@ -57,9 +57,9 @@ check_options <- function(opt) {
                                               "does not exist.")
       }
     } else if (option == "ncores") {
-      if (!is.integer(opt[[option]])) {
+      if (!is.integer(opt[[option]]) | opt[[option]] < 1) {
         my_errors[[option]] <- stringr::str_c("\nNumber of cores given for --", option,
-                                              " must be an integer.")
+                                              " must be a positive integer.")
       }
     }
   }
