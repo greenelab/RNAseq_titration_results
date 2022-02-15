@@ -57,8 +57,9 @@ for platform in geo_dict:
 #### Array Express -------------------------------------------------------------
 
 # Do not include GEO results in AE (directsub=on)
-ae_array_url =  "https://www.ebi.ac.uk/arrayexpress/ArrayExpress-Experiments.txt?keywords=&organism=Homo+sapiens&exptype%5B%5D=%22rna+assay%22&exptype%5B%5D=%22array+assay%22&array=&directsub=on"
-ae_rnaseq_url = "https://www.ebi.ac.uk/arrayexpress/ArrayExpress-Experiments.txt?keywords=&organism=Homo+sapiens&exptype%5B%5D=%22rna+assay%22&exptype%5B%5D=%22sequencing+assay%22&array=&directsub=on"
+ae_base_url = "https://www.ebi.ac.uk/arrayexpress/ArrayExpress-Experiments.txt?keywords="
+ae_array_url = ae_base_url + "&organism=Homo+sapiens&exptype%5B%5D=%22rna+assay%22&exptype%5B%5D=%22array+assay%22&array=&directsub=on"
+ae_rnaseq_url = ae_base_url + "&organism=Homo+sapiens&exptype%5B%5D=%22rna+assay%22&exptype%5B%5D=%22sequencing+assay%22&array=&directsub=on"
 
 ae_dict = {"array": [ae_array_url, 0],
            "rnaseq": [ae_rnaseq_url, 0]}
