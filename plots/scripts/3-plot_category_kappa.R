@@ -31,9 +31,7 @@ cancer_type <- opt$cancer_type
 predictor <- opt$predictor
 null_model <- opt$null_model
 supplementary <- opt$supplementary
-file_identifier <- ifelse(null_model,
-                          str_c(cancer_type, predictor, "null", sep = "_"),
-                          str_c(cancer_type, predictor, sep = "_"))
+file_identifier <- str_c(cancer_type, predictor, sep = "_")
 
 # define directories
 plot.dir <- here::here("plots")
@@ -88,8 +86,10 @@ plot_obj <- ggplot(plot_df,
                position = position_dodge(0.7),
                size = 1,
                shape = 16) +
-  expand_limits(y = c(0,1)) +
-  scale_x_discrete(breaks = seq(0, 100, 50)) + 
+  expand_limits(y = 1) +
+  scale_x_discrete(labels = c("0", "", "", "", "",
+                              "50", "", "", "", "",
+                              "100")) + 
   labs(x = "% RNA-seq Samples in Training Data",
        color = "Test Data Platform",
        fill = "Test Data Platform",
@@ -103,5 +103,5 @@ plot_obj <- ggplot(plot_df,
 
 ggsave(output_filename,
        plot = plot_obj,
-       height = 4.5,
+       height = 5,
        width = 7.5)
