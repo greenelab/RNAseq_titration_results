@@ -38,7 +38,7 @@ except Exception as e:
     exit()
 
 # define output filenames
-current_time = datetime.utcnow().strftime("%Y-%m-%d_%H.%M.%S_UTC")
+current_time = datetime.utcnow().strftime("%Y-%m-%d_%H_%M_%S_UTC")
 # output filename refers to search results at this particular time
 output_filename = os.path.join(output_directory,
                                "ratio." + current_time + ".tsv")
@@ -134,6 +134,16 @@ for platform in ae_dict:
 
 total_array = geo_dict["array"][1] + ae_dict["array"][1]  # total number array
 total_rnaseq = geo_dict["rnaseq"][1] + ae_dict["rnaseq"][1]  # total n RNA-seq
+
+# check array and RNA-seq searches returned non-zero results
+try:
+    assert (total_array != 0 and total_rnaseq != 0), \
+        "Array or RNA-seq returned zero results in search_geo_arrayexpress.py."
+except Exception as e:
+    print(e, file = sys.stderr)
+    exit()
+
+
 ratio = total_array/total_rnaseq  # array:RNA-seq
 
 output_table = open(output_filename, "w")
@@ -149,7 +159,7 @@ output_table.write('\t'.join([str(x) for x in ["RNA-seq",
 output_table.close()
 
 output_tracking = open(output_tracking_filename, "a")  # create new or append
-output_tracking.write('\t'.join(["File:" + output_filename,
+output_tracking.write('\t'.join(["File:" + os.path.basename(output_filename),
                                  "Date:" + current_time,
                                  "Array_to_RNA-seq_ratio:" + str(ratio)]) + "\n")
 output_tracking.close()
