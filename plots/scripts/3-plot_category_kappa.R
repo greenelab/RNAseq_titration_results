@@ -73,8 +73,8 @@ plot_obj <- ggplot(plot_df,
                        y = Kappa,
                        color = Platform,
                        fill = Platform)) +
-  facet_grid(cols = vars(Classifier),
-             rows = vars(Normalization)) +
+  facet_grid(rows = vars(Classifier),
+             cols = vars(Normalization)) +
   geom_violin(position = position_dodge(0.7),
               alpha = 0.25,
               show.legend = FALSE) +
@@ -89,6 +89,7 @@ plot_obj <- ggplot(plot_df,
                size = 1,
                shape = 16) +
   expand_limits(y = c(0,1)) +
+  scale_x_discrete(breaks = seq(0, 100, 50)) + 
   labs(x = "% RNA-seq Samples in Training Data",
        color = "Test Data Platform",
        fill = "Test Data Platform",
@@ -98,10 +99,9 @@ plot_obj <- ggplot(plot_df,
        title = str_c(cancer_type, predictor, sep = " ")) +
   theme_bw() +
   scale_colour_manual(values = cbPalette[2:3]) +
-  theme(legend.position = "bottom",
-        axis.text.x = element_text(angle = 45, vjust = 0.5))
+  theme(legend.position = "bottom")
 
 ggsave(output_filename,
        plot = plot_obj,
-       height = 9,
+       height = 4.5,
        width = 7.5)
