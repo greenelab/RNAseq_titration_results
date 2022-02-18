@@ -1,20 +1,49 @@
-from datetime import datetime
-import requests
-import xmltodict
-
 ###############################################################################
 # This script queries two databases (GEO, ArrayExpress) to find human samples
 # analyzed on array or RNA-seq platforms. It parses information from each data
-# set and adds up the total number of samples from each platform. The output is
-# table showing the number of samples from each database and platform, plus a
-# ratio of the number of array samples to the number of RNA-seq samples. Also,
-# since this information will change over time, a timestamp representing the
-# moment these queries took place is included in the output.
+# set and adds up the total number of samples from each platform. One output
+# file is a time-stamped table showing the number of samples from each database
+# and platform. Metadata from the search is appended to a tracking file, which
+# includes the original output table filename, the time/date of the saerch, and
+# the ratio of array to RNA-seq data found. Output goes to the folder
+# results/array_rnaseq_ratio.
 #
-# Usage: python3 util/search_geo_arrayexpress.py > output_file
+# Usage: python3 util/search_geo_arrayexpress.py
 #
 # S. Foltz February 2022
 ###############################################################################
+
+from datetime import datetime
+import os
+import requests
+import sys
+import xmltodict
+
+# max number of results fetch can return
+fetch_retmax = 10000 # as of Feb 2022
+
+# find the directory of this script (top level project directory)
+dir_path = os.path.dirname(os.path.realpath(__file__))
+
+# define output directory
+output_directory = os.path.join(dir_path, "results", "array_rnaseq_ratio")
+
+# check that output directory exists
+try:
+    assert (os.path.isdir(output_directory)), \
+        "Output directory " + output_directory + \
+        " does not exist in search_geo_arrayexpress.py."
+except Exception as e:
+    print(e, file = sys.stderr)
+    exit()
+
+# define output filenames
+current_time = datetime.utcnow().strftime("%Y-%m-%d_%H.%M.%S_UTC")
+# output filename refers to search results at this particular time
+output_filename = os.path.join(output_directory,
+                               "ratio." + current_time + ".tsv")
+# tracking filename collects metadata about each search (filename, date, ratio)
+output_tracking_filename = os.path.join(output_directory, "ratio.tracking.tsv")
 
 ###############################################################################
 # GEO - Gene Expression Omnibus
@@ -25,13 +54,18 @@ search_base = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?"
 geo_array_search_term = "homo+sapiens[Organism]+AND+expression+profiling+by+array[DataSet+Type]"
 geo_rnaseq_search_term = "homo+sapiens[Organism]+AND+expression+profiling+by+high+throughput+sequencing[DataSet+Type]"
 
-geo_array_initial_url = search_base +
+geo_array_initial_url = search_base + \
 "&".join(["db=gds", "term=" + geo_array_search_term])
-geo_rnaseq_initial_url = search_base +
+geo_rnaseq_initial_url = search_base + \
 "&".join(["db=gds", "term=" + geo_rnaseq_search_term])
 
 geo_dict = {"array": [geo_array_initial_url, 0],
             "rnaseq": [geo_rnaseq_initial_url, 0]}
+
+# Use this base url to fetch the records of the search results
+fetch_base = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?"
+# for any data sets with an entry in this list, we will skip that data set
+skip_these = ["(Submitter supplied) This SuperSeries is composed of the SubSeries listed below."]
 
 # for each platform in the dictionary, search twice and then fetch samples
 for platform in geo_dict:
@@ -49,12 +83,8 @@ for platform in geo_dict:
     query_key = second_dict['eSearchResult']['QueryKey']
     webenv = second_dict['eSearchResult']['WebEnv']
 
-    # now fetch the records of the search results
-    fetch_base = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?"
-    # for any data sets with an entry in this list, we will skip that data set
-    skip_these = ["(Submitter supplied) This SuperSeries is composed of the SubSeries listed below."]
-    # fetch returns up to 10K results, so we need to define the start position
-    # so we can increase the start position on subsequent fetches
+    # fetch returns up to fetch_retmax results, so we need to define the start
+    # position so we can increase the start position on subsequent fetches
     retstart = 0
 
     while retstart < int(n_results):
@@ -75,7 +105,7 @@ for platform in geo_dict:
                     if entry.startswith("Platform"):  # parse 2nd last element
                         n_samples = int(entry.split(" ")[-2])  # (n_samples)
                         geo_dict[platform][1] += n_samples  # increment count
-        retstart += 10000  # increment the start position
+        retstart += fetch_retmax  # increment the start position
 
 ###############################################################################
 # ArrayExpress
@@ -99,21 +129,27 @@ for platform in ae_dict:
         ae_dict[platform][1] += n_assays  # increment the count
 
 ###############################################################################
-# Print results
+# Write results to output files
 ###############################################################################
 
 total_array = geo_dict["array"][1] + ae_dict["array"][1]  # total number array
 total_rnaseq = geo_dict["rnaseq"][1] + ae_dict["rnaseq"][1]  # total n RNA-seq
 ratio = total_array/total_rnaseq  # array:RNA-seq
 
-print('\t'.join(["Platform", "GEO", "AE", "Total"]))
-print('\t'.join([str(x) for x in ["Array",
+output_table = open(output_filename, "w")
+output_table.write('\t'.join(["Platform", "GEO", "AE", "Total"]) + "\n")
+output_table.write('\t'.join([str(x) for x in ["Array",
                                   geo_dict["array"][1],
                                   ae_dict["array"][1],
-                                  total_array]]))
-print('\t'.join([str(x) for x in ["RNA-seq",
+                                  total_array]]) + "\n")
+output_table.write('\t'.join([str(x) for x in ["RNA-seq",
                                   geo_dict["rnaseq"][1],
                                   ae_dict["rnaseq"][1],
-                                  total_rnaseq]]))
-print("Ratio: " + str(ratio))
-print("Date: " + datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"))
+                                  total_rnaseq]]) + "\n")
+output_table.close()
+
+output_tracking = open(output_tracking_filename, "a")  # create new or append
+output_tracking.write('\t'.join(["File:" + output_filename,
+                                 "Date:" + current_time,
+                                 "Array_to_RNA-seq_ratio:" + str(ratio)]) + "\n")
+output_tracking.close()
