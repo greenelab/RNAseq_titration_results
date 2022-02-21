@@ -50,12 +50,9 @@ output_filename <- file.path(ifelse(supplementary,
 
 plot_df <- readr::read_tsv(input_filename,
                            col_types = "cdcccd") %>%
-  rename("Perc.seq" = "Perc_seq") %>%
   mutate(Perc.seq = factor(Perc.seq,
                            levels = seq(0, 100, 10))) %>%
-  mutate(Normalization = stringr::str_to_upper(Normalization)) %>%
-  filter(Mean_Value != Inf) %>%
-  filter(Normalization != "UN")
+  filter(Mean_Value != Inf)
 
 # for each normalization method, plot error stats
 plot_obj <- ggplot(plot_df,
@@ -64,7 +61,7 @@ plot_obj <- ggplot(plot_df,
                        color = Platform,
                        fill = Platform)) +
   facet_wrap(~ Normalization,
-             ncol = 3,
+             ncol = 4,
              scales = "free_y") +
   geom_violin(position = position_dodge(0.7),
               alpha = 0.25,
