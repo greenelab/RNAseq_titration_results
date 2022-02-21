@@ -125,6 +125,7 @@ error.master.df$perc.seq <- factor(error.master.df$perc.seq,
                                    levels = seq(0, 100, by = 10))
 
 # get norm and reconstruction methods as factors
+error.master.df$norm.method <- stringr::str_to_upper(error.master.df$norm.method)
 error.master.df$norm.method <- as.factor(error.master.df$norm.method)
 
 # rename platforms -- same as above for kappa data.frame
@@ -142,7 +143,7 @@ error.mean.df <- error.master.df %>%
   dplyr::summarise(mean_mase = mean(MASE)) %>%
   dplyr::ungroup()
 rm(error.master.df)
-colnames(error.mean.df) <- c("Gene", "Perc_seq", "Normalization",
+colnames(error.mean.df) <- c("Gene", "Perc.seq", "Normalization",
                              "Method", "Platform", "Mean_Value")
 
 write.table(error.mean.df,
