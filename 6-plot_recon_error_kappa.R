@@ -49,8 +49,8 @@ error.files <- list.files(rcn.res.dir, pattern = paste0(file_identifier, "_recon
 # define output files
 kap.plot.file.lead <- file.path(plot.dir, paste0(file_identifier, "_kappa_reconstructed_data_"))
 err.plot.file.lead <- file.path(plot.dir, paste0(file_identifier, "_reconstruction_error_"))
-kap.plot.data.file.lead <- file.path(plot.data.dir, paste0(file_identifier, "_kappa_reconstructed_data_"))
-err.plot.data.file.lead <- file.path(plot.data.dir, paste0(file_identifier, "_reconstruction_error_"))
+kap.plot.data.file <- file.path(plot.data.dir, paste0(file_identifier, "_kappa_reconstructed_data.tsv"))
+err.plot.data.file <- file.path(plot.data.dir, paste0(file_identifier, "_reconstruction_error.tsv"))
 
 #### plot kappa stats ----------------------------------------------------------
 
@@ -78,6 +78,7 @@ kappa.master.df$Classifier <- car::recode(kappa.master.df$Classifier,
 kappa.master.df$Classifier <- as.factor(kappa.master.df$Classifier)
 
 # get norm and reconstruction methods as factors
+kappa.master.df$Normalization <- stringr::str_to_upper(plot_df$Normalization)
 kappa.master.df$Normalization <- as.factor(kappa.master.df$Normalization)
 kappa.master.df$Reconstruction <- as.factor(kappa.master.df$Reconstruction)
 
@@ -88,39 +89,10 @@ kappa.master.df$Platform <- car::recode(kappa.master.df$Platform,
                                         recodes = plt.recode.str)
 kappa.master.df$Platform <- as.factor(kappa.master.df$Platform)
 
-# for each normalization method, plot kappa stats
-norm.methods <- levels(kappa.master.df$Normalization)
-for (norm in norm.methods) {
-  
-  plot.nm <- paste0(kap.plot.file.lead, norm, ".pdf")  # each norm method
-  plot.data.nm <- paste0(kap.plot.data.file.lead, norm, ".tsv")  # each norm method
-  
-  # violin plot is saved as a PDF
-  
-  plot_df <- kappa.master.df[which(kappa.master.df$Normalization == norm), ]
-  
-  write.table(plot_df,
-              file = plot.data.nm,
-              quote = FALSE, sep = "\t", row.names = FALSE)
-  
-  ggplot(plot_df,
-         aes(x = Perc.seq, y = Kappa, color = Platform,
-             fill = Platform)) +
-    facet_wrap(Reconstruction ~ Classifier, ncol = 3) +
-    geom_violin(colour = "black", position = position_dodge(0.8),
-                alpha = 0.2) +
-    stat_summary(fun = median, geom = "line", aes(group = Platform),
-                 position = position_dodge(0.6)) +
-    stat_summary(fun = median, geom = "point", aes(group = Platform),
-                 position = position_dodge(0.7), size = 1) +
-    ggtitle(paste0(cancer_type, ": ", toupper(norm))) +
-    xlab("% RNA-seq samples") +
-    theme_bw() +
-    scale_colour_manual(values = cbPalette[c(2, 3)]) +
-    theme(text = element_text(size = 18)) +
-    theme(axis.text.x=element_text(angle = 45, vjust = 0.5))
-  ggsave(plot.nm, plot = last_plot(), height = 8.5, width = 11)
-}
+
+write.table(kappa.master.df,
+            file = kap.plot.data.file,
+            quote = FALSE, sep = "\t", row.names = FALSE)
 
 # get summary data.frame + write to file
 kappa.summary.df <-
@@ -173,34 +145,6 @@ rm(error.master.df)
 colnames(error.mean.df) <- c("Gene", "Perc_seq", "Normalization",
                              "Method", "Platform", "Mean_Value")
 
-# for each normalization method, plot reconstruction error
-norm.methods <- levels(error.mean.df$Normalization)
-for (norm in norm.methods) {
-  
-  plot.nm <- paste0(err.plot.file.lead, norm, ".pdf")  # each norm method
-  plot.data.nm <- paste0(err.plot.data.file.lead, norm, ".tsv")  # each norm method
-  
-  # violin plot is saved as a PDF
-  
-  plot_df <- error.mean.df[which(error.mean.df$Normalization == norm), ]
-  
-  write.table(plot_df,
-              file = plot.data.nm,
-              quote = FALSE, sep = "\t", row.names = FALSE)
-  
-  ggplot(plot_df,
-         aes(Perc_seq, y = Mean_Value, color = Platform, fill = Platform)) +
-    facet_wrap(~ Method, ncol = 2) +
-    theme_bw() +
-    scale_colour_manual(values = cbPalette[c(2, 3)]) +
-    geom_violin(colour = "black", position = position_dodge(0.8),
-                alpha = 0.2) +
-    stat_summary(fun = median, geom = "line", aes(group = Platform),
-                 position = position_dodge(0.8)) +
-    stat_summary(fun = median, geom = "point", aes(group = Platform),
-                 position = position_dodge(0.8)) +
-    xlab("% RNA-seq") +
-    ylab("Mean Value (per gene)") +
-    ggtitle(paste0(cancer_type, ": ", toupper(norm))) +
-    ggsave(plot.nm, plot = last_plot(), height = 8.5, width = 8.5)
-}
+write.table(error.mean.df,
+            file = err.plot.data.file,
+            quote = FALSE, sep = "\t", row.names = FALSE)
