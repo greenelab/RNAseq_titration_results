@@ -67,8 +67,7 @@ plot_obj <- jaccard_df %>%
   ggplot(aes(x = nmeth,
              y = jaccard)) +
   geom_violin(draw_quantiles = .5,
-              scale = "width"
-              ) +
+              scale = "width") +
   geom_jitter(shape = 16,
               alpha = 0.5,
               height = 0,
