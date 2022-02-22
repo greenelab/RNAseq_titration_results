@@ -56,17 +56,9 @@ last_subtype.silver_df <- read_tsv(
   file.path(plot.data.dir,
             paste0(file_identifier, "_titration_differential_exp_eBayes_fits_",
                    subtypes_combination, ".silver.tsv")),
-  col_types = "dddcdc") %>%
-  #col_types = "cdccd") %>%
+  col_types = "cdccd") %>%
   mutate(perc.seq = factor(perc.seq,
-                           levels = seq(0, 100, 10))) %>%
-  rename("Jaccard" = "jaccard",
-         "Rand" = "rand",
-         "Spearman" = "spearman",
-         "Normalization" = "normalization",
-         "Perc.Seq" = "perc.seq",
-         "Platform" = "platform") %>%
-  gather("Jaccard", "Rand", "Spearman", key = "measure", value = "value")
+                           levels = seq(0, 100, 10)))
 
 plot_obj_all3 <- PlotSilverStandardStats(
   last_subtype.silver_df,

@@ -421,7 +421,8 @@ GetDataSilverStandardStats <- function(top.table.list,
   
   # gather jaccard rand and spearman
   mstr.df <- mstr.df %>%
-    gather("Jaccard", "Rand", "Spearman", key = "measure", value = "value")
+    gather("Jaccard", "Rand", "Spearman",
+           key = "measure", value = "value")
   
   return(mstr.df)
   
