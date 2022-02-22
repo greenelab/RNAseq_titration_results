@@ -364,50 +364,7 @@ if (length(jaccard_list) > 0) {
   
   readr::write_tsv(
     x = jaccard_df,
-    path = file.path(
-      res.dir,
-      str_c(file_identifier, "_PLIER_jaccard.tsv")
-    )
-  )
-  
-  # Plot results
-  
-  plot_filename = file.path(
-    plot.dir,
-    str_c(file_identifier, "_PLIER_jaccard.pdf")
-  )
-  
-  plot_data_filename = file.path(
-    plot.data.dir,
-    str_c(file_identifier, "_PLIER_jaccard.tsv")
-  )
-  
-  readr::write_tsv(
-    x = jaccard_df,
     path = plot_data.filename
   )
   
-  jaccard_df %>%
-    mutate(pseq = as.factor(pseq),
-           nmeth = str_to_upper(nmeth)) %>%
-    ggplot(aes(x = pseq,
-               y = jaccard)) +
-    geom_violin() +
-    stat_summary(fun = median, geom = "line", aes(group = "pseq"),
-                 position = position_dodge(0.6)) +
-    stat_summary(fun = median, geom = "point", aes(group = "pseq"),
-                 position = position_dodge(0.7), size = 1) +
-    expand_limits(y = 0) +
-    facet_wrap(~ nmeth,
-               nrow = 1) +
-    ggtitle(cancer_type) +
-    xlab("% RNA-seq samples") +
-    ylab("Proportion") +
-    theme_bw() +
-    theme(text = element_text(size = 18)) +
-    theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
-  
-  ggsave(plot_filename,
-         plot = last_plot(),
-         height = 3.5, width = 15)
 }
