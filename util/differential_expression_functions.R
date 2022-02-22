@@ -322,61 +322,45 @@ GetDataProportionDE <- function(top.table.list,
   return(deg.count.df)
 }
 
-PlotProportionDE <- function(fit.list, adjust.method = "BH", cutoff = 0.05) {
-  # from a list of limma fits, plot the proportion of genes that are
-  # considered differentially expressed under a user-specified adjusted p
-  # cutoff (FDR < 5% by default); return topTable(s) as well
+PlotProportionDE <- function(propDE_df,
+                             subtypes,
+                             cancer_type,
+                             cutoff = 0.05) {
+  # plot the proportion of DEGs by normalization method
   #
   # Args:
-  #   fit.list: a nested list of limma eBayes fits
-  #   adjust.method: how should the p-values be adjusted for multiple
-  #                  hypothesis testing?
+  #   propDE_df: output from GetDataProportionDE, a data frame with the
+  #     proportion of genes differentially expressed
+  #   subtypes: character string of subtypes being compared (for plot title)
+  #   cancer_type: cancer type of data being used (for plot title)
+  #   cutoff = what adjusted p-value cutoff was used
   #
   # Returns
-  #   A list containing:
-  #     top.table.list: the limma::topTable output (includes all genes)
-  #                     for fits
-  #     p: the bar plot of the proportion of genes that are differentially
-  #        expressed
+  #   A plot object
   #
-
-  # get topTables
-  top.table.list <-
-    lapply(fit.list,  # for each level of % seq
-           function(x)
-             lapply(x, # for each normalization method
-                    function(y) GetAllGenesTopTable(y, adjust = adjust.method)))
-
-  # how many genes are differentially expressed @ cutoff
-  deg.count.count.list <-
-    lapply(top.table.list,  # for each level of % seq
-           function(x) lapply(x,  # for each normalization method
-                              function(y) sum(y$adj.P.Val < cutoff)))
-  # get DEG counts as data.frame
-  deg.count.df <- reshape2::melt(deg.count.count.list)
-
-  # get proportion differentially expressed genes
-  deg.count.df$value <- deg.count.df$value / dim(top.table.list[[1]][[1]])[1]
-  colnames(deg.count.df) <- c("perc.ltdeg.count", "normalization", "perc.seq")
-
-  # order % seq so bar plot displays 0-100
-  deg.count.df$perc.seq <- factor(deg.count.df$perc.seq,
-                                  levels = seq(0, 100, 10))
-
-  # capitalize normalization methods for display
-  deg.count.df$normalization <- as.factor(toupper(deg.count.df$normalization))
 
   # bar plots of proportion of genes that are differentially expressed
   # in each experiment
-  p <- ggplot(deg.count.df, aes(perc.seq, perc.ltdeg.count,
-                                fill = normalization)) +
-    geom_bar(stat = "identity", position = "dodge", colour = "black") +
-    theme_classic() +
-    xlab("% RNA-seq samples") +
-    ylab("proportion of genes FDR < 5%") +
-    scale_fill_manual(values = cbPalette)
-
-  return(list("top.table.list" = top.table.list, "plot" = p))
+  p <- ggplot(propDE_df,
+              aes(x = perc.seq,
+                  y = perc.ltdeg.count,
+                  #fill = normalization
+                  )) +
+    facet_wrap(~ normalization,
+               ncol = 4) +
+    geom_bar(stat = "identity",
+             position = "dodge") +
+    labs(x = "% RNA-seq Samples",
+         y = str_c("Proportion of Genes FDR < ", cutoff),
+         title = str_c(cancer_type, " ", subtypes, " DEGs")) +
+    scale_x_discrete(labels = c("0", "", "", "", "",
+                                "50", "", "", "", "",
+                                "100"),
+                     drop = FALSE) +
+    expand_limits(y = 1) +
+    theme_bw()
+  
+  return(p)
 }
 
 GetDataSilverStandardStats <- function(top.table.list,
@@ -389,9 +373,8 @@ GetDataSilverStandardStats <- function(top.table.list,
   #   cutoff: adjusted p-value threshold to be used
   #
   # Returns:
-  #   Jaccard similarity line plot
-  #   Rand index line plot
-  #   Spearman rank correlation line plot
+  #   Data frame to plot Jaccard similarity, Rand index, Spearman rank correlation
+  #
   
   ### "silver standards" ###
   
@@ -422,12 +405,12 @@ GetDataSilverStandardStats <- function(top.table.list,
   # combine seq and array similarity results
   array.stats.df <- cbind(array.stats.df, rep("Microarray", nrow(array.stats.df)))
   seq.stats.df <- cbind(seq.stats.df, rep("RNA-seq", nrow(seq.stats.df)))
-  colnames(seq.stats.df) <- colnames(array.stats.df) <- c("jaccard",
-                                                          "rand",
-                                                          "spearman",
-                                                          "normalization",
-                                                          "perc.seq",
-                                                          "platform")
+  colnames(seq.stats.df) <- colnames(array.stats.df) <- c("Jaccard",
+                                                          "Rand",
+                                                          "Spearman",
+                                                          "Normalization",
+                                                          "Perc.Seq",
+                                                          "Platform")
   mstr.df <- rbind(array.stats.df, seq.stats.df)
   
   # order % seq so plot displays 0-100
@@ -435,113 +418,68 @@ GetDataSilverStandardStats <- function(top.table.list,
   
   # capitalize normalization methods for display
   mstr.df$normalization <- as.factor(toupper(mstr.df$normalization))
+  
+  # gather jaccard rand and spearman
+  mstr.df <- mstr.df %>%
+    gather("Jaccard", "Rand", "Spearman", key = "measure", value = "value")
   
   return(mstr.df)
   
 }
 
-PlotSilverStandardStats <- function(top.table.list, title,
-                                    cutoff = 0.05){
-  # Given a list of top tables, plot the Jaccard similarity, Rand index, and
-  # Spearman rho between the "silver standards" and all other experiments
+PlotSilverStandardStats <- function(measure_df,
+                                    title,
+                                    single_measure = FALSE){
+  # Plot the Jaccard similarity, Rand index, or Spearman rho between the
+  # "silver standards" and all other experiments
   #
   # Args:
-  #   top.table.list: list of limma::topTable objects from PlotProportionDE
-  #   title: a character vector to be used for the title of the plot
-  #   cutoff: adjusted p-value threshold to be used
+  #   propDE_df: output from GetDataSilverStandardStats, data frame with each set of stats
+  #   title: main title of plot
+  #   single_measure: specify TRUE if only one measure (Jaccard, Rand, or Spearman) is being used as input
   #
   # Returns:
-  #   Jaccard similarity line plot
-  #   Rand index line plot
+  #   Jaccard similarity line plot, and
+  #   Rand index line plot, and
   #   Spearman rank correlation line plot
-  
-  ### "silver standards" ###
-  
-  # 100% RNA-seq data RSEM using limma::voom processing step
-  #top.table.list$`100`$un
-  
-  # LOG 100% array data
-  #top.table.list$`0`$log
-  
-  # how similiar are DEG results to the RNA-seq silver standard?
-  seq.stats.list <-
-    lapply(top.table.list,
-           function(x) lapply(x,
-                              function(y) GetGeneSetStats(top.table.list$`100`$un,
-                                                          y, cutoff = cutoff)))
-  seq.stats.df <- reshape2::melt(seq.stats.list,
-                                 id.vars = c("jaccard", "rand", "spearman"))
-  
-  # how similiar are DEG results to the microarray silver standard?
-  array.stats.list <-
-    lapply(top.table.list,
-           function(x) lapply(x,
-                              function(y) GetGeneSetStats(top.table.list$`0`$log,
-                                                          y, cutoff = cutoff)))
-  array.stats.df <- reshape2::melt(array.stats.list,
-                                   id.vars = c("jaccard", "rand", "spearman"))
-  
-  # combine seq and array similarity results
-  array.stats.df <- cbind(array.stats.df, rep("Microarray", nrow(array.stats.df)))
-  seq.stats.df <- cbind(seq.stats.df, rep("RNA-seq", nrow(seq.stats.df)))
-  colnames(seq.stats.df) <- colnames(array.stats.df) <- c("jaccard",
-                                                          "rand",
-                                                          "spearman",
-                                                          "normalization",
-                                                          "perc.seq",
-                                                          "platform")
-  mstr.df <- rbind(array.stats.df, seq.stats.df)
-  
-  # order % seq so plot displays 0-100
-  mstr.df$perc.seq <- factor(mstr.df$perc.seq, levels = seq(0, 100, 10))
-  
-  # capitalize normalization methods for display
-  mstr.df$normalization <- as.factor(toupper(mstr.df$normalization))
-  
+    
   # line plots
-  # TODO make this less repetitive once we figure out what to do with plots overall
-  plots_list <- list()
-  
-  plots_list[["jaccard"]] <- ggplot(mstr.df, aes(perc.seq, jaccard,
-                                                 color = platform,
-                                                 fill = platform)) +
-    facet_wrap(~normalization, ncol = 4) +
-    geom_line(aes(group = platform), position = position_dodge(0.3)) +
-    geom_point(aes(group = platform), position = position_dodge(0.3)) +
-    theme_bw() +
+  plot_obj <- ggplot(measure_df,
+                     aes(x = Perc.Seq,
+                         y = value,
+                         color = Platform,
+                         fill = Platform)) +
+    geom_line(aes(group = Platform),
+              position = position_dodge(0.7)) +
+    geom_point(aes(group = Platform),
+               position = position_dodge(0.7)) +
+    scale_x_discrete(labels = c("0", "", "", "", "",
+                                "50", "", "", "", "",
+                                "100")) +
+    expand_limits(y = c(0,1)) +
+    scale_y_continuous(breaks = seq(0, 1, 0.25)) +
     scale_colour_manual(values = cbPalette[c(2, 3)]) +
-    ggtitle(title) +
-    xlab("% RNA-seq") +
-    ylab("Jaccard similarity") +
-    theme(axis.text.x=element_text(angle = 45, vjust = 0.5))
-  
-  plots_list[["rand"]] <- ggplot(mstr.df, aes(perc.seq, rand,
-                                                 color = platform,
-                                                 fill = platform)) +
-    facet_wrap(~normalization, ncol = 4) +
-    geom_line(aes(group = platform), position = position_dodge(0.3)) +
-    geom_point(aes(group = platform), position = position_dodge(0.3)) +
     theme_bw() +
-    scale_colour_manual(values = cbPalette[c(2, 3)]) +
-    ggtitle(title) +
-    xlab("% RNA-seq") +
-    ylab("Rand index") +
-    theme(axis.text.x=element_text(angle = 45, vjust = 0.5))
+    theme(legend.position = "bottom") +
+    labs(x = "% RNA-seq in Experimental Dataset",
+         y = ifelse(single_measure,
+                    unique(measure_df$measure),
+                    "Measure of similarity"),
+         color = "Silver Standard Comparison Platform",
+         fill = "Silver Standard Comparison Platform",
+         title = title)
   
-  plots_list[["spearman"]] <- ggplot(mstr.df, aes(perc.seq, spearman,
-                                                  color = platform,
-                                                  fill = platform)) +
-    facet_wrap(~normalization, ncol = 4) +
-    geom_line(aes(group = platform), position = position_dodge(0.3)) +
-    geom_point(aes(group = platform), position = position_dodge(0.3)) +
-    theme_bw() +
-    scale_colour_manual(values = cbPalette[c(2, 3)]) +
-    ggtitle(title) +
-    xlab("% RNA-seq") +
-    ylab("Spearman rank correlation (rho)") +
-    theme(axis.text.x=element_text(angle = 45, vjust = 0.5))
+  if (single_measure) {
+    plot_obj <- plot_obj +
+      facet_wrap(~ Normalization,
+                 ncol = 7)
+    } else {
+    plot_obj <- plot_obj +
+      facet_grid(rows = vars(measure),
+                 cols = vars(Normalization))
+  }
   
-  return(plots_list)
+  return(plot_obj)
   
 }
 
