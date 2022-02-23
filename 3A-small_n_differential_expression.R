@@ -161,17 +161,14 @@ names(stats.df.list)[1:9] <- as.character(seq(10, 90, 10))
 
 # combine jaccard similarity data.frames into one data.frame
 subtypes_combination <- stringr::str_c(two_subtypes, collapse = "v")
-subtypes_combination_nice <- stringr::str_c(two_subtypes, collapse = " vs. ")
 
 stats.df <- reshape2::melt(stats.df.list,
                            id.vars = c("platform", "normalization", "no.samples"))
-names(stats.df) <- c("platform", "normalization", "no.samples", "metric", "value",
+names(stats.df) <- c("platform", "normalization", "no.samples", "measure", "value",
                      "iteration", "seq_prop")
 stats.df %>% 
   mutate(seq_prop = factor(str_c(seq_prop, "% RNA-seq"),
-                           levels = str_c(seq(0, 100, 10), "% RNA-seq"))) %>%
-  gather("Jaccard", "Rand", "Spearman",
-         key = "measure", value = "value") %>%
+                           levels = str_c(seq(0, 100, 10), "% RNA-seq")))
   
 write.table(stats.df,
             file = file.path(plot.data.dir,
