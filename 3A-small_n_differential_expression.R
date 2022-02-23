@@ -55,20 +55,6 @@ smpl.file <- file.path(res.dir,
                                   pattern = paste0(file_identifier, # and does not rely on knowing a seed
                                                    "_matchedSamples_training_testing_split_labels_"))[1])
 
-#### functions -----------------------------------------------------------------
-
-DataSummary <- function(x) {
-  # This function is supplied to ggplot2::stat_summary in order to plot the
-  # median value of a vector as a point and the "confidence interval on the
-  # median" used in notched boxplots as a vertical line. See boxplot.stats for
-  # more information.
-  m <- median(x)
-  conf <- boxplot.stats(x)$conf
-  ymin <- min(conf)
-  ymax <- max(conf)
-  return(c(y = m, ymin = ymin, ymax = ymax))
-}
-
 #### read in data --------------------------------------------------------------
 
 seq.data <- data.table::fread(seq.file, data.table = F)
@@ -192,67 +178,3 @@ write.table(stats.df,
                                     subtypes_combination,
                                     "_results.tsv")),
             sep = "\t", quote = FALSE, row.names = FALSE)
-
-# line plot is saved as a PDF
-# TODO future problem: make sure the x-axis values are consistent across plots
-for (percent_rna_seq in as.integer(names(stats.df.list))) {
-  stats.df.pct <- stats.df %>%
-    filter(seq_prop == percent_rna_seq)
-  
-  ggplot(stats.df.pct, aes(x = no.samples,
-                           y = jaccard,
-                           color = platform)) +
-    facet_wrap(~ normalization, ncol = 1) +
-    stat_summary(fun = median, geom = "line", aes(group = platform),
-                 position = position_dodge(0.2)) +
-    stat_summary(fun.data = DataSummary, aes(group = platform),
-                 position = position_dodge(0.2), size = 0.2) +
-    theme_bw() +
-    ggtitle(paste(subtypes_combination_nice, "FDR < 10%")) +
-    ylab("Jaccard similarity") +
-    xlab("Number of samples (n)") +
-    scale_colour_manual(values = cbPalette[c(2, 3)]) +
-    theme(text = element_text(size = 18))
-  ggsave(filename = here::here("plots",
-                               str_c(file_identifier, "small_n", subtypes_combination,
-                                     percent_rna_seq, "pct_rna_seq_jaccard_lineplots.pdf", sep = "_")),
-         plot = last_plot(), width = 5, height = 7)
-  
-  ggplot(stats.df.pct, aes(x = no.samples,
-                           y = rand,
-                           color = platform)) +
-    facet_wrap(~ normalization, ncol = 1) +
-    stat_summary(fun = median, geom = "line", aes(group = platform),
-                 position = position_dodge(0.2)) +
-    stat_summary(fun.data = DataSummary, aes(group = platform),
-                 position = position_dodge(0.2), size = 0.2) +
-    theme_bw() +
-    ggtitle(paste(subtypes_combination_nice, "FDR < 10%")) +
-    ylab("Rand index") +
-    xlab("Number of samples (n)") +
-    scale_colour_manual(values = cbPalette[c(2, 3)]) +
-    theme(text = element_text(size = 18))
-  ggsave(filename = here::here("plots",
-                               str_c(file_identifier, "small_n", subtypes_combination,
-                                     percent_rna_seq, "pct_rna_seq_rand_lineplots.pdf", sep = "_")),
-         plot = last_plot(), width = 5, height = 7)
-  
-  ggplot(stats.df.pct, aes(x = no.samples,
-                           y = spearman,
-                           color = platform)) +
-    facet_wrap(~ normalization, ncol = 1) +
-    stat_summary(fun = median, geom = "line", aes(group = platform),
-                 position = position_dodge(0.2)) +
-    stat_summary(fun.data = DataSummary, aes(group = platform),
-                 position = position_dodge(0.2), size = 0.2) +
-    theme_bw() +
-    ggtitle(paste(subtypes_combination_nice, "FDR < 10%")) +
-    ylab("Spearman correlation") +
-    xlab("Number of samples (n)") +
-    scale_colour_manual(values = cbPalette[c(2, 3)]) +
-    theme(text = element_text(size = 18))
-  ggsave(filename = here::here("plots",
-                               str_c(file_identifier, "small_n", subtypes_combination,
-                                     percent_rna_seq, "pct_rna_seq_spearman_lineplots.pdf", sep = "_")),
-         plot = last_plot(), width = 5, height = 7)
-}
