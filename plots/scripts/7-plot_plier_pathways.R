@@ -64,7 +64,7 @@ jaccard_df <- read_tsv(plot_data_filename,
 set.seed(1) # using jitter
 
 plot_obj <- jaccard_df %>%
-  ggplot(aes(x = nmeth,
+  ggplot(aes(x = fct_rev(nmeth),
              y = jaccard)) +
   geom_violin(draw_quantiles = .5,
               scale = "width") +
