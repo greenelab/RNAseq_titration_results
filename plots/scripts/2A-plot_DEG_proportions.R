@@ -14,10 +14,8 @@ option_list <- list(
                         default = NA_character_,
                         help = "Cancer type"),
   optparse::make_option("--subtype_vs_others",
-                        #default = NA_character_, not required
                         help = "Subtype used for comparison against all others."),
   optparse::make_option("--subtype_vs_subtype",
-                        #default = NA_character_, not required
                         help = "Subtypes used in head-to-head comparison (comma-separated without space e.g. Type1,Type2)"),
   optparse::make_option("--supplementary",
                         action = "store_true",
@@ -70,12 +68,7 @@ output_directory <- file.path(ifelse(supplementary,
 
 #### functions -----------------------------------------------------------------
 
-plot_DEG_and_save <- function(subtypes # c(subtype, Other) or c(subtype1, subtype2)
-                              #plot_data_dir = plot_data_dir,
-                              #file_identifier = file_identifier,
-                              #output_directory = output_directory,
-                              #cancer_type = cancer_type
-  ){
+plot_DEG_and_save <- function(subtypes){
   
   subtypes_path <- str_c(subtypes, collapse = "v")
   subtypes_nice <- str_c(subtypes, collapse = " vs. ")
@@ -100,7 +93,6 @@ plot_DEG_and_save <- function(subtypes # c(subtype, Other) or c(subtype1, subtyp
                                subtypes = subtypes_nice,
                                cancer_type = cancer_type)
   
-  #return(plot_obj)
   ggsave(output_filename,
          plot = plot_obj,
          width = 7.25,
