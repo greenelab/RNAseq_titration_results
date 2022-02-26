@@ -37,7 +37,7 @@ plot.data.dir <- here::here("plots/data")
 
 # define input file
 
-plot_data_filename = file.path(
+plot_data_filename <- file.path(
   plot.data.dir,
   str_c(file_identifier, "_PLIER_jaccard.tsv")
 )
