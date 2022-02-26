@@ -59,7 +59,7 @@ jaccard_df <- read_tsv(plot_data_filename,
 set.seed(1) # using jitter
 
 plot_obj <- jaccard_df %>%
-  ggplot(aes(x = fct_rev(nmeth),
+  ggplot(aes(x = nmeth,
              y = jaccard)) +
   geom_violin(draw_quantiles = .5,
               scale = "width") +
@@ -68,7 +68,7 @@ plot_obj <- jaccard_df %>%
               height = 0,
               width = 0.1) +
   expand_limits(y = 0) +
-  facet_grid(. ~ sample_size,
+  facet_grid(. ~ fct_rev(sample_size),
              scales = "free_x",
              space='free') +
   ggtitle(cancer_type) +
