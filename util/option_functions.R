@@ -56,6 +56,13 @@ check_options <- function(opt) {
                                               " (", dirname(opt[[option]]), ") ",
                                               "does not exist.")
       }
+    } else if (stringr::str_ends(option, "_directory")) { # option related to output directory
+      if (!dir.exists(opt[[option]])) {
+        my_errors[[option]] <- stringr::str_c("\nOutput directory given for --", option,
+                                              " (", opt[[option]], ") ",
+                                              "does not exist.")
+      }
+      
     }
   }
 

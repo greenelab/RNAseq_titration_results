@@ -30,6 +30,8 @@ opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
 source(here::here("util/option_functions.R"))
 check_options(opt)
 
+stop()
+
 # at least one of --subtype_vs_others or --subtype_vs_subtype should be given
 if (any(c("subtype_vs_others", "subtype_vs_subtype") %in% names(opt))) {
   
