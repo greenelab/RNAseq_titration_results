@@ -30,8 +30,6 @@ opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
 source(here::here("util/option_functions.R"))
 check_options(opt)
 
-stop()
-
 # at least one of --subtype_vs_others or --subtype_vs_subtype should be given
 if (any(c("subtype_vs_others", "subtype_vs_subtype") %in% names(opt))) {
   
@@ -60,28 +58,12 @@ if (any(c("proportion_output_directory", "overlap_output_directory") %in% names(
   if ("proportion_output_directory" %in% names(opt)) {
     proportion_output_directory <- opt$proportion_output_directory
     plot_proportion <- TRUE
-    
-    # check if output directory exists
-    if (!dir.exists(proportion_output_directory)) {
-      message(paste0("  Errors: --proportion_output_directory ",
-                     proportion_output_directory,
-                     " does not exist in plots/scripts/2A-plot_DEG_proportions.R.\n"))
-      stop() 
-    }
-    
+
   }
   
   if ("overlap_output_directory" %in% names(opt)) {
     overlap_output_directory <- opt$overlap_output_directory
     plot_overlap <- TRUE
-    
-    # check if output directory exists
-    if (!dir.exists(overlap_output_directory)) {
-      message(paste0("  Errors: --overlap_output_directory ",
-                     overlap_output_directory,
-                     " does not exist in plots/scripts/2A-plot_DEG_proportions.R.\n"))
-      stop() 
-    }
     
     # check that overlap measures requested are the ones present in data
     if ("overlap_measure" %in% names(opt)) {
