@@ -6,6 +6,7 @@
 # (0-100%) normalized various ways.
 #
 # Plot the proportion of genes that are differentially expressed between conditions
+# Plot similarity of DEGs to silver standards (subtype vs. others only)
 #
 # USAGE: Rscript 2A-plot_DEG_proportions.R --cancer_type --subtype_vs_others --subtype_vs_subtype
 
@@ -17,10 +18,12 @@ option_list <- list(
                         help = "Subtype used for comparison against all others."),
   optparse::make_option("--subtype_vs_subtype",
                         help = "Subtypes used in head-to-head comparison (comma-separated without space e.g. Type1,Type2)"),
-  optparse::make_option("--supplementary",
-                        action = "store_true",
-                        default = FALSE,
-                        help = "Save plot in plots/supplementary folder instead of plots/main")
+  optparse::make_option("--proportion_output_directory",
+                        help = "Output directory of DEG proportion plot. Include this option to plot DEG proportion plot."),
+  optparse::make_option("--overlap_output_directory",
+                        help = "Output directory of DEG overlap plot. Include this option to plot silver standard overlap plot."),
+  optparse::make_option("--overlap_measure",
+                        help = "Which overlap measures to include in silver standard overlap plot (comma-separated without space e.g. Jaccard,Rand,Spearman; must be one or more of Jaccard, Rand, Spearman)")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
@@ -46,6 +49,59 @@ if (any(c("subtype_vs_others", "subtype_vs_subtype") %in% names(opt))) {
   stop()
 }
 
+# at least one of --proportion_output_directory or --overlap_output_directory should be given
+if (any(c("proportion_output_directory", "overlap_output_directory") %in% names(opt))) {
+  
+  proportion_output_directory <- NA # first assume option is not provided
+  overlap_output_directory <- NA # then update as available below
+  
+  if ("proportion_output_directory" %in% names(opt)) {
+    proportion_output_directory <- opt$proportion_output_directory
+    plot_proportion <- TRUE
+    
+    # check if output directory exists
+    if (!dir.exists(proportion_output_directory)) {
+      message(paste0("  Errors: --proportion_output_directory ",
+                     proportion_output_directory,
+                     " does not exist in plots/scripts/2A-plot_DEG_proportions.R.\n"))
+      stop() 
+    }
+    
+  }
+  
+  if ("overlap_output_directory" %in% names(opt)) {
+    overlap_output_directory <- opt$overlap_output_directory
+    plot_overlap <- TRUE
+    
+    # check if output directory exists
+    if (!dir.exists(overlap_output_directory)) {
+      message(paste0("  Errors: --overlap_output_directory ",
+                     overlap_output_directory,
+                     " does not exist in plots/scripts/2A-plot_DEG_proportions.R.\n"))
+      stop() 
+    }
+    
+    # check that overlap measures requested are the ones present in data
+    if ("overlap_measure" %in% names(opt)) {
+      overlap_measures <- sort(stringr::str_split(opt$overlap_measure,
+                                            pattern = ",", simplify = TRUE))
+      
+      if (!all(overlap_measures %in% c("Jaccard", "Rand", "Spearman"))) {
+        message("  Errors: --overlap_measure must be one or more of Jaccard, Rand, Spearman in plots/scripts/2A-plot_DEG_proportions.R.\n")
+        stop()  
+      }
+      
+    } else {
+      message("  Errors: must include --overlap_measure with --overlap_output_directory in plots/scripts/2A-plot_DEG_proportions.R.\n")
+      stop()
+    }
+  }
+  
+} else {
+  message("  Errors: must include --proportion_output_directory and/or --overlap_output_directory in plots/scripts/2A-plot_DEG_proportions.R.\n")
+  stop()
+}
+
 # load libraries
 suppressMessages(library(tidyverse))
 source(here::here("util/color_blind_friendly_palette.R"))
@@ -53,22 +109,15 @@ source(here::here("util", "differential_expression_functions.R"))
 
 # set options
 cancer_type <- opt$cancer_type
-supplementary <- opt$supplementary
 file_identifier <- str_c(cancer_type, "subtype", sep = "_") # we are only working with subtype models here
 
 # define directories
 plot.dir <- here::here("plots")
-plot.main.dir <- file.path(plot.dir, "main")
-plot.supp.dir <- file.path(plot.dir, "supplementary")
 plot.data.dir <- file.path(plot.dir, "data")
-
-output_directory <- file.path(ifelse(supplementary,
-                                     plot.supp.dir,
-                                     plot.main.dir))
 
 #### functions -----------------------------------------------------------------
 
-plot_DEG_and_save <- function(subtypes){
+plot_DEG_proportions <- function(subtypes){
   
   subtypes_path <- str_c(subtypes, collapse = "v")
   subtypes_nice <- str_c(subtypes, collapse = " vs. ")
@@ -79,8 +128,8 @@ plot_DEG_and_save <- function(subtypes){
            subtypes_path, ".propDE.tsv"))
   
   output_filename <- file.path(
-    output_directory,
-    paste0(file_identifier, "_differential_expr_proportion_ltFDR5perc_",
+    proportion_output_directory,
+    paste0(file_identifier, "_differential_expr_proportion_lt5_",
            subtypes_path, ".pdf"))
   
   propDEG_df <- read_tsv(input_filename,
@@ -100,13 +149,56 @@ plot_DEG_and_save <- function(subtypes){
   
 }
 
+plot_silver_overlap <- function(subtypes){
+  
+  subtypes_path <- str_c(subtypes, collapse = "v")
+  subtypes_nice <- str_c(subtypes, collapse = " vs. ")
+  measures_path <- str_c(overlap_measures, collapse = "_")
+  
+  input_filename <- file.path(
+    plot.data.dir,
+    paste0(file_identifier, "_titration_differential_exp_eBayes_fits_",
+           subtypes_path, ".silver.tsv"))
+  
+  output_filename <- file.path(
+    overlap_output_directory,
+    paste0(file_identifier, "_silver_standard_similarity_lt5_",
+           measures_path, "_", subtypes_path, ".pdf"))
+  
+  silver_df <- read_tsv(input_filename,
+                        col_types = "cdccd") %>%
+    mutate(perc.seq = factor(perc.seq,
+                             levels = seq(0, 100, 10))) %>%
+    filter(measure %in% overlap_measures)
+  
+  using_single_measure <- length(overlap_measures) == 1
+  
+  plot_obj <- PlotSilverStandardStats(
+    silver_df,
+    title = paste(cancer_type, subtypes_nice, " FDR < 5%"),
+    single_measure = using_single_measure)
+
+  ggsave(
+    output_filename,
+    plot = plot_obj,
+    width = 7.25,
+    height = c(3,4,5)[length(overlap_measures)]
+  )
+}
+
 #### plot Subtype v. Other results ---------------------------------------------
 
 if (!is.na(subtype_vs_others)) {
   
   subtypes <- c(subtype_vs_others, "Other")
-  plot_DEG_and_save(subtypes)
 
+  if (plot_proportion) {
+    plot_DEG_proportions(subtypes)  
+  }
+  
+  if (plot_overlap) {
+    plot_silver_overlap(subtypes)  
+  }
 }
 
 #### plot Subtype v. Subtype results -------------------------------------------
@@ -115,6 +207,13 @@ if (!is.na(subtype_vs_subtype)) {
   
   subtypes <- as.vector(
     stringr::str_split(subtype_vs_subtype, pattern = ",", simplify = TRUE))
-  plot_DEG_and_save(subtypes)
+
+  if (plot_proportion) {
+    plot_DEG_proportions(subtypes)  
+  }
+  
+  if (plot_overlap) {
+    plot_silver_overlap(subtypes)  
+  }
 
 }
