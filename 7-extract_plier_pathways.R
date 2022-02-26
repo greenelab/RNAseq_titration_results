@@ -52,6 +52,12 @@ norm.train.files <- file.path(
   )
 )
 
+# define output files
+plot_data_filename <- file.path(
+  plot.data.dir,
+  str_c(file_identifier, "_PLIER_jaccard.tsv")
+)
+
 #### set up PLIER data ---------------------------------------------------------
 
 data(bloodCellMarkersIRISDMAP)
@@ -364,7 +370,7 @@ if (length(jaccard_list) > 0) {
   
   readr::write_tsv(
     x = jaccard_df,
-    path = plot_data.filename
+    path = plot_data_filename
   )
   
 }

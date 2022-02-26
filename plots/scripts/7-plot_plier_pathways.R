@@ -9,10 +9,9 @@ option_list <- list(
   optparse::make_option("--predictor",
                         default = NA_character_,
                         help = "Predictor used"),
-  optparse::make_option("--supplementary",
-                        action = "store_true",
-                        default = FALSE,
-                        help = "Save plot in plots/supplementary folder instead of plots/main")
+  optparse::make_option("--output_directory",
+                        default = NA_character_,
+                        help = "Save plot to this directory")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
@@ -26,27 +25,23 @@ source(here::here("util/color_blind_friendly_palette.R"))
 # set options
 cancer_type <- opt$cancer_type
 predictor <- opt$predictor
-supplementary <- opt$supplementary
+output_directory <- opt$output_directory
 file_identifier <- str_c(cancer_type, predictor, sep = "_")
 
 # define directories
 plot.dir <- here::here("plots")
-plot.main.dir <- file.path(plot.dir, "main")
-plot.supp.dir <- file.path(plot.dir, "supplementary")
 plot.data.dir <- here::here("plots/data")
 
 # define input file
 
-plot_data_filename = file.path(
+plot_data_filename <- file.path(
   plot.data.dir,
   str_c(file_identifier, "_PLIER_jaccard.tsv")
 )
 
 # define output files
 
-output_filename <- file.path(ifelse(supplementary,
-                                    plot.supp.dir,
-                                    plot.main.dir),
+output_filename <- file.path(output_directory,
                              str_c(file_identifier,
                                    "_PLIER_jaccard.pdf"))
 
@@ -64,7 +59,7 @@ jaccard_df <- read_tsv(plot_data_filename,
 set.seed(1) # using jitter
 
 plot_obj <- jaccard_df %>%
-  ggplot(aes(x = fct_rev(nmeth),
+  ggplot(aes(x = nmeth,
              y = jaccard)) +
   geom_violin(draw_quantiles = .5,
               scale = "width") +
@@ -73,7 +68,7 @@ plot_obj <- jaccard_df %>%
               height = 0,
               width = 0.1) +
   expand_limits(y = 0) +
-  facet_grid(. ~ sample_size,
+  facet_grid(. ~ fct_rev(sample_size),
              scales = "free_x",
              space='free') +
   ggtitle(cancer_type) +
