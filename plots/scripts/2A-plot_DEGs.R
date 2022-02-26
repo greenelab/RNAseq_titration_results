@@ -151,7 +151,7 @@ plot_silver_overlap <- function(subtypes){
   
   silver_df <- read_tsv(input_filename,
                         col_types = "cdccd") %>%
-    mutate(perc.seq = factor(perc.seq,
+    mutate(Perc.Seq = factor(Perc.Seq,
                              levels = seq(0, 100, 10))) %>%
     filter(measure %in% overlap_measures)
   
