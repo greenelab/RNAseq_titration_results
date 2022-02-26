@@ -8,7 +8,7 @@
 # Plot the proportion of genes that are differentially expressed between conditions
 # Plot similarity of DEGs to silver standards (subtype vs. others only)
 #
-# USAGE: Rscript 2A-plot_DEG_proportions.R --cancer_type --subtype_vs_others --subtype_vs_subtype
+# USAGE: Rscript 2A-plot_DEGs.R --cancer_type --subtype_vs_others --subtype_vs_subtype
 
 option_list <- list(
   optparse::make_option("--cancer_type",
