@@ -12,10 +12,9 @@ option_list <- list(
                         action = "store_true",
                         default = FALSE,
                         help = "Use delta kappa input data"),
-  optparse::make_option("--supplementary",
-                        action = "store_true",
-                        default = FALSE,
-                        help = "Save plot in plots/supplementary folder instead of plots/main")
+  optparse::make_option("--output_directory",
+                        default = NA_character_,
+                        help = "Output directory for plot (absolute or relative path)")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
@@ -30,14 +29,12 @@ source(here::here("util/color_blind_friendly_palette.R"))
 cancer_type <- opt$cancer_type
 predictor <- opt$predictor
 null_model <- opt$null_model
-supplementary <- opt$supplementary
 file_identifier <- str_c(cancer_type, predictor, sep = "_")
 
 # define directories
 plot.dir <- here::here("plots")
-plot.main.dir <- file.path(plot.dir, "main")
-plot.supp.dir <- file.path(plot.dir, "supplementary")
 plot.data.dir <- here::here("plots/data")
+output_directoroy <- opt$output_directory
 
 # define input file
 input_filename <- ifelse(null_model,
@@ -49,9 +46,7 @@ input_filename <- ifelse(null_model,
                                           "_train_3_models_kappa.tsv")))
 
 # define output files
-output_filename <- file.path(ifelse(supplementary,
-                                    plot.supp.dir,
-                                    plot.main.dir),
+output_filename <- file.path(output_directory,
                              ifelse(null_model,
                                     paste0(file_identifier,
                                            "_train_3_models_delta_kappa.pdf"),

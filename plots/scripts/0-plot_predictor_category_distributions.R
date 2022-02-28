@@ -15,7 +15,10 @@ option_list <- list(
   optparse::make_option("--plot_all_seeds",
                         action = "store_true",
                         default = FALSE,
-                        help = "Plot all seeds instead of representative seed")
+                        help = "Plot all seeds instead of representative seed"),
+  optparse::make_option("--output_directory",
+                        default = NA_character_,
+                        help = "Output directory for plot (absolute or relative path)")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
@@ -37,9 +40,8 @@ file_identifier <- ifelse(null_model,
 
 # define directories
 plot.dir <- here::here("plots")
-plot.main.dir <- file.path(plot.dir, "main")
-plot.supp.dir <- file.path(plot.dir, "supplementary")
 plot.data.dir <- here::here("plots/data")
+output_directory <- opt$output_directory
 
 # list potential input files
 input_files <- list.files(path = plot.data.dir,
@@ -63,13 +65,13 @@ if (plot_all_seeds) { # read in all seed data to one data frame
 
 # define output file
 if (plot_all_seeds) {
-  category.distribution.plot <- file.path(plot.supp.dir,
+  category.distribution.plot <- file.path(output_directory,
                                           paste0(file_identifier,
                                                  ".dist_split_stacked_bar.",
                                                  "all_seeds",
                                                  ".pdf"))
 } else { # default
-  category.distribution.plot <- file.path(plot.supp.dir,
+  category.distribution.plot <- file.path(output_directory,
                                           paste0(file_identifier,
                                                  ".dist_split_stacked_bar.",
                                                  initial_seed,
