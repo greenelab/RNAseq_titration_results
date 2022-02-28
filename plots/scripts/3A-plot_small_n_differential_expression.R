@@ -140,7 +140,7 @@ plot_small_n <- function(subtypes){
     expand_limits(y = c(0,1)) +
     scale_y_continuous(breaks = seq(0, 1, 0.25)) +
     theme_bw() +
-    labs(x = "Number of samples",
+    labs(x = "Number of samples from each subtype",
          y = ifelse(using_single_measure,
                     unique(stats_df$measure),
                     "Measure of similarity"),
