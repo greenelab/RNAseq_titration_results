@@ -465,7 +465,7 @@ PlotSilverStandardStats <- function(measure_df,
     labs(x = "% RNA-seq in Experimental Dataset",
          y = ifelse(single_measure,
                     unique(measure_df$measure),
-                    "Measure of similarity"),
+                    "Measure of Similarity"),
          color = "Silver Standard Comparison Platform",
          fill = "Silver Standard Comparison Platform",
          title = title)
