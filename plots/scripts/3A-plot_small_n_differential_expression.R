@@ -140,10 +140,10 @@ plot_small_n <- function(subtypes){
     expand_limits(y = c(0,1)) +
     scale_y_continuous(breaks = seq(0, 1, 0.25)) +
     theme_bw() +
-    labs(x = "Number of samples from each subtype",
+    labs(x = "Number of Samples from Each Subtype",
          y = ifelse(using_single_measure,
                     unique(stats_df$measure),
-                    "Measure of similarity"),
+                    "Measure of Similarity"),
          title = paste(cancer_type, subtypes_nice, "FDR < 10%")) +
     scale_colour_manual(values = cbPalette[c(2, 3)])
   
