@@ -45,8 +45,7 @@ if (any(c("subtype_vs_others", "subtype_vs_subtype") %in% names(opt))) {
   }
   
 } else {
-  message("  Errors: must include --subtype_vs_others and/or --subtype_vs_subtype in plots/scripts/2A-plot_DEG_proportions.R.\n")
-  stop()
+  stop("  Errors: must include --subtype_vs_others and/or --subtype_vs_subtype in plots/scripts/2A-plot_DEG_proportions.R.\n")
 }
 
 # at least one of --proportion_output_directory or --overlap_output_directory should be given
@@ -71,19 +70,16 @@ if (any(c("proportion_output_directory", "overlap_output_directory") %in% names(
                                             pattern = ",", simplify = TRUE))
       
       if (!all(overlap_measures %in% c("Jaccard", "Rand", "Spearman"))) {
-        message("  Errors: --overlap_measure must be one or more of Jaccard, Rand, Spearman in plots/scripts/2A-plot_DEG_proportions.R.\n")
-        stop()  
+        stop("  Errors: --overlap_measure must be one or more of Jaccard, Rand, Spearman in plots/scripts/2A-plot_DEG_proportions.R.\n")
       }
       
     } else {
-      message("  Errors: must include --overlap_measure with --overlap_output_directory in plots/scripts/2A-plot_DEG_proportions.R.\n")
-      stop()
+      stop("  Errors: must include --overlap_measure with --overlap_output_directory in plots/scripts/2A-plot_DEG_proportions.R.\n")
     }
   }
   
 } else {
-  message("  Errors: must include --proportion_output_directory and/or --overlap_output_directory in plots/scripts/2A-plot_DEG_proportions.R.\n")
-  stop()
+  stop("  Errors: must include --proportion_output_directory and/or --overlap_output_directory in plots/scripts/2A-plot_DEG_proportions.R.\n")
 }
 
 # load libraries
