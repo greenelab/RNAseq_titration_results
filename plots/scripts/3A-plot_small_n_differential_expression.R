@@ -101,19 +101,8 @@ plot_small_n <- function(subtypes){
   
   using_single_measure <- length(overlap_measures) == 1
   
-  #stats_df <- read_tsv(input_filename,
-  #                     col_types = "ccdddddd") %>%
-  #  filter(seq_prop %in% str_c(c(30, 50, 70), "% RNA-seq"),
-  #         !is.na(value),
-  #         measure %in% overlap_measures) %>%
-  #  mutate(no.samples = factor(no.samples))
-
   stats_df <- read_tsv(input_filename,
                        col_types = "ccdddddd") %>%
-    rename("Jaccard" = "jaccard", "Rand" = "rand", "Spearman" = "spearman") %>%
-    gather(key = "measure", value = "value", Jaccard, Rand, Spearman) %>%
-    mutate(seq_prop = factor(str_c(seq_prop, "% RNA-seq"),
-                             levels = str_c(seq(0, 100, 10), "% RNA-seq"))) %>%
     filter(seq_prop %in% str_c(c(30, 50, 70), "% RNA-seq"),
            !is.na(value),
            measure %in% overlap_measures) %>%
