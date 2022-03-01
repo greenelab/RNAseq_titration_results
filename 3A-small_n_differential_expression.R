@@ -3,7 +3,7 @@
 # (quantile normalization or z-transformation) perform wrt differential
 # expression when there are a small number of samples on each platform
 #
-# USAGE: Rscript 3A-small_n_differential_expression.R --cancer_type --subtype_vs_subtype
+# USAGE: Rscript 3A-small_n_differential_expression.R --cancer_type --subtype_vs_subtype --ncores
 
 option_list <- list(
   optparse::make_option("--cancer_type",
@@ -14,7 +14,10 @@ option_list <- list(
                         help = "Subtypes used in head-to-head comparison (comma-separated without space e.g. Type1,Type2)"),
   optparse::make_option("--seed",
                         default = 3255,
-                        help = "Random seed")
+                        help = "Random seed"),
+  optparse::make_option("--ncores",
+                        default = NA_integer_,
+                        help = "Set the number of cores to use")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
@@ -32,6 +35,9 @@ cancer_type <- opt$cancer_type
 subtype_vs_subtype <- opt$subtype_vs_subtype
 two_subtypes <- as.vector(stringr::str_split(subtype_vs_subtype, pattern = ",", simplify = TRUE))
 file_identifier <- str_c(cancer_type, "subtype", sep = "_") # we are only working with subtype models here
+ncores <- min(parallel::detectCores() - 1,
+              opt$ncores,
+              na.rm = TRUE)
 
 # set seed
 initial.seed <- opt$seed
@@ -100,7 +106,7 @@ stats.df.list <- list()
 
 # Do this at 0-100% RNA-seq titration levels
 # parallel backend
-cl <- parallel::makeCluster(detectCores() - 1)
+cl <- parallel::makeCluster(ncores)
 doParallel::registerDoParallel(cl)
 
 # at each titration level (0-100% RNA-seq)
