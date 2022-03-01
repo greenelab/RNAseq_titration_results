@@ -20,5 +20,4 @@ fi
 
 # Run differential expression scripts
 Rscript 1A-detect_differentially_expressed_genes.R --cancer_type $cancer_type --subtype_vs_others $subtype_vs_others --subtype_vs_subtype $subtype_vs_subtype --ncores $ncores
-Rscript 2A-plot_DE_results.R --cancer_type $cancer_type --subtype_vs_others $subtype_vs_others --subtype_vs_subtype $subtype_vs_subtype
 Rscript 3A-small_n_differential_expression.R --cancer_type $cancer_type --subtype_vs_subtype $subtype_vs_subtype_small --ncores $ncores
