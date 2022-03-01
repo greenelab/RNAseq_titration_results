@@ -3,7 +3,7 @@
 # in our data, and quantify the rate of return for significant PLIER pathways
 # for data coming from different normalization methods and titration levels.
 #
-# USAGE: Rscript 7-extract_plier_pathways.R --cancer_type --seed
+# USAGE: Rscript 7-extract_plier_pathways.R --cancer_type --seed --ncores
 
 option_list <- list(
   optparse::make_option("--cancer_type",
@@ -13,6 +13,10 @@ option_list <- list(
   optparse::make_option("--seed",
                         default = 8934,
                         help = "Random seed"
+  ),
+  optparse::make_option("--ncores",
+                        default = NA_integer_,
+                        help = "Set the number of cores to use"
   )
 )
 
@@ -28,6 +32,9 @@ source(here::here("util", "color_blind_friendly_palette.R"))
 # set options
 cancer_type <- opt$cancer_type
 file_identifier <- str_c(cancer_type, "subtype", sep = "_") # assuming subtype
+ncores <- min(parallel::detectCores() - 1,
+              opt$ncores,
+              na.rm = TRUE)
 
 # set seed
 initial.seed <- opt$seed
@@ -244,7 +251,7 @@ for (seed_index in 1:length(norm.train.files)) {
   #### main --------------------------------------------------------------------
   
   # parallel backend
-  cl <- parallel::makeCluster(floor(detectCores()/2))
+  cl <- parallel::makeCluster(ncores)
   doParallel::registerDoParallel(cl)
 
   # create an output list
