@@ -11,6 +11,7 @@ cancer_type=$1
 subtype_vs_others=$2
 subtype_vs_subtype=$3
 subtype_vs_subtype_small=$4
+ncores=$5
 
 if [ $cancer_type != "BRCA" ] && [ $cancer_type != "GBM" ]; then
   echo Cancer type must be BRCA or GBM in run_differential_expression_experiments.sh [cancer_type]
@@ -18,6 +19,6 @@ if [ $cancer_type != "BRCA" ] && [ $cancer_type != "GBM" ]; then
 fi
 
 # Run differential expression scripts
-Rscript 1A-detect_differentially_expressed_genes.R --cancer_type $cancer_type --subtype_vs_others $subtype_vs_others --subtype_vs_subtype $subtype_vs_subtype
+Rscript 1A-detect_differentially_expressed_genes.R --cancer_type $cancer_type --subtype_vs_others $subtype_vs_others --subtype_vs_subtype $subtype_vs_subtype --ncores $ncores
 Rscript 2A-plot_DE_results.R --cancer_type $cancer_type --subtype_vs_others $subtype_vs_others --subtype_vs_subtype $subtype_vs_subtype
-Rscript 3A-small_n_differential_expression.R --cancer_type $cancer_type --subtype_vs_subtype $subtype_vs_subtype_small
+Rscript 3A-small_n_differential_expression.R --cancer_type $cancer_type --subtype_vs_subtype $subtype_vs_subtype_small --ncores $ncores

@@ -21,7 +21,10 @@ option_list <- list(
   optparse::make_option("--null_model",
                         action = "store_true",
                         default = FALSE,
-                        help = "Refer to models with permuted dependent variable (within subtype if predictor is a gene)")
+                        help = "Refer to models with permuted dependent variable (within subtype if predictor is a gene)"),
+  optparse::make_option("--ncores",
+                        default = NA_integer_,
+                        help = "Set the number of cores to use")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
@@ -39,6 +42,9 @@ null_model <- opt$null_model
 file_identifier <- ifelse(null_model,
                           str_c(cancer_type, predictor, "null", sep = "_"),
                           str_c(cancer_type, predictor, sep = "_"))
+ncores <- min(parallel::detectCores() - 1,
+              opt$ncores,
+              na.rm = TRUE)
 
 # set seed
 filename.seed <- opt$seed1
@@ -104,7 +110,7 @@ set.seed(folds.seed)
 folds.list <- lapply(category.norm.list, function(x) createFolds(x, k = 5))
 
 # parallel backend
-cl <- makeCluster(detectCores()-1)
+cl <- parallel::makeCluster(ncores)
 registerDoParallel(cl)
 
 resample.seed <- sample(1:10000, 1)
