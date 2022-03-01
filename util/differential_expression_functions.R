@@ -414,7 +414,7 @@ GetDataSilverStandardStats <- function(top.table.list,
   mstr.df <- rbind(array.stats.df, seq.stats.df)
   
   # order % seq so plot displays 0-100
-  mstr.df$perc.seq <- factor(mstr.df$perc.seq, levels = seq(0, 100, 10))
+  mstr.df$Perc.Seq <- factor(mstr.df$Perc.Seq, levels = seq(0, 100, 10))
   
   # capitalize normalization methods for display
   mstr.df$normalization <- as.factor(toupper(mstr.df$normalization))
