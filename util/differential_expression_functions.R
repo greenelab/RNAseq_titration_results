@@ -417,7 +417,7 @@ GetDataSilverStandardStats <- function(top.table.list,
   mstr.df$Perc.Seq <- factor(mstr.df$Perc.Seq, levels = seq(0, 100, 10))
   
   # capitalize normalization methods for display
-  mstr.df$normalization <- as.factor(toupper(mstr.df$normalization))
+  mstr.df$Normalization <- as.factor(toupper(mstr.df$Normalization))
   
   # gather jaccard rand and spearman
   mstr.df <- mstr.df %>%
