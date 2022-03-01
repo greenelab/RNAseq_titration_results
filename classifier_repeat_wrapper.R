@@ -2,7 +2,7 @@
 # This script is a wrapper for running the BRCA subtype pipeline repeatedly with
 # different random seeds.
 # It should be run from the command line.
-# USAGE: Rscript classifier_repeat_wrapper.R --cancer_type [BRCA|GBM] --predictor [subtype|TP53|PIK3CA] --n_repeats (default: 10) --null_model
+# USAGE: Rscript classifier_repeat_wrapper.R --cancer_type [BRCA|GBM] --predictor [subtype|TP53|PIK3CA] --n_repeats (default: 10) --null_model --ncores
 
 option_list <- list(
   optparse::make_option("--cancer_type",
@@ -17,7 +17,10 @@ option_list <- list(
   optparse::make_option("--null_model",
                         action = "store_true",
                         default = FALSE,
-                        help = "Permute dependent variable (within subtype if predictor is a gene)")
+                        help = "Permute dependent variable (within subtype if predictor is a gene)"),
+  optparse::make_option("--ncores",
+                        default = NA_integer_,
+                        help = "Set the number of cores to use")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
@@ -29,6 +32,9 @@ cancer_type <- opt$cancer_type
 predictor <- opt$predictor
 n.repeats <- opt$n_repeats
 null_model <- opt$null_model
+ncores <- min(parallel::detectCores() - 1,
+              opt$ncores,
+              na.rm = TRUE)
 
 message(paste("\nPredicting", predictor,
               "in", cancer_type,
@@ -36,6 +42,7 @@ message(paste("\nPredicting", predictor,
                      "(null model) ...",
                      "...")))
 message(paste("\nNumber of repeats set to", n.repeats))
+message(paste("\nUsing", ncores, "out of", parallel::detectCores(), "cores"))
 
 initial.seed <- 12
 set.seed(initial.seed)
@@ -51,7 +58,8 @@ for(seed in seeds){
                "--seed", seed,
                ifelse(null_model,
                       "--null_model",
-                      "")))
+                      ""),
+               "--ncores", ncores))
   rep.count <- rep.count + 1
 }
 

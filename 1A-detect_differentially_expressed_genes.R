@@ -6,7 +6,7 @@
 # methods. It takes RNA-seq and microarray data from matched samples as input,
 # and performs RNA-seq titration and differential expression analysis.
 #
-# USAGE: Rscript 1A-detect_differentially_expressed_genes.R --cancer_type --subtype_vs_others --subtype_vs_subtype --seed
+# USAGE: Rscript 1A-detect_differentially_expressed_genes.R --cancer_type --subtype_vs_others --subtype_vs_subtype --seed --ncores
 
 option_list <- list(
   optparse::make_option("--cancer_type",
@@ -20,7 +20,10 @@ option_list <- list(
                         help = "Subtypes used in head-to-head comparison (comma-separated without space e.g. Type1,Type2)"),
   optparse::make_option("--seed",
                         default = 98,
-                        help = "Random seed [default: %default]")
+                        help = "Random seed [default: %default]"),
+  optparse::make_option("--ncores",
+                        default = NA_integer_,
+                        help = "Set the number of cores to use")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
@@ -38,6 +41,9 @@ subtype_vs_others <- opt$subtype_vs_others
 subtype_vs_subtype <- opt$subtype_vs_subtype
 two_subtypes <- as.vector(stringr::str_split(subtype_vs_subtype, pattern = ",", simplify = TRUE))
 file_identifier <- str_c(cancer_type, "subtype", sep = "_") # we are only working with subtype models here
+ncores <- min(parallel::detectCores() - 1,
+              opt$ncores,
+              na.rm = TRUE)
 
 # set seed
 initial.seed <- opt$seed
@@ -162,7 +168,7 @@ norm.titrate.list[["0"]] <-
                                      add.qn.z = TRUE)
 
 # parallel backend
-cl <- parallel::makeCluster(detectCores() - 1)
+cl <- parallel::makeCluster(ncores)
 doParallel::registerDoParallel(cl)
 
 # 'mixed' both platform normalization
