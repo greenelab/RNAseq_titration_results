@@ -172,7 +172,7 @@ stats.df <- reshape2::melt(stats.df.list,
                            id.vars = c("platform", "normalization", "no.samples"))
 names(stats.df) <- c("platform", "normalization", "no.samples", "measure", "value",
                      "iteration", "seq_prop")
-stats.df %>% 
+stats.df <- stats.df %>% 
   mutate(seq_prop = factor(str_c(seq_prop, "% RNA-seq"),
                            levels = str_c(seq(0, 100, 10), "% RNA-seq")))
   
