@@ -34,7 +34,7 @@ file_identifier <- str_c(cancer_type, predictor, sep = "_")
 # define directories
 plot.dir <- here::here("plots")
 plot.data.dir <- here::here("plots/data")
-output_directoroy <- opt$output_directory
+output_directory <- opt$output_directory
 
 # define input file
 input_filename <- ifelse(null_model,
