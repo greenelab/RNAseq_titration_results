@@ -102,7 +102,7 @@ plot_small_n <- function(subtypes){
   using_single_measure <- length(overlap_measures) == 1
   
   stats_df <- read_tsv(input_filename,
-                       col_types = "ccdcddd") %>%
+                       col_types = "ccdcddc") %>%
     filter(seq_prop %in% str_c(c(30, 50, 70), "% RNA-seq"),
            !is.na(value),
            measure %in% overlap_measures) %>%
