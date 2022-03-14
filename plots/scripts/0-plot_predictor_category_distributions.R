@@ -51,11 +51,11 @@ input_files <- list.files(path = plot.data.dir,
 if (plot_all_seeds) { # read in all seed data to one data frame
   plot_df <- input_files %>%
     map(read_tsv,
-        col_types = "cccd") %>%
+        col_types = "ccccc") %>%
     reduce(rbind)
 } else { # default
   plot_df <- read_tsv(input_files[1],
-                      col_types = "cccd")
+                      col_types = "ccccc")
   initial_seed <- plot_df %>%
     pull(initial_seed) %>%
     unique()
