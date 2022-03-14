@@ -75,8 +75,8 @@ clinical <- fread(file.path(data.dir, clin.filename),
 # if the predictor is a gene, we select subtype and the gene
 # this ensures downstream mutation predictions will have subtype available as covariate
 clinical <- clinical %>%
-  select(Sample, Type, "subtype", all_of(predictor)) %>%
-  rename("category" = all_of(predictor)) %>%
+  mutate(category = !!sym(predictor)) %>%
+  select(Sample, Type, "subtype", "category") %>%
   filter(Type == "tumor") %>%
   tidyr::drop_na()
 
@@ -159,13 +159,11 @@ lbl.df <- tibble(sample = colnames(array.matched)[2:ncol(array.matched)],
                  split = lbl,
                  category = as.character(array.category))
 
-# add back subtype if predicting gene
-if (predictor != "subtype") {
-  lbl.df <- lbl.df %>% 
-    left_join(clinical %>%
-                select(Sample, subtype),
-              by = c("sample" = "Sample"))
-}
+# add back subtype
+lbl.df <- lbl.df %>% 
+  left_join(clinical %>%
+              select(Sample, subtype),
+            by = c("sample" = "Sample"))
 
 #### permute category labels for null model ------------------------------------
 # this comes after createDataPartition() to ensure same samples go to train/test
