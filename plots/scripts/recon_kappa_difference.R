@@ -71,7 +71,8 @@ with_summary_df <- with_df %>%
 joint_df <- without_summary_df %>%
   left_join(with_summary_df,
             by = c("Perc.Seq", "Classifier", "Normalization", "Platform")) %>%
-  mutate(kappa_difference = median_without - median_with)
+  mutate(kappa_difference = median_without - median_with) %>%
+  filter(!is.na(kappa_difference))
 
 # plot
 
