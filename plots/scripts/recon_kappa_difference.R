@@ -99,7 +99,7 @@ plot_obj <- ggplot(joint_df,
        color = "Test Data Platform",
        fill = "Test Data Platform",
        y = "Difference in Kappa\n(No Reconstruction - Reconstruction)",
-       title = str_c(cancer_type, predictor, "(reconstruction difference)" sep = " ")) +
+       title = str_c(cancer_type, predictor, "(reconstruction difference)", sep = " ")) +
   theme_bw() +
   scale_colour_manual(values = cbPalette[2:3]) +
   theme(legend.position = "bottom")
