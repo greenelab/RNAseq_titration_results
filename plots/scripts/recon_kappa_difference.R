@@ -39,7 +39,7 @@ with_recon_input_filename <- file.path(plot.data.dir,
 # define output files
 output_filename <- file.path(output_directory,
                              paste0(file_identifier,
-                                           "_kappa_reconstruction_difference.tsv"))
+                                           "_kappa_reconstruction_difference.pdf"))
 
 # read in data
 without_df <- read_tsv(without_recon_input_filename,
