@@ -21,6 +21,9 @@ bash run_differential_expression_experiments.sh BRCA Basal Her2,LumA Her2,LumA 7
 # plot array vs. RNA-seq expression levels after normalization
 Rscript plots/scripts/visualize_expression.R --cancer_type BRCA --predictor subtype
 
+# plot difference in subtype prediction kappa between non-reconstructed and reconstructed data
+Rscript plots/scripts/recon_kappa_difference.R --cancer_type BRCA --output_directory plots/supplementary
+
 # stacked bar plot showing distribution of subtypes in train/test sets (one representative example)
 Rscript plots/scripts/0-plot_predictor_category_distributions.R \
   --cancer_type BRCA \
@@ -149,6 +152,9 @@ bash run_differential_expression_experiments.sh GBM Proneural Classical,Mesenchy
 
 # plot array vs. RNA-seq expression levels after normalization
 Rscript plots/scripts/visualize_expression.R --cancer_type GBM --predictor subtype
+
+# plot difference in subtype prediction kappa between non-reconstructed and reconstructed data
+Rscript plots/scripts/recon_kappa_difference.R --cancer_type GBM --output_directory plots/supplementary
 
 # stacked bar plot showing distribution of subtypes in train/test sets (one representative example)
 Rscript plots/scripts/0-plot_predictor_category_distributions.R \
