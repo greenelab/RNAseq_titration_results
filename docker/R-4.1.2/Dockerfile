@@ -1,14 +1,19 @@
 FROM rocker/tidyverse:4.1.2
 
 # Update apt-get and install other libraries
-#RUN apt-get update && apt-get install -y --no-install-recommends \
-#    curl \
-#    libbz2-dev \
-#    libglpk40 \
-#    liblzma-dev \
-#    libxt-dev \
-#    python3-pip \
-#    python3-dev
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    libbz2-dev \
+    libgdal-dev \
+    libgeos-dev \
+    libglpk40 \
+    liblzma-dev \
+    libmagick++-dev \
+    libproj-dev \
+    libudunits2-dev \
+    libxt-dev \
+    python3-pip \
+    python3-dev
 
 # Install pyrefinebio v0.3.4
 #RUN pip3 install pyrefinebio==0.3.4
