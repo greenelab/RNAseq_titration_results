@@ -107,5 +107,5 @@ plot_obj <- ggplot(joint_df,
 
 ggsave(output_filename,
        plot = plot_obj,
-       height = 5,
+       height = 4,
        width = 7.25)
