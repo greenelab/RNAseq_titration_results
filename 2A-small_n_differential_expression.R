@@ -3,7 +3,7 @@
 # (quantile normalization or z-transformation) perform wrt differential
 # expression when there are a small number of samples on each platform
 #
-# USAGE: Rscript 3A-small_n_differential_expression.R --cancer_type --subtype_vs_subtype --ncores
+# USAGE: Rscript 2A-small_n_differential_expression.R --cancer_type --subtype_vs_subtype --ncores
 
 option_list <- list(
   optparse::make_option("--cancer_type",
@@ -71,7 +71,7 @@ sample.df <- read.delim(smpl.file)
 for(subtype in two_subtypes) {
   if (!(subtype %in% sample.df$category)) {
     stop(paste("Subtype", subtype, "not found in sample file",
-               smpl.file, "in 3A-small_n_differential_expression.R."))
+               smpl.file, "in 2A-small_n_differential_expression.R."))
   }
 }
 
@@ -99,7 +99,7 @@ no.samples <- c(3, 4, 5, 6, 8, 10, 15, 25, 50)
 no.samples <- no.samples[which(no.samples <= smaller_subtype_size)]
 
 message(paste("Smaller subtype has", smaller_subtype_size, "samples,",
-              "so using up to", max(no.samples), "samples in 3A-small_n_differential_expression.R"))
+              "so using up to", max(no.samples), "samples in 2A-small_n_differential_expression.R"))
 
 # initialize list to hold Jaccard, Rand, Spearman data from the 10 trials
 stats.df.list <- list()
