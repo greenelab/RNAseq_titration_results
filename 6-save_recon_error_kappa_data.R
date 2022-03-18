@@ -78,7 +78,7 @@ kappa.master.df$Classifier <- car::recode(kappa.master.df$Classifier,
 kappa.master.df$Classifier <- as.factor(kappa.master.df$Classifier)
 
 # get norm and reconstruction methods as factors
-kappa.master.df$Normalization <- stringr::str_to_upper(plot_df$Normalization)
+kappa.master.df$Normalization <- stringr::str_to_upper(kappa.master.df$Normalization)
 kappa.master.df$Normalization <- as.factor(kappa.master.df$Normalization)
 kappa.master.df$Reconstruction <- as.factor(kappa.master.df$Reconstruction)
 
