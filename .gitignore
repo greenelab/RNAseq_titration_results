@@ -14,3 +14,4 @@ plots/supplementary/*.pdf
 .Rproj.user
 RNAseq_titration_results.Rproj
 ._RNAseq_titration_results.Rproj
+.DS_Store
