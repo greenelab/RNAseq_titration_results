@@ -3,7 +3,7 @@
 # (quantile normalization or z-transformation) perform wrt differential
 # expression when there are a small number of samples on each platform
 #
-# USAGE: Rscript 3A-small_n_differential_expression.R --cancer_type --subtype_vs_subtype --ncores
+# USAGE: Rscript 2A-small_n_differential_expression.R --cancer_type --subtype_vs_subtype --ncores
 
 option_list <- list(
   optparse::make_option("--cancer_type",
@@ -61,20 +61,6 @@ smpl.file <- file.path(res.dir,
                                   pattern = paste0(file_identifier, # and does not rely on knowing a seed
                                                    "_matchedSamples_training_testing_split_labels_"))[1])
 
-#### functions -----------------------------------------------------------------
-
-DataSummary <- function(x) {
-  # This function is supplied to ggplot2::stat_summary in order to plot the
-  # median value of a vector as a point and the "confidence interval on the
-  # median" used in notched boxplots as a vertical line. See boxplot.stats for
-  # more information.
-  m <- median(x)
-  conf <- boxplot.stats(x)$conf
-  ymin <- min(conf)
-  ymax <- max(conf)
-  return(c(y = m, ymin = ymin, ymax = ymax))
-}
-
 #### read in data --------------------------------------------------------------
 
 seq.data <- data.table::fread(seq.file, data.table = F)
@@ -85,7 +71,7 @@ sample.df <- read.delim(smpl.file)
 for(subtype in two_subtypes) {
   if (!(subtype %in% sample.df$category)) {
     stop(paste("Subtype", subtype, "not found in sample file",
-               smpl.file, "in 3A-small_n_differential_expression.R."))
+               smpl.file, "in 2A-small_n_differential_expression.R."))
   }
 }
 
@@ -113,7 +99,7 @@ no.samples <- c(3, 4, 5, 6, 8, 10, 15, 25, 50)
 no.samples <- no.samples[which(no.samples <= smaller_subtype_size)]
 
 message(paste("Smaller subtype has", smaller_subtype_size, "samples,",
-              "so using up to", max(no.samples), "samples in 3A-small_n_differential_expression.R"))
+              "so using up to", max(no.samples), "samples in 2A-small_n_differential_expression.R"))
 
 # initialize list to hold Jaccard, Rand, Spearman data from the 10 trials
 stats.df.list <- list()
@@ -181,16 +167,15 @@ names(stats.df.list)[1:9] <- as.character(seq(10, 90, 10))
 
 # combine jaccard similarity data.frames into one data.frame
 subtypes_combination <- stringr::str_c(two_subtypes, collapse = "v")
-subtypes_combination_nice <- stringr::str_c(two_subtypes, collapse = " vs. ")
 
 stats.df <- reshape2::melt(stats.df.list,
                            id.vars = c("platform", "normalization", "no.samples"))
-names(stats.df) <- c("platform", "normalization", "no.samples", "metric", "value",
+names(stats.df) <- c("platform", "normalization", "no.samples", "measure", "value",
                      "iteration", "seq_prop")
-stats.df <- pivot_wider(stats.df,
-                        names_from = "metric",
-                        values_from = "value")
-
+stats.df <- stats.df %>% 
+  mutate(seq_prop = factor(str_c(seq_prop, "% RNA-seq"),
+                           levels = str_c(seq(0, 100, 10), "% RNA-seq")))
+  
 write.table(stats.df,
             file = file.path(plot.data.dir,
                              paste0(file_identifier,
@@ -198,67 +183,3 @@ write.table(stats.df,
                                     subtypes_combination,
                                     "_results.tsv")),
             sep = "\t", quote = FALSE, row.names = FALSE)
-
-# line plot is saved as a PDF
-# TODO future problem: make sure the x-axis values are consistent across plots
-for (percent_rna_seq in as.integer(names(stats.df.list))) {
-  stats.df.pct <- stats.df %>%
-    filter(seq_prop == percent_rna_seq)
-  
-  ggplot(stats.df.pct, aes(x = no.samples,
-                           y = jaccard,
-                           color = platform)) +
-    facet_wrap(~ normalization, ncol = 1) +
-    stat_summary(fun = median, geom = "line", aes(group = platform),
-                 position = position_dodge(0.2)) +
-    stat_summary(fun.data = DataSummary, aes(group = platform),
-                 position = position_dodge(0.2), size = 0.2) +
-    theme_bw() +
-    ggtitle(paste(subtypes_combination_nice, "FDR < 10%")) +
-    ylab("Jaccard similarity") +
-    xlab("Number of samples (n)") +
-    scale_colour_manual(values = cbPalette[c(2, 3)]) +
-    theme(text = element_text(size = 18))
-  ggsave(filename = here::here("plots",
-                               str_c(file_identifier, "small_n", subtypes_combination,
-                                     percent_rna_seq, "pct_rna_seq_jaccard_lineplots.pdf", sep = "_")),
-         plot = last_plot(), width = 5, height = 7)
-  
-  ggplot(stats.df.pct, aes(x = no.samples,
-                           y = rand,
-                           color = platform)) +
-    facet_wrap(~ normalization, ncol = 1) +
-    stat_summary(fun = median, geom = "line", aes(group = platform),
-                 position = position_dodge(0.2)) +
-    stat_summary(fun.data = DataSummary, aes(group = platform),
-                 position = position_dodge(0.2), size = 0.2) +
-    theme_bw() +
-    ggtitle(paste(subtypes_combination_nice, "FDR < 10%")) +
-    ylab("Rand index") +
-    xlab("Number of samples (n)") +
-    scale_colour_manual(values = cbPalette[c(2, 3)]) +
-    theme(text = element_text(size = 18))
-  ggsave(filename = here::here("plots",
-                               str_c(file_identifier, "small_n", subtypes_combination,
-                                     percent_rna_seq, "pct_rna_seq_rand_lineplots.pdf", sep = "_")),
-         plot = last_plot(), width = 5, height = 7)
-  
-  ggplot(stats.df.pct, aes(x = no.samples,
-                           y = spearman,
-                           color = platform)) +
-    facet_wrap(~ normalization, ncol = 1) +
-    stat_summary(fun = median, geom = "line", aes(group = platform),
-                 position = position_dodge(0.2)) +
-    stat_summary(fun.data = DataSummary, aes(group = platform),
-                 position = position_dodge(0.2), size = 0.2) +
-    theme_bw() +
-    ggtitle(paste(subtypes_combination_nice, "FDR < 10%")) +
-    ylab("Spearman correlation") +
-    xlab("Number of samples (n)") +
-    scale_colour_manual(values = cbPalette[c(2, 3)]) +
-    theme(text = element_text(size = 18))
-  ggsave(filename = here::here("plots",
-                               str_c(file_identifier, "small_n", subtypes_combination,
-                                     percent_rna_seq, "pct_rna_seq_spearman_lineplots.pdf", sep = "_")),
-         plot = last_plot(), width = 5, height = 7)
-}

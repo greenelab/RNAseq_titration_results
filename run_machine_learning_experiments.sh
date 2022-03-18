@@ -29,6 +29,6 @@ fi
 if [ $predictor == "subtype" ]; then
   Rscript 4-ica_pca_feature_reconstruction.R --cancer_type $cancer_type --predictor $predictor --n_components 50
   Rscript 5-predict_category_reconstructed_data.R --cancer_type $cancer_type --predictor $predictor
-  Rscript 6-plot_recon_error_kappa.R --cancer_type $cancer_type --predictor $predictor
-#  Rscript 7-extract_plier_pathways.R --cancer_type $cancer_type --ncores $ncores
+  Rscript 6-save_recon_error_kappa_data.R --cancer_type $cancer_type --predictor $predictor
+  Rscript 7-extract_plier_pathways.R --cancer_type $cancer_type --ncores $ncores
 fi

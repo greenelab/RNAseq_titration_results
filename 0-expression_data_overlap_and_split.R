@@ -53,9 +53,6 @@ array.exprs.filename <- paste0(cancer_type, "array.pcl")
 clin.filename <- paste0("combined_clinical_data.", cancer_type, ".tsv")
 
 # name output files
-category.distribtion.plot <- paste0(file_identifier,
-                                    "_dist_split_stacked_bar_",
-                                    initial.seed, ".pdf")
 category.distribtion.plot.data <- paste0(file_identifier,
                                          "_dist_split_stacked_bar_",
                                          initial.seed, ".tsv")
@@ -78,8 +75,8 @@ clinical <- fread(file.path(data.dir, clin.filename),
 # if the predictor is a gene, we select subtype and the gene
 # this ensures downstream mutation predictions will have subtype available as covariate
 clinical <- clinical %>%
-  select(Sample, Type, "subtype", all_of(predictor)) %>%
-  rename("category" = all_of(predictor)) %>%
+  mutate(category = !!sym(predictor)) %>%
+  select(Sample, Type, "subtype", "category") %>%
   filter(Type == "tumor") %>%
   tidyr::drop_na()
 
@@ -162,13 +159,11 @@ lbl.df <- tibble(sample = colnames(array.matched)[2:ncol(array.matched)],
                  split = lbl,
                  category = as.character(array.category))
 
-# add back subtype if predicting gene
-if (predictor != "subtype") {
-  lbl.df <- lbl.df %>% 
-    left_join(clinical %>%
-                select(Sample, subtype),
-              by = c("sample" = "Sample"))
-}
+# add back subtype
+lbl.df <- lbl.df %>% 
+  left_join(clinical %>%
+              select(Sample, subtype),
+            by = c("sample" = "Sample"))
 
 #### permute category labels for null model ------------------------------------
 # this comes after createDataPartition() to ensure same samples go to train/test
@@ -197,25 +192,15 @@ write.table(lbl.df,
             file = file.path(res.dir, train.test.labels),
             quote = FALSE, sep = "\t", row.names = FALSE)
 
-#### plot category distributions ------------------------------------------------
-cbPalette <- c("#000000", "#E69F00", "#56B4E9",
-               "#009E73", "#F0E442","#0072B2", "#D55E00", "#CC79A7")
+#### save plot data frame ------------------------------------------------------
 
 plot.df <- lbl.df %>%
-  mutate(split = case_when(split == "train" ~ "train (2/3)",
-                           split == "test" ~ "test (1/3)")) %>%
-  bind_rows(lbl.df %>% mutate(split = "whole")) %>%
+  mutate(split = case_when(split == "train" ~ "Train (2/3)",
+                           split == "test" ~ "Test (1/3)")) %>%
+  bind_rows(lbl.df %>% mutate(split = "Whole")) %>%
   mutate(initial_seed = initial.seed)
 
-write.table(plot.df, # seem like this is sufficiently different from lbl.df
-            file = file.path(plot.data.dir, category.distribtion.plot.data),
+write.table(plot.df,
+            file = file.path(plot.data.dir,
+                             category.distribtion.plot.data),
             quote = FALSE, sep = "\t", row.names = FALSE)
-
-plot.nm <- file.path(plot.dir, category.distribtion.plot)
-ggplot(plot.df, aes(x = split, fill = category)) +
-  geom_bar() +
-  theme_classic() +
-  scale_fill_manual(values = cbPalette) +
-  ggsave(plot.nm,
-         height = 6,
-         width = 6)
