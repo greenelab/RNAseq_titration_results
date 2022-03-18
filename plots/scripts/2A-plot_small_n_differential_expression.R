@@ -1,7 +1,7 @@
 # J. Taroni Feb 2016, S. Foltz Feb 2022
 # With small n data, plot comparison of SOMETHING
 #
-# USAGE: Rscript 3A-plot_small_n_differential_expression.R --cancer_type --subtype_vs_others --subtype_vs_subtype --output_directory --overlap_measure
+# USAGE: Rscript 2A-plot_small_n_differential_expression.R --cancer_type --subtype_vs_others --subtype_vs_subtype --output_directory --overlap_measure
 
 option_list <- list(
   optparse::make_option("--cancer_type",
@@ -38,7 +38,7 @@ if (any(c("subtype_vs_others", "subtype_vs_subtype") %in% names(opt))) {
   }
   
 } else {
-  message("  Errors: must include --subtype_vs_others and/or --subtype_vs_subtype in plots/scripts/3A-plot_small_n_differential_expression.R.\n")
+  message("  Errors: must include --subtype_vs_others and/or --subtype_vs_subtype in plots/scripts/2A-plot_small_n_differential_expression.R.\n")
   stop()
 }
 
@@ -48,7 +48,7 @@ if ("overlap_measure" %in% names(opt)) {
                                               pattern = ",", simplify = TRUE))
   
   if (!all(overlap_measures %in% c("Jaccard", "Rand", "Spearman"))) {
-    message("  Errors: --overlap_measure must be one or more of Jaccard, Rand, Spearman in plots/scripts/3A-plot_small_n_differential_expression.R.\n")
+    message("  Errors: --overlap_measure must be one or more of Jaccard, Rand, Spearman in plots/scripts/2A-plot_small_n_differential_expression.R.\n")
     stop()  
   }
 }

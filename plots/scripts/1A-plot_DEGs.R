@@ -8,7 +8,7 @@
 # Plot the proportion of genes that are differentially expressed between conditions
 # Plot similarity of DEGs to silver standards (subtype vs. others only)
 #
-# USAGE: Rscript 2A-plot_DEGs.R --cancer_type --subtype_vs_others --subtype_vs_subtype
+# USAGE: Rscript 1A-plot_DEGs.R --cancer_type --subtype_vs_others --subtype_vs_subtype
 
 option_list <- list(
   optparse::make_option("--cancer_type",
@@ -45,7 +45,7 @@ if (any(c("subtype_vs_others", "subtype_vs_subtype") %in% names(opt))) {
   }
   
 } else {
-  stop("  Errors: must include --subtype_vs_others and/or --subtype_vs_subtype in plots/scripts/2A-plot_DEG_proportions.R.\n")
+  stop("  Errors: must include --subtype_vs_others and/or --subtype_vs_subtype in plots/scripts/1A-plot_DEGs.R.\n")
 }
 
 # at least one of --proportion_output_directory or --overlap_output_directory should be given
@@ -70,16 +70,16 @@ if (any(c("proportion_output_directory", "overlap_output_directory") %in% names(
                                             pattern = ",", simplify = TRUE))
       
       if (!all(overlap_measures %in% c("Jaccard", "Rand", "Spearman"))) {
-        stop("  Errors: --overlap_measure must be one or more of Jaccard, Rand, Spearman in plots/scripts/2A-plot_DEG_proportions.R.\n")
+        stop("  Errors: --overlap_measure must be one or more of Jaccard, Rand, Spearman in plots/scripts/1A-plot_DEGs.R.\n")
       }
       
     } else {
-      stop("  Errors: must include --overlap_measure with --overlap_output_directory in plots/scripts/2A-plot_DEG_proportions.R.\n")
+      stop("  Errors: must include --overlap_measure with --overlap_output_directory in plots/scripts/1A-plot_DEGs.R.\n")
     }
   }
   
 } else {
-  stop("  Errors: must include --proportion_output_directory and/or --overlap_output_directory in plots/scripts/2A-plot_DEG_proportions.R.\n")
+  stop("  Errors: must include --proportion_output_directory and/or --overlap_output_directory in plots/scripts/1A-plot_DEGs.R.\n")
 }
 
 # load libraries
