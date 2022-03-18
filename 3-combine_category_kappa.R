@@ -1,8 +1,8 @@
 # J. Taroni Jul 2016
-# The purpose of this script is to plot Kappa statistics from category
+# The purpose of this script is to combine and save Kappa statistics from category
 # predictions on hold-out data. It should be run from the command line
 # through the classifier_repeat_wrapper.R script or alternatively
-# USAGE: Rscript 3-plot_category_kappa.R
+# USAGE: Rscript 3-combine_category_kappa.R
 
 option_list <- list(
   optparse::make_option("--cancer_type",
@@ -61,10 +61,6 @@ if (null_model) {
 }
 
 # define output files
-plot.file.lead <- ifelse(null_model,
-                         paste0(file_identifier, "_train_3_models_delta_kappa_"),
-                         paste0(file_identifier, "_train_3_models_kappa_"))
-
 test.df.filename <- ifelse(null_model,
                               file.path(plot.data.dir,
                                         paste0(file_identifier,
@@ -130,7 +126,8 @@ if (null_model) {
   seq.df <- data.table::rbindlist(seq.list)
 }
 
-#### plot test set results -----------------------------------------------------
+#### save test set results -----------------------------------------------------
+
 # bind all kappa stats together
 test.df <- cbind(rbind(array.df, seq.df),
                  c(rep("Microarray", nrow(array.df)),
@@ -165,45 +162,3 @@ summary.df <- test.df %>%
 
 readr::write_tsv(summary.df,
                  summary.df.filename) # delta or not delta in file name
-
-# plot performance of a classifier/model type on all normalization method in a
-# single plot
-
-cls.methods <- unique(test.df$Classifier)
-for (cls in cls.methods) {
-  plot.nm <- file.path(plot.dir,
-                       paste0(plot.file.lead, # includes file_identifier and delta/not delta
-                              stringr::str_replace_all(cls,
-                                                       pattern = " ",
-                                                       replacement = "_"),
-                              "_VIOLIN_test.pdf"))
-  
-  plot.data.nm <- file.path(plot.data.dir,
-                       paste0(plot.file.lead, # includes file_identifier and delta/not delta
-                              stringr::str_replace_all(cls,
-                                                       pattern = " ",
-                                                       replacement = "_"),
-                              "_VIOLIN_test.tsv"))
-  
-  plot_df <- test.df[which(test.df$Classifier == cls), ]
-  
-  ggplot(plot_df,
-         aes(x = Perc.Seq, y = Kappa, color = Platform, fill = Platform)) +
-    facet_wrap(~ Normalization, ncol = 5) +
-    geom_violin(colour = "black", position = position_dodge(0.8),
-                alpha = 0.2) +
-    stat_summary(fun = median, geom = "line", aes(group = Platform),
-                 position = position_dodge(0.6)) +
-    stat_summary(fun = median, geom = "point", aes(group = Platform),
-                 position = position_dodge(0.7), size = 1) +
-    ggtitle(paste0(cancer_type, ": ", cls)) +
-    xlab("% RNA-seq samples") +
-    ylab(ifelse(null_model,
-                "Delta Kappa",
-                "Kappa")) +
-    theme_bw() +
-    scale_colour_manual(values = cbPalette[2:3]) +
-    theme(text = element_text(size = 18)) +
-    theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
-  ggsave(plot.nm, plot = last_plot(), height = 3.5, width = 15)
-}
