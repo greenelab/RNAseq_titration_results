@@ -63,7 +63,7 @@ Rscript plots/scripts/7-plot_plier_pathways.R \
 
 # bar plot showing proportion of genes differentially expressed (Basal vs. Others)
 # line plot showing overlap with silver standard DEGs (Basal vs. Others)
-Rscript plots/scripts/2A-plot_DEGs.R \
+Rscript plots/scripts/1A-plot_DEGs.R \
   --cancer_type BRCA \
   --subtype_vs_others Basal \
   --proportion_output_directory plots/supplementary \
@@ -72,7 +72,7 @@ Rscript plots/scripts/2A-plot_DEGs.R \
   
 # bar plot showing proportion of genes differentially expressed (Her2 vs. LumA)
 # line plot showing overlap with silver standard DEGs (Her2 vs. LumA)
-Rscript plots/scripts/2A-plot_DEGs.R \
+Rscript plots/scripts/1A-plot_DEGs.R \
   --cancer_type BRCA \
   --subtype_vs_subtype Her2,LumA \
   --proportion_output_directory plots/supplementary \
@@ -80,7 +80,7 @@ Rscript plots/scripts/2A-plot_DEGs.R \
   --overlap_measure Jaccard
 
 # line plot showing overlap with silver standard DEGs (Her2 vs. LumA) across small n values
-Rscript plots/scripts/3A-plot_small_n_differential_expression.R \
+Rscript plots/scripts/2A-plot_small_n_differential_expression.R \
   --cancer_type BRCA \
   --subtype_vs_subtype Her2,LumA \
   --output_directory plots/main \
@@ -195,7 +195,7 @@ Rscript plots/scripts/7-plot_plier_pathways.R \
 
 # bar plot showing proportion of genes differentially expressed (Proneural vs. Others, Classical vs. Mesenchymal)
 # line plot showing overlap with silver standard DEGs (Proneural vs. Others, Classical vs. Mesenchymal)
-Rscript plots/scripts/2A-plot_DEGs.R \
+Rscript plots/scripts/1A-plot_DEGs.R \
   --cancer_type GBM \
   --subtype_vs_others Proneural \
   --subtype_vs_subtype Classical,Mesenchymal \
@@ -204,7 +204,7 @@ Rscript plots/scripts/2A-plot_DEGs.R \
   --overlap_measure Jaccard
 
 # line plot showing overlap with silver standard DEGs (Classical vs. Mesenchymal) across small n values
-Rscript plots/scripts/3A-plot_small_n_differential_expression.R \
+Rscript plots/scripts/2A-plot_small_n_differential_expression.R \
   --cancer_type GBM \
   --subtype_vs_subtype Classical,Mesenchymal \
   --output_directory plots/supplementary \
