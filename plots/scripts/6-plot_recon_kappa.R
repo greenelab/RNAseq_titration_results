@@ -8,10 +8,9 @@ option_list <- list(
   optparse::make_option("--predictor",
                         default = NA_character_,
                         help = "Predictor used"),
-  optparse::make_option("--supplementary",
-                        action = "store_true",
-                        default = FALSE,
-                        help = "Save plot in plots/supplementary folder instead of plots/main")
+  optparse::make_option("--output_directory",
+                        default = NA_character_,
+                        help = "Output directory for plot (absolute or relative path)")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
@@ -25,14 +24,12 @@ source(here::here("util/color_blind_friendly_palette.R"))
 # set options
 cancer_type <- opt$cancer_type
 predictor <- opt$predictor
-supplementary <- opt$supplementary
 file_identifier <- str_c(cancer_type, predictor, sep = "_")
 
 # define directories
 plot.dir <- here::here("plots")
-plot.main.dir <- file.path(plot.dir, "main")
-plot.supp.dir <- file.path(plot.dir, "supplementary")
 plot.data.dir <- here::here("plots/data")
+output_directory <- opt$output_directory
 
 # define input file
 input_filename <- file.path(plot.data.dir,
@@ -40,9 +37,7 @@ input_filename <- file.path(plot.data.dir,
                                    "_kappa_reconstructed_data.tsv"))
 
 # define output files
-output_filename <- file.path(ifelse(supplementary,
-                                    plot.supp.dir,
-                                    plot.main.dir),
+output_filename <- file.path(output_directory,
                              paste0(file_identifier,
                                     "_kappa_reconstructed.pdf"))
 

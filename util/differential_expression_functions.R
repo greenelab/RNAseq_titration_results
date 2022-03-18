@@ -537,7 +537,7 @@ GetSmallNSilverStandardStats <- function(top.table.list, cutoff = 0.05){
   
   stats.df <- reshape2::melt(stats.list,
                              id.vars = c("jaccard", "rand", "spearman"))
-  colnames(stats.df) <-c("jaccard", "rand", "spearman",
+  colnames(stats.df) <-c("Jaccard", "Rand", "Spearman",
                          "platform", "normalization", "no.samples")
   
   # rename platforms
