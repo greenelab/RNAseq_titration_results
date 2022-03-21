@@ -39,7 +39,7 @@ LOGArrayOnly <- function(array.dt, zero.to.one = TRUE){
   if (zero.to.one) {
     array.dt <- rescale_datatable(array.dt)
   }
-  return(array.dt)
+  return(data.table(array.dt))
 }
 
 LOGSeqOnly <- function(seq.dt, zero.to.one = TRUE){
@@ -72,7 +72,7 @@ LOGSeqOnly <- function(seq.dt, zero.to.one = TRUE){
   if (zero.to.one) {
     log.dt <- rescale_datatable(log.dt)
   }
-  return(log.dt)
+  return(data.table(log.dt))
 }
 
 QNSingleDT <- function(dt, zero.to.one = TRUE){
@@ -109,7 +109,7 @@ QNSingleDT <- function(dt, zero.to.one = TRUE){
   if (zero.to.one) {
     qn.dt <- rescale_datatable(qn.dt)
   }
-  return(qn.dt)
+  return(data.table(qn.dt))
 }
 
 NPNSingleDT <- function(dt, zero.to.one = TRUE){
@@ -148,7 +148,7 @@ NPNSingleDT <- function(dt, zero.to.one = TRUE){
   if (zero.to.one) {
     npn.dt <- rescale_datatable(npn.dt)
   }
-  return(npn.dt)
+  return(data.table(npn.dt))
 }
 
 ZScoreSingleDT <- function(dt, zero.to.one = TRUE){
@@ -180,7 +180,7 @@ ZScoreSingleDT <- function(dt, zero.to.one = TRUE){
   if (zero.to.one) {
     z.dt <- rescale_datatable(z.dt)
   }
-  return(z.dt)
+  return(data.table(z.dt))
 }
 
 QNZSingleDT <- function(dt, zero.to.one = TRUE){
@@ -218,7 +218,7 @@ QNZSingleDT <- function(dt, zero.to.one = TRUE){
   if (zero.to.one) {
     z.dt <- rescale_datatable(z.dt)
   }
-  return(z.dt)
+  return(data.table(z.dt))
 }
 
 QNSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
@@ -277,7 +277,7 @@ QNSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
   if (zero.to.one) {
     qn.targ <- rescale_datatable(qn.targ)
   }
-  return(qn.targ)
+  return(data.table(qn.targ))
 }
 
 QNZSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
@@ -342,7 +342,7 @@ QNZSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
   if (zero.to.one) {
     qnz.dt <- rescale_datatable(qnz.dt)
   }
-  return(qnz.dt)
+  return(data.table(qnz.dt))
 }
 
 TDMSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
@@ -390,7 +390,7 @@ TDMSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
   if (zero.to.one) {
     tdm.targ <- rescale_datatable(tdm.targ)
   }
-  return(tdm.targ)
+  return(data.table(tdm.targ))
 }
 
 SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
@@ -550,7 +550,7 @@ ZScoreProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   if (zero.to.one) {
     z.dt <- rescale_datatable(z.dt)
   }
-  return(z.dt)
+  return(data.table(z.dt))
 }
 
 QNProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
@@ -608,7 +608,7 @@ QNProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   }
   #  message("\tConcatenation...\n")
   qn.cat <- data.table(cbind(array.dt, qn.seq[, 2:ncol(qn.seq), with = F]))
-  return(qn.cat)
+  return(data.table(qn.cat))
 }
 
 QNZProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
@@ -668,7 +668,7 @@ QNZProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   if (zero.to.one) {
     z.dt <- rescale_datatable(z.dt)
   }
-  return(z.dt)
+  return(data.table(z.dt))
 }
 
 NPNProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
@@ -725,7 +725,7 @@ NPNProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   if (zero.to.one) {
     npn.cat <- rescale_datatable(npn.cat)
   }
-  return(npn.cat)
+  return(data.table(npn.cat))
 }
 
 TDMProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
@@ -782,7 +782,7 @@ TDMProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   #  message("\tConcatenation...\n")
   tdm.cat <- data.table(cbind(array.dt, tdm.seq[, 2:ncol(tdm.seq), with = F]))
 
-  return(tdm.cat)
+  return(data.table(tdm.cat))
 }
 
 LOGProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
@@ -831,7 +831,7 @@ LOGProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   }
   #  message("\tConcatenation...\n")
   log.cat <- data.table(cbind(array.dt, log.seq[, 2:ncol(log.seq), with = F]))
-  return(log.cat)
+  return(data.table(log.cat))
 }
 
 UnNoZTOProcessing <- function(array.dt = NULL, seq.dt = NULL) {
@@ -861,7 +861,7 @@ UnNoZTOProcessing <- function(array.dt = NULL, seq.dt = NULL) {
   # If the only input is seq data, there is nothing to be done -- just return it
   if (array.dt.null & !seq.dt.null) {
     
-    return(seq.dt) # don't need to do anything to to seq.dt
+    return(data.table(seq.dt)) # don't need to do anything to to seq.dt
     
   } else { # if there is array data, we need to do something to it
 
@@ -897,7 +897,7 @@ UnNoZTOProcessing <- function(array.dt = NULL, seq.dt = NULL) {
       
     }
     
-    return(un_datatable)
+    return(data.table(un_datatable))
     
   }
 }
@@ -1072,7 +1072,7 @@ rescale_datatable <- function(data_table){
   
   result <- ensure_numeric_gex(result)
   
-  return(result)
+  return(data.table(result))
   
 }
 
