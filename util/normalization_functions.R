@@ -956,3 +956,36 @@ rescale_datatable <- function(data_table){
   return(result)
   
 }
+
+ensure_numeric_gex <- function(input_data) {
+  # Numeric version of data.table
+  #
+  # Ensure gene expression values are numeric in a given data.table
+  #
+  # input_data: a data.table with gene in the first column and gene
+  # expression in the remaining columns
+  #
+  # returns a data.table with numeric values for the gene expression columns
+
+  if ("data.table" %in% class(input_data)) {
+
+    # save gene names as character vector
+    gene_names <- as.character(input_data[[1]])
+
+    # force gene expression values to be numeric
+    gex_values <- t(apply(input_data[,-1], 1, as.numeric))
+
+    # create data frame of gene names and gene expression values
+    # set column names to be same as input data
+    return_df <- data.frame(gene_names, gex_values)
+    names(return_df) <- names(input_data)
+
+    # return as data.table
+    return(data.table(return_df))
+
+  } else {
+
+    stop("\nInput must be a data.table")
+
+  }
+}
