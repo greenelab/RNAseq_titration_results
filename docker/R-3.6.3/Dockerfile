@@ -1,7 +1,7 @@
 FROM rocker/tidyverse:3.6.3
 
 # Update apt-get and install other libraries
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get --allow-releaseinfo-change-suite update && apt-get install -y --no-install-recommends \
     curl \
     libbz2-dev \
     libgdal-dev \
@@ -44,6 +44,7 @@ RUN install2.r --error --deps TRUE \
     huge \
     jsonlite \
     kernlab \
+    locfit \
     optparse \
     plyr \
     ranger \
@@ -61,7 +62,8 @@ RUN Rscript -e "options(warn = 2); BiocManager::install(c( \
     'ensembldb', \
     'limma', \
     'quantro'), \
-    update = FALSE)"
+    update = FALSE, \
+    version = '3.10')"
 
 # Threading issue with preprocessCore::normalize.quantiles
 # https://support.bioconductor.org/p/122925/#124701
@@ -73,7 +75,8 @@ RUN Rscript -e "options(warn = 2); BiocManager::install( \
 
 # ref = 341eb77105e7efd2654b4f112578648584936e06 is latest greenelab/TDM commit (retrieved 2021-05-28)
 RUN Rscript -e "options(warn = 2); remotes::install_github( \
-    'greenelab/TDM', ref = '341eb77105e7efd2654b4f112578648584936e06')"
+#    'greenelab/TDM', ref = '341eb77105e7efd2654b4f112578648584936e06')"
+    'envest/TDM', ref = '551acc6cbb6b2f2ae3db54fb0d33c09907db8008')"
 
 # ref = 08ed6b54e4efe5249107cb335cd8e169657cbc44 is wgmao/PLIER commit corresponding to v0.1.6 (retrieved 2021-11-09)
 RUN Rscript -e "options(warn = 2); remotes::install_github( \
