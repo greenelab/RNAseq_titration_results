@@ -538,7 +538,7 @@ ZScoreProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   seq.mat <- data.frame(seq.dt[, 2:ncol(seq.dt), with = F])
   z.seq <- t(apply(seq.mat, 1, function(x) scale(as.numeric(x))))
   #  message("\tConcatenation...\n")
-  z.dt <- data.table(cbind(array.dt[[1]], z.array, z.seq))
+  z.dt <- data.table(cbind(as.character(array.dt[[1]]), z.array, z.seq))
   colnames(z.dt) <- c("gene",
                       chartr(".", "-", colnames(array.mat)),
                       chartr(".", "-", colnames(seq.mat)))
@@ -656,7 +656,7 @@ QNZProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   z.array <- t(apply(ref.values, 1, function(x) scale(as.numeric(x))))
   z.seq <- t(apply(qn.seq, 1, function(x) scale(as.numeric(x))))
   #  message("\tConcatenation...\n")
-  z.dt <- data.table(cbind(array.dt[[1]], z.array, z.seq))
+  z.dt <- data.table(cbind(as.character(array.dt[[1]]), z.array, z.seq))
   colnames(z.dt) <- c("gene",
                       chartr(".", "-", colnames(ref.values)),
                       chartr(".", "-", colnames(target.values)))
@@ -713,7 +713,7 @@ NPNProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   npn.seq <- huge::huge.npn(t(npn.targ), npn.func = "shrinkage",
                             npn.thresh = NULL, verbose = FALSE)
   #  message("\tConcatenation...\n")
-  npn.cat <- data.table(cbind(array.dt[[1]], t(npn.array), t(npn.seq)))
+  npn.cat <- data.table(cbind(as.character(array.dt[[1]]), t(npn.array), t(npn.seq)))
   colnames(npn.cat) <- c("gene",
                          chartr(".", "-", colnames(ref.values)),
                          chartr(".", "-", colnames(target.values)))
