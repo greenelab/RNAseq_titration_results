@@ -42,6 +42,8 @@ ncores <- min(parallel::detectCores() - 1,
 # set seed
 initial.seed <- opt$seed
 set.seed(initial.seed)
+random_seeds <- sample(1:10000, size = 9)
+
 message(paste("\nInitial seed set to:", initial.seed))
 
 # define directories
@@ -111,6 +113,8 @@ doParallel::registerDoParallel(cl)
 
 # at each titration level (0-100% RNA-seq)
 stats.df.list[1:9] <- foreach(seq_prop = seq(0.1, .9, 0.1), .packages = c("tidyverse")) %dopar% {
+  
+  set.seed(random_seeds[seq_prop*10])
   
   # we're going to repeat the small n experiment 10 times
   stats.df.iter_list <- list() # this is returned to stats.df.list each iteration
