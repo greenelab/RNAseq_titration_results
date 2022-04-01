@@ -72,11 +72,6 @@ else
   wget -O $data/gbm_clinical_table_S7.xlsx $gbm_clinical_link
 fi
 
-# check md5 sums of downloaded files
-echo Checking md5 sums of downloaded files ...
-md5sum --check check_sums.tsv
-echo All files downloaded match expected md5 sums!
-
 # modify BRCA clinical file column PAM50 to be subtype
 sed -i 's/PAM50/subtype/' $data/BRCAClin.tsv
 
@@ -109,6 +104,11 @@ Rscript combine_clinical_data.R \
   --clinical_input $data/GBMClin.tsv \
   --mutation_input $data/mutations.GBM.tsv \
   --combined_output $data/combined_clinical_data.GBM.tsv
+
+# check md5 sums of downloaded files
+echo Checking md5 sums of downloaded files ...
+md5sum --check --quiet check_sums.tsv
+echo All data files match expected md5 sums!
 
 # get BRCA array expression data from TCGA Legacy Archive
 # data/gdc_legacy_archive_brca_manifest.txt obtained from https://portal.gdc.cancer.gov/legacy-archive
