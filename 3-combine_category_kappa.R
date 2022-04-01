@@ -157,8 +157,8 @@ summary.df <- test.df %>%
   dplyr::group_by(Classifier, Normalization, Platform, Perc.Seq) %>%
   dplyr::summarise(Median = median(Kappa),
                    Mean = mean(Kappa),
-                   SD = sd(Kappa)) %>%
-  dplyr::ungroup()
+                   SD = sd(Kappa),
+                   .groups = "drop")
 
 readr::write_tsv(summary.df,
                  summary.df.filename) # delta or not delta in file name
