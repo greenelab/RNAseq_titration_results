@@ -213,12 +213,12 @@ missing_clinical <- gbm_subtypes %>%
 
 write_tsv(gbm_array_expression_renamed %>%
             select(-all_of(missing_clinical)),
-          file = gbm_array_output_filepath)
+          gbm_array_output_filepath)
 
 write_tsv(gbm_seq_expression_renamed %>%
             select(-all_of(missing_clinical)),
-          file = gbm_seq_output_filepath)
+          gbm_seq_output_filepath)
 
 write_tsv(gbm_subtypes %>%
             filter(!is.na(subtype)),
-          file = clinical_tsv_output_filepath)
+          clinical_tsv_output_filepath)
