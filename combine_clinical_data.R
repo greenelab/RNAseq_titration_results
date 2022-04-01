@@ -60,4 +60,4 @@ combined_df <- clinical_df %>%
 ################################################################################
 
 write_tsv(combined_df,
-          path = combined_output_filepath)
+          file = combined_output_filepath)
