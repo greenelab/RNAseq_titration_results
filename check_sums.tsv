@@ -5,7 +5,7 @@ d4486dde14da14b4f8887a7415e2866f  data/BRCARNASeqClin.tsv
 02e72c33071307ff6570621480d3c90b  data/EBPlusPlusAdjustPANCAN_IlluminaHiSeq_RNASeqV2.geneExp.tsv
 90feb5edb48d7619568d2de21697509e  data/GBMClin.tsv
 949938abadd336eb9a2f698b3102e1bb  data/GBMRNASeq.pcl
-defedd046e30d8e6339c2572ca8cec1f  data/GBMarray.pcl
+3bbdad11c322ebf3b03ada07263c6444  data/GBMarray.pcl
 e5df57691b44c47b8c916116b5ac7acf  data/PanCan-General_Open_GDC-Manifest_2.txt
 a4591b2dcee39591f59e5e25a6ce75fa  data/TCGA-CDR-SupplementalTableS1.xlsx
 7fafc537807d5b3ddf0bb89665279a9d  data/broad.mit.edu_PANCAN_Genome_Wide_SNP_6_whitelisted.seg
