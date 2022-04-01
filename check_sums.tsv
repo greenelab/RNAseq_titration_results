@@ -1,15 +1,11 @@
 2f4f2fcd97eff5385c0b1205b719b8dc  data/BRCAClin.tsv
 7f00ea6ef1f309773b02e6118046550f  data/BRCARNASeq.pcl
 d4486dde14da14b4f8887a7415e2866f  data/BRCARNASeqClin.tsv
-b2ad76ed6438da4852e2ca86377bb703  data/BRCARNASeq_matchedOnly_ordered.pcl
 1a89ea769381e300e5a88ec61713ad9e  data/BRCAarray.pcl
-806699255228eb34ea7e2b3f43a4a8be  data/BRCAarray_matchedOnly_ordered.pcl
 02e72c33071307ff6570621480d3c90b  data/EBPlusPlusAdjustPANCAN_IlluminaHiSeq_RNASeqV2.geneExp.tsv
 90feb5edb48d7619568d2de21697509e  data/GBMClin.tsv
 949938abadd336eb9a2f698b3102e1bb  data/GBMRNASeq.pcl
-d79e4849b0d336cd10ca33daca6615d5  data/GBMRNASeq_matchedOnly_ordered.pcl
 defedd046e30d8e6339c2572ca8cec1f  data/GBMarray.pcl
-9d42d03476d3acc978a7d2e8022a812b  data/GBMarray_matchedOnly_ordered.pcl
 e5df57691b44c47b8c916116b5ac7acf  data/PanCan-General_Open_GDC-Manifest_2.txt
 a4591b2dcee39591f59e5e25a6ce75fa  data/TCGA-CDR-SupplementalTableS1.xlsx
 7fafc537807d5b3ddf0bb89665279a9d  data/broad.mit.edu_PANCAN_Genome_Wide_SNP_6_whitelisted.seg
@@ -23,6 +19,5 @@ d79d2399598ac2e6c11a1b44c5c603df  data/combined_clinical_data.BRCA.tsv
 e56585bd0c2e59658b1d54fc8b0c9df2  data/mutations.tsv
 b62634d9eccbb548499ce384605fe47a  data/GSE83130/LICENSE.TXT
 9ed2fa92d31d51f17fc048b98158a5e1  data/GSE83130/README.md
-0cd51ee49f1171f2285723f618c7658e  data/GSE83130/aggregated_metadata.json
 76a0454f911aeb17276725abb760ce89  data/GSE83130/GSE83130/GSE83130.tsv
 dca310d9643a18d35e694425c56b9d2b  data/GSE83130/GSE83130/metadata_GSE83130.tsv
