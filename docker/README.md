@@ -17,7 +17,7 @@ docker pull envest/rnaseq_titration_results:R-4.1.2
 ### R-3.6.3 version
 
 We also have an image based on R version 3.6.3.
-This image is most similar to the environment used in earlier (pre-2022) iterations of this analysis.
+This image is more representative of the development environment used in earlier (pre-2022) iterations of this analysis and we retain it for posterity.
 
 :warning: We do _not_ recommend using this version for running analysis since recent code updates have changed some behaviors under older versions of R and corresponding package versions. 
 
