@@ -68,7 +68,7 @@ Rscript plots/scripts/1A-plot_DEGs.R \
   --subtype_vs_others Basal \
   --proportion_output_directory plots/supplementary \
   --overlap_output_directory plots/supplementary \
-  --overlap_measure Jaccard
+  --overlap_measure Jaccard,Spearman
   
 # bar plot showing proportion of genes differentially expressed (Her2 vs. LumA)
 # line plot showing overlap with silver standard DEGs (Her2 vs. LumA)
@@ -77,7 +77,7 @@ Rscript plots/scripts/1A-plot_DEGs.R \
   --subtype_vs_subtype Her2,LumA \
   --proportion_output_directory plots/supplementary \
   --overlap_output_directory plots/main \
-  --overlap_measure Jaccard
+  --overlap_measure Jaccard,Spearman
 
 # line plot showing overlap with silver standard DEGs (Her2 vs. LumA) across small n values
 Rscript plots/scripts/2A-plot_small_n_differential_expression.R \
@@ -110,6 +110,7 @@ Rscript plots/scripts/0-plot_predictor_category_distributions.R \
 Rscript plots/scripts/3-plot_category_kappa.R \
   --cancer_type BRCA \
   --predictor TP53 \
+  --null_model \
   --output_directory plots/supplementary
 
 # ------------------------------------------------------------------------------
@@ -136,6 +137,7 @@ Rscript plots/scripts/0-plot_predictor_category_distributions.R \
 Rscript plots/scripts/3-plot_category_kappa.R \
   --cancer_type BRCA \
   --predictor PIK3CA \
+  --null_model \
   --output_directory plots/supplementary
 
 # ------------------------------------------------------------------------------
@@ -201,7 +203,7 @@ Rscript plots/scripts/1A-plot_DEGs.R \
   --subtype_vs_subtype Classical,Mesenchymal \
   --proportion_output_directory plots/supplementary \
   --overlap_output_directory plots/supplementary \
-  --overlap_measure Jaccard
+  --overlap_measure Jaccard,Spearman
 
 # line plot showing overlap with silver standard DEGs (Classical vs. Mesenchymal) across small n values
 Rscript plots/scripts/2A-plot_small_n_differential_expression.R \
@@ -234,6 +236,7 @@ Rscript plots/scripts/0-plot_predictor_category_distributions.R \
 Rscript plots/scripts/3-plot_category_kappa.R \
   --cancer_type GBM \
   --predictor TP53 \
+  --null_model \
   --output_directory plots/main
 
 # ------------------------------------------------------------------------------
@@ -260,6 +263,7 @@ Rscript plots/scripts/0-plot_predictor_category_distributions.R \
 Rscript plots/scripts/3-plot_category_kappa.R \
   --cancer_type GBM \
   --predictor PIK3CA \
+  --null_model \
   --output_directory plots/supplementary
 
 # ------------------------------------------------------------------------------
