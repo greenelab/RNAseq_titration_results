@@ -1,12 +1,28 @@
-# Dockerfiles
+# Using Docker with this project
 
-When updating code to run in 2021, we experienced different (worse) prediction behavior than expected based on previous results.
+Two Docker images are available from `envest/rnaseq_titration_results`.
+They are highly similar but are based on different versions of R.
 
-### Issue
-See: https://github.com/greenelab/RNAseq_titration_results/issues/41
+### R-4.1.2 version
 
-### Game plan
-For now, we need to use a Dockerfile that builds an image with R-3.6.3 (`docker/R-3.6.3/Dockerfile_R-3.6.3`).
-In the future, we would like to understand why builds with R-4 failed and use the most up-to-date version of R.
-The R-3.6.3 Dockerfile will be developed independently from the R-4 version.
-The R-4 version will become outdated and need to be brought back up to speed when the time comes.
+We recommend using this version for running any analysis.
+This version is maintained and will be the one to get updated in the future.
+
+To pull this image, use the tag `R-4.1.2`:
+
+```
+docker pull envest/rnaseq_titration_results:R-4.1.2
+```
+
+### R-3.6.3 version
+
+We also have an image based on R version 3.6.3.
+This image is more representative of the development environment used in earlier (pre-2022) iterations of this analysis and we retain it for posterity.
+
+:warning: We do _not_ recommend using this version for running analysis since recent code updates have changed some behaviors under older versions of R and corresponding package versions. 
+
+To pull this image, use the tag `R-3.6.3`:
+
+```
+docker pull envest/rnaseq_titration_results:R-3.6.3
+```

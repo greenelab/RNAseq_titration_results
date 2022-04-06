@@ -1,11 +1,16 @@
-FROM rocker/tidyverse:4.0.3
+FROM rocker/tidyverse:4.1.2
 
 # Update apt-get and install other libraries
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     libbz2-dev \
+    libgdal-dev \
+    libgeos-dev \
     libglpk40 \
     liblzma-dev \
+    libmagick++-dev \
+    libproj-dev \
+    libudunits2-dev \
     libxt-dev \
     python3-pip \
     python3-dev
@@ -37,9 +42,10 @@ RUN install2.r --error --deps TRUE \
     here \
     Hmisc \
     huge \
+    jsonlite \
     kernlab \
+    locfit \
     optparse \
-    parallel \
     plyr \
     ranger \
     RColorBrewer \
@@ -52,9 +58,12 @@ RUN install2.r --error --deps TRUE \
 
 # R Bioconductor packages
 RUN Rscript -e "options(warn = 2); BiocManager::install(c( \
+    'EnsDb.Hsapiens.v86' , \
+    'ensembldb', \
     'limma', \
     'quantro'), \
-    update = FALSE)"
+    update = FALSE, \
+    version = 3.14)"
 
 # Threading issue with preprocessCore::normalize.quantiles
 # https://support.bioconductor.org/p/122925/#124701
@@ -62,16 +71,13 @@ RUN Rscript -e "options(warn = 2); BiocManager::install(c( \
 RUN Rscript -e "options(warn = 2); BiocManager::install( \
     'preprocessCore', \
     configure.args = '--disable-threading', \
+    force = TRUE, \
     update = FALSE)"
 
-# ref = 341eb77105e7efd2654b4f112578648584936e06 is latest greenelab/TDM commit 2021-05-28 
+# ref = 341eb77105e7efd2654b4f112578648584936e06 is latest greenelab/TDM commit (retrieved 2021-05-28)
 RUN Rscript -e "options(warn = 2); remotes::install_github( \
-    'greenelab/TDM', ref = '341eb77105e7efd2654b4f112578648584936e06')"
+    'greenelab/TDM', ref = 'b041807835d4076c5549356c86c44f087d713b1a')"
 
-# gdc-client
-#RUN wget https://gdc.cancer.gov/files/public/file/gdc-client_v1.6.1_Ubuntu_x64-py3.7-ubuntu-16.04.zip && \
-#    unzip gdc-client_v1.6.1_Ubuntu_x64-py3.7-ubuntu-16.04.zip && \
-#    unzip gdc-client_v1.6.1_Ubuntu_x64.zip && \
-#    mv gdc-client /usr/bin/. && \
-#    rm -rf gdc-client_v1.6.1_Ubuntu_x64-py3.7-ubuntu-16.04.zip && \
-#    rm -rf gdc-client_v1.6.1_Ubuntu_x64.zip
+# ref = 08ed6b54e4efe5249107cb335cd8e169657cbc44 is wgmao/PLIER commit corresponding to v0.1.6 (retrieved 2021-11-09)
+RUN Rscript -e "options(warn = 2); remotes::install_github( \
+    'wgmao/PLIER', ref = '08ed6b54e4efe5249107cb335cd8e169657cbc44')"

@@ -18,6 +18,9 @@ LOGArrayOnly <- function(array.dt, zero.to.one = TRUE){
   if (!(array.is.dt)) {
     stop("\nInput must be a data.table")
   }
+  
+  array.dt <- ensure_numeric_gex(array.dt)
+  
   # if any negative values are found, then inverse log transform and relog
   # transform using x+1
   any.negative <- any(as.vector(as.matrix(array.dt[, 2:ncol(array.dt),
@@ -29,11 +32,14 @@ LOGArrayOnly <- function(array.dt, zero.to.one = TRUE){
   }
   # convert NA to zero
   array.dt <- NAToZero(array.dt)
+  
+  array.dt <- ensure_numeric_gex(array.dt)
+  
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
     array.dt <- rescale_datatable(array.dt)
   }
-  return(array.dt)
+  return(data.table(array.dt))
 }
 
 LOGSeqOnly <- function(seq.dt, zero.to.one = TRUE){
@@ -53,14 +59,20 @@ LOGSeqOnly <- function(seq.dt, zero.to.one = TRUE){
   if (!(seq.is.dt)) {
     stop("\nInput must be a data.table")
   }
+  
+  seq.dt <- ensure_numeric_gex(seq.dt)
+  
   #  message("Log transformation seq data...\n")
   log.dt <- TDM::log_transform_p1(seq.dt)
+  
+  log.dt <- ensure_numeric_gex(log.dt)
+  
   # log.dt <- NAToZero(log.dt)
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
     log.dt <- rescale_datatable(log.dt)
   }
-  return(log.dt)
+  return(data.table(log.dt))
 }
 
 QNSingleDT <- function(dt, zero.to.one = TRUE){
@@ -81,17 +93,23 @@ QNSingleDT <- function(dt, zero.to.one = TRUE){
   if (!(dt.is.dt)) {
     stop("\nInput must be a data.table")
   }
+  
+  dt <- ensure_numeric_gex(dt)
+  
   val <- data.frame(dt[, 2:ncol(dt), with = F])
   #  message("Quantile normalization...\n")
   qn <- preprocessCore::normalize.quantiles(data.matrix(val), copy = F)
   qn.dt <- data.table(cbind(as.character(dt[[1]]), qn))
   colnames(qn.dt) <- chartr(".", "-", colnames(dt))
+  
+  qn.dt <- ensure_numeric_gex(qn.dt)
+  
   # qn.dt <- NAToZero(qn.dt)
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
     qn.dt <- rescale_datatable(qn.dt)
   }
-  return(qn.dt)
+  return(data.table(qn.dt))
 }
 
 NPNSingleDT <- function(dt, zero.to.one = TRUE){
@@ -112,6 +130,9 @@ NPNSingleDT <- function(dt, zero.to.one = TRUE){
   if (!(dt.is.dt)) {
     stop("\nInput must be a data.table")
   }
+  
+  dt <- ensure_numeric_gex(dt)
+  
   val <- data.frame(dt[, 2:ncol(dt), with = F])
   val.mat <- data.matrix(val)
   npn.mat <- huge.npn(t(val.mat), npn.func = "shrinkage",
@@ -119,12 +140,15 @@ NPNSingleDT <- function(dt, zero.to.one = TRUE){
                       verbose = FALSE)
   npn.dt <- data.table(cbind(as.character(dt[[1]]), t(npn.mat)))
   colnames(npn.dt) <- chartr(".", "-", colnames(dt))
+  
+  npn.dt <- ensure_numeric_gex(npn.dt)
+  
   # npn.dt <- NAToZero(npn.dt)
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
     npn.dt <- rescale_datatable(npn.dt)
   }
-  return(npn.dt)
+  return(data.table(npn.dt))
 }
 
 ZScoreSingleDT <- function(dt, zero.to.one = TRUE){
@@ -143,6 +167,9 @@ ZScoreSingleDT <- function(dt, zero.to.one = TRUE){
   if (!(dt.is.dt)) {
     stop("\nInput must be a data.table")
   }
+  
+  dt <- ensure_numeric_gex(dt)
+  
   val <- data.frame(dt[, 2:ncol(dt), with = F])
   #  message("Z-score...\n")
   z.val <- t(apply(val, 1, function(x) scale(as.numeric(x))))
@@ -153,7 +180,7 @@ ZScoreSingleDT <- function(dt, zero.to.one = TRUE){
   if (zero.to.one) {
     z.dt <- rescale_datatable(z.dt)
   }
-  return(z.dt)
+  return(data.table(z.dt))
 }
 
 QNZSingleDT <- function(dt, zero.to.one = TRUE){
@@ -174,18 +201,24 @@ QNZSingleDT <- function(dt, zero.to.one = TRUE){
   if (!(dt.is.dt)) {
     stop("\nInput must be a data.table")
   }
+  
+  dt <- ensure_numeric_gex(dt)
+  
   val <- data.frame(dt[, 2:ncol(dt), with = F])
   #  message("Quantile normalization...\n")
   qn <- preprocessCore::normalize.quantiles(data.matrix(val), copy = F)
   z.qn <- t(apply(qn, 1, function(x) scale(as.numeric(x))))
   z.dt <- data.table(cbind(as.character(dt[[1]]), z.qn))
   colnames(z.dt) <- chartr(".", "-", colnames(dt))
+  
+  z.dt <- ensure_numeric_gex(z.dt)
+  
   # z.dt <- NAToZero(z.dt)
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
     z.dt <- rescale_datatable(z.dt)
   }
-  return(z.dt)
+  return(data.table(z.dt))
 }
 
 QNSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
@@ -216,6 +249,10 @@ QNSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
   if (!(all(ref.dt[[1]] %in% targ.dt[[1]]))) {
     stop("Gene identifiers in data.tables must match")
   }
+  
+  ref.dt <- ensure_numeric_gex(ref.dt)
+  targ.dt <- ensure_numeric_gex(targ.dt)
+  
   ref.values <- data.frame(ref.dt[, 2:ncol(ref.dt), with = F])
   target.values <- data.frame(targ.dt[, 2:ncol(targ.dt), with = F])
   #  message("Quantile normalization...\n")
@@ -233,11 +270,14 @@ QNSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
                                                    copy = F)
   qn.targ <- data.table(cbind(as.character(targ.dt[[1]]), qn.targ))
   colnames(qn.targ) <- chartr(".", "-", colnames(qn.targ))
+  
+  qn.targ <- ensure_numeric_gex(qn.targ)
+  
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
     qn.targ <- rescale_datatable(qn.targ)
   }
-  return(qn.targ)
+  return(data.table(qn.targ))
 }
 
 QNZSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
@@ -268,6 +308,10 @@ QNZSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
   if (!(all(ref.dt[[1]] %in% targ.dt[[1]]))) {
     stop("Gene identifiers in data.tables must match")
   }
+  
+  ref.dt <- ensure_numeric_gex(ref.dt)
+  targ.dt <- ensure_numeric_gex(targ.dt)
+  
   ref.values <- data.frame(ref.dt[, 2:ncol(ref.dt), with = F])
   target.values <- data.frame(targ.dt[, 2:ncol(targ.dt), with = F])
   #  message("Quantile normalization...\n")
@@ -291,11 +335,14 @@ QNZSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
   qnz.dt <- data.table(cbind(targ.dt[[1]], qnz.targ))
   
   colnames(qnz.dt) <- chartr(".", "-", colnames(targ.dt))
+  
+  qnz.dt <- ensure_numeric_gex(qnz.dt)
+  
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
     qnz.dt <- rescale_datatable(qnz.dt)
   }
-  return(qnz.dt)
+  return(data.table(qnz.dt))
 }
 
 TDMSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
@@ -325,6 +372,10 @@ TDMSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
   if (!(all(ref.dt[[1]] %in% targ.dt[[1]]))) {
     stop("Gene identifiers in data.tables must match")
   }
+  
+  ref.dt <- ensure_numeric_gex(ref.dt)
+  targ.dt <- ensure_numeric_gex(targ.dt)
+  
   #  message("TDM transformation...\n")
   tdm.targ <- TDM::tdm_transform(target_data = targ.dt,
                                  ref_data = ref.dt,
@@ -332,11 +383,14 @@ TDMSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
                                  filter_p = FALSE,
                                  inv_reference = TRUE,
                                  log_target=TRUE)
+  
+  tdm.targ <- ensure_numeric_gex(tdm.targ)
+  
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
     tdm.targ <- rescale_datatable(tdm.targ)
   }
-  return(tdm.targ)
+  return(data.table(tdm.targ))
 }
 
 SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
@@ -372,6 +426,8 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
   #  add.untransformed <- FALSE
   #}
 
+  dt <- ensure_numeric_gex(dt)
+  
   norm.list <- list()
   if (platform == "array") {
     norm.list[["log"]] <- LOGArrayOnly(dt, zto)
@@ -472,22 +528,29 @@ ZScoreProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   if (!(all(array.dt[[1]] %in% seq.dt[[1]]))) {
     stop("Gene identifiers in data.tables must match")
   }
+  
+  array.dt <- ensure_numeric_gex(array.dt)
+  seq.dt <- ensure_numeric_gex(seq.dt)
+  
   #  message("Z-score...\n")
   array.mat <- data.frame(array.dt[, 2:ncol(array.dt), with = F])
   z.array <- t(apply(array.mat, 1, function(x) scale(as.numeric(x))))
   seq.mat <- data.frame(seq.dt[, 2:ncol(seq.dt), with = F])
   z.seq <- t(apply(seq.mat, 1, function(x) scale(as.numeric(x))))
   #  message("\tConcatenation...\n")
-  z.dt <- data.table(cbind(array.dt[[1]], z.array, z.seq))
+  z.dt <- data.table(cbind(as.character(array.dt[[1]]), z.array, z.seq))
   colnames(z.dt) <- c("gene",
                       chartr(".", "-", colnames(array.mat)),
                       chartr(".", "-", colnames(seq.mat)))
+  
+  z.dt <- ensure_numeric_gex(z.dt)
+  
   # z.dt <- NAToZero(z.dt)
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
     z.dt <- rescale_datatable(z.dt)
   }
-  return(z.dt)
+  return(data.table(z.dt))
 }
 
 QNProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
@@ -520,6 +583,10 @@ QNProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   if (!(all(array.dt[[1]] %in% seq.dt[[1]]))) {
     stop("Gene identifiers in data.tables must match")
   }
+  
+  array.dt <- ensure_numeric_gex(array.dt)
+  seq.dt <- ensure_numeric_gex(seq.dt)
+  
   ref.values <- data.frame(array.dt[, 2:ncol(array.dt), with = F])
   target.values <- data.frame(seq.dt[, 2:ncol(seq.dt), with = F])
   #  message("Quantile normalization...\n")
@@ -529,6 +596,9 @@ QNProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
     data.matrix(target.values), qn.targ, copy = F)
   qn.seq <- data.table(cbind(seq.dt[[1]], qn.seq))
   colnames(qn.seq) <- chartr(".", "-", colnames(seq.dt))
+
+  qn.seq <- ensure_numeric_gex(qn.seq)
+  
   # array.dt <- NAToZero(array.dt)
   # qn.seq <- NAToZero(qn.seq)
   #  message("\tZero to one transformation...\n")
@@ -538,7 +608,7 @@ QNProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   }
   #  message("\tConcatenation...\n")
   qn.cat <- data.table(cbind(array.dt, qn.seq[, 2:ncol(qn.seq), with = F]))
-  return(qn.cat)
+  return(data.table(qn.cat))
 }
 
 QNZProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
@@ -571,6 +641,10 @@ QNZProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   if (!(all(array.dt[[1]] %in% seq.dt[[1]]))) {
     stop("Gene identifiers in data.tables must match")
   }
+  
+  array.dt <- ensure_numeric_gex(array.dt)
+  seq.dt <- ensure_numeric_gex(seq.dt)
+  
   ref.values <- data.frame(array.dt[, 2:ncol(array.dt), with = F])
   target.values <- data.frame(seq.dt[, 2:ncol(seq.dt), with = F])
   #  message("Quantile normalization...\n")
@@ -582,17 +656,19 @@ QNZProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   z.array <- t(apply(ref.values, 1, function(x) scale(as.numeric(x))))
   z.seq <- t(apply(qn.seq, 1, function(x) scale(as.numeric(x))))
   #  message("\tConcatenation...\n")
-  z.dt <- data.table(cbind(array.dt[[1]], z.array, z.seq))
+  z.dt <- data.table(cbind(as.character(array.dt[[1]]), z.array, z.seq))
   colnames(z.dt) <- c("gene",
                       chartr(".", "-", colnames(ref.values)),
                       chartr(".", "-", colnames(target.values)))
+  
+  z.dt <- ensure_numeric_gex(z.dt)
 
   # z.dt <- NAToZero(z.dt)
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
     z.dt <- rescale_datatable(z.dt)
   }
-  return(z.dt)
+  return(data.table(z.dt))
 }
 
 NPNProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
@@ -624,6 +700,10 @@ NPNProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   if (!(all(array.dt[[1]] %in% seq.dt[[1]]))) {
     stop("Gene identifiers in data.tables must match")
   }
+  
+  array.dt <- ensure_numeric_gex(array.dt)
+  seq.dt <- ensure_numeric_gex(seq.dt)
+  
   ref.values <- data.frame(array.dt[, 2:ncol(array.dt), with = F])
   target.values <- data.frame(seq.dt[, 2:ncol(seq.dt), with = F])
   npn.ref <- data.matrix(ref.values)
@@ -633,17 +713,19 @@ NPNProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   npn.seq <- huge::huge.npn(t(npn.targ), npn.func = "shrinkage",
                             npn.thresh = NULL, verbose = FALSE)
   #  message("\tConcatenation...\n")
-  npn.cat <- data.table(cbind(array.dt[[1]], t(npn.array), t(npn.seq)))
+  npn.cat <- data.table(cbind(as.character(array.dt[[1]]), t(npn.array), t(npn.seq)))
   colnames(npn.cat) <- c("gene",
                          chartr(".", "-", colnames(ref.values)),
                          chartr(".", "-", colnames(target.values)))
 
+  npn.cat <- ensure_numeric_gex(npn.cat)
+  
   # npn.cat <- NAToZero(npn.cat)
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
     npn.cat <- rescale_datatable(npn.cat)
   }
-  return(npn.cat)
+  return(data.table(npn.cat))
 }
 
 TDMProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
@@ -676,6 +758,10 @@ TDMProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   if (!(all(array.dt[[1]] %in% seq.dt[[1]]))) {
     stop("Gene identifiers in data.tables must match")
   }
+  
+  array.dt <- ensure_numeric_gex(array.dt)
+  seq.dt <- ensure_numeric_gex(seq.dt)
+  
   #  message("TDM transformation...\n")
   tdm.seq <- TDM::tdm_transform(target_data = seq.dt,
                                 ref_data = array.dt,
@@ -686,6 +772,9 @@ TDMProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   # array.dt <- NAToZero(array.dt)
   # tdm.seq <- NAToZero(tdm.seq)
   #  message("\tZero to one transformation...\n")
+  
+  tdm.seq <- ensure_numeric_gex(tdm.seq)
+  
   if (zero.to.one) {
     array.dt <- rescale_datatable(array.dt)
     tdm.seq <- rescale_datatable(tdm.seq)
@@ -693,7 +782,7 @@ TDMProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   #  message("\tConcatenation...\n")
   tdm.cat <- data.table(cbind(array.dt, tdm.seq[, 2:ncol(tdm.seq), with = F]))
 
-  return(tdm.cat)
+  return(data.table(tdm.cat))
 }
 
 LOGProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
@@ -724,10 +813,17 @@ LOGProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   if (!(all(array.dt[[1]] %in% seq.dt[[1]]))) {
     stop("Gene identifiers in data.tables must match")
   }
+  
+  array.dt <- ensure_numeric_gex(array.dt)
+  seq.dt <- ensure_numeric_gex(seq.dt)
+  
   #  message("Log transformation seq data...\n")
   log.seq <- TDM::log_transform_p1(seq.dt)
   # array.dt <- NAToZero(array.dt)
   # log.seq <- NAToZero(log.seq)
+  
+  log.seq <- ensure_numeric_gex(log.seq)
+  
   #  message("\tZero to one transformation...\n")
   if (zero.to.one) {
     array.dt <- rescale_datatable(array.dt)
@@ -735,7 +831,7 @@ LOGProcessing <- function(array.dt, seq.dt, zero.to.one = TRUE){
   }
   #  message("\tConcatenation...\n")
   log.cat <- data.table(cbind(array.dt, log.seq[, 2:ncol(log.seq), with = F]))
-  return(log.cat)
+  return(data.table(log.cat))
 }
 
 UnNoZTOProcessing <- function(array.dt = NULL, seq.dt = NULL) {
@@ -761,14 +857,16 @@ UnNoZTOProcessing <- function(array.dt = NULL, seq.dt = NULL) {
   if (all(array.dt.null, seq.dt.null)) {
     stop("Cannot have array.dt and seq.dt both NULL in UnNoZTOProcessing()")
   }
-  
+
   # If the only input is seq data, there is nothing to be done -- just return it
   if (array.dt.null & !seq.dt.null) {
     
-    return(seq.dt) # don't need to do anything to to seq.dt
+    return(data.table(seq.dt)) # don't need to do anything to to seq.dt
     
   } else { # if there is array data, we need to do something to it
-    
+
+    array.dt <- ensure_numeric_gex(array.dt)
+        
     # extract the gene vector and array column names
     gene_vector <- array.dt[,1]  
     array_column_names <- colnames(array.dt)
@@ -780,11 +878,13 @@ UnNoZTOProcessing <- function(array.dt = NULL, seq.dt = NULL) {
     
     # if there is no seq data, set up the returned object with just array
     if (seq.dt.null) {
-      
+    
       un_datatable <- data.table(data.frame(gene_vector, array_matrix))
       colnames(un_datatable) <- array_column_names
       
     } else { # if there is both seq and array data to combine
+      
+      seq.dt <- ensure_numeric_gex(seq.dt)
       
       # extract seq column names, without the gene column
       seq_column_names <- colnames(seq.dt)[-1]
@@ -797,7 +897,7 @@ UnNoZTOProcessing <- function(array.dt = NULL, seq.dt = NULL) {
       
     }
     
-    return(un_datatable)
+    return(data.table(un_datatable))
     
   }
 }
@@ -840,6 +940,9 @@ NormalizationWrapper <- function(array.dt, seq.dt,
             one transformation.")
   }
 
+  array.dt <- ensure_numeric_gex(array.dt)
+  seq.dt <- ensure_numeric_gex(seq.dt)
+  
   # if any negative values are found, then inverse log transform and relog
   # transform using x+1
   any.negative <- any(as.vector(as.matrix(array.dt[, 2:ncol(array.dt),
@@ -851,6 +954,9 @@ NormalizationWrapper <- function(array.dt, seq.dt,
   }
   # convert NA to zero
   array.dt <- NAToZero(array.dt)
+  
+  array.dt <- ensure_numeric_gex(array.dt)
+  
   norm.list <- list()
   # save array data.table to be used as 'reference' for test data
   norm.list[["raw.array"]] <- array.dt
@@ -903,6 +1009,10 @@ GetDataTablesForMixing <- function(array.data, seq.data,
   if (!(all(array.data[[1]] %in% seq.data[[1]]))) {
     stop("Gene identifiers in data.tables must match")
   }
+  
+  array.data <- ensure_numeric_gex(array.data)
+  seq.data <- ensure_numeric_gex(seq.data)
+  
   if ((length(titrate.sample.names) > 0)
       & (length(titrate.sample.names) != (ncol(seq.data) - 1))) {
     array.dt <-
@@ -913,6 +1023,10 @@ GetDataTablesForMixing <- function(array.data, seq.data,
       seq.data[, c(1, which(colnames(seq.data) %in% titrate.sample.names)),
                with = F]
     seq.dt <- data.table(seq.dt)
+    
+    array.dt <- ensure_numeric_gex(array.dt)
+    seq.dt <- ensure_numeric_gex(seq.dt)
+    
     mix.dt.list <- list("array" = array.dt, "seq" = seq.dt)
   } else if (length(titrate.sample.names) == (ncol(seq.data) - 1)) {
     mix.dt.list <- list("seq" = data.table(seq.data))
@@ -945,14 +1059,52 @@ rescale_datatable <- function(data_table){
   #   remaining columns are expression values
   # Returns: scaled gene expression data table
   
+  data_table <- ensure_numeric_gex(data_table)
+  
   data_matrix = data.matrix(data_table[, -1, with = F])
   
   # Rescale each row [0,1]
   rescaled_data_matrix = t(apply(data_matrix, 1, rescale_01))
     
-  # Includ gene symbols in result
+  # Include gene symbols in result
   result = data.table(data.frame(data_table[,1], rescaled_data_matrix))
   colnames(result) <- colnames(data_table)
-  return(result)
   
+  result <- ensure_numeric_gex(result)
+  
+  return(data.table(result))
+  
+}
+
+ensure_numeric_gex <- function(input_data) {
+  # Numeric version of data.table
+  #
+  # Ensure gene expression values are numeric in a given data.table
+  #
+  # input_data: a data.table with gene in the first column and gene
+  # expression in the remaining columns
+  #
+  # returns a data.table with numeric values for the gene expression columns
+
+  if ("data.table" %in% class(input_data)) {
+
+    # save gene names as character vector
+    gene_names <- as.character(input_data[[1]])
+
+    # force gene expression values to be numeric
+    gex_values <- t(apply(input_data[,-1], 1, as.numeric))
+
+    # create data frame of gene names and gene expression values
+    # set column names to be same as input data
+    return_df <- data.frame(gene_names, gex_values)
+    names(return_df) <- names(input_data)
+
+    # return as data.table
+    return(data.table(return_df))
+
+  } else {
+
+    stop("\nInput must be a data.table")
+
+  }
 }

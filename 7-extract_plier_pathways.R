@@ -375,9 +375,8 @@ if (length(jaccard_list) > 0) {
       "seed_index" = "L1"
     )
   
-  readr::write_tsv(
-    x = jaccard_df,
-    path = plot_data_filename
+  readr::write_tsv(jaccard_df,
+                   plot_data_filename
   )
   
 }
