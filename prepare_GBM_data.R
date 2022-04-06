@@ -92,7 +92,8 @@ all_array_tumor_samples <- tibble(accession = names(metadata_json$samples)) %>%
 # keep one (first) accession per TCGA ID
 array_accession_tcga_id_keep <- all_array_tumor_samples %>%
   group_by(tcga_id) %>%
-  summarize(accession = sort(accession)[1])
+  summarize(accession = sort(accession)[1]) %>%
+  ungroup()
 accession_colnames_keep <- colnames(gbm_array_expression)[-1][colnames(gbm_array_expression)[-1] %in% array_accession_tcga_id_keep$accession]
 
 # select columns to keep and rename with TCGA IDs
@@ -122,8 +123,10 @@ gbm_seq_tumor_samples <- tibble(tcga_id_raw = tcga_seq_expression_column_names[-
          sample = str_sub(tcga_id_raw, 14, 15)) %>% # and sample is ZZ
   filter(sample == "01") %>% # require sample to be primary solid tumor
   filter(tcga_id %in% array_accession_tcga_id_keep$tcga_id) %>% # keep array GBMs
-  group_by(tcga_patient, tcga_id) %>%
-  summarize(tcga_id_raw = sort(tcga_id_raw)[1]) # keep one raw ID per person
+  group_by(tcga_patient) %>%
+  summarize(tcga_id_raw = sort(tcga_id_raw)[1], # keep one raw ID per person
+            tcga_id = str_sub(tcga_id_raw, 1, 15)) %>%
+  ungroup()
 
 # now read in GBM subset of entire TCGA seq expression file
 # this is faster and uses less memory than reading in entire file and then subsetting
@@ -211,12 +214,12 @@ missing_clinical <- gbm_subtypes %>%
 
 write_tsv(gbm_array_expression_renamed %>%
             select(-all_of(missing_clinical)),
-          path = gbm_array_output_filepath)
+          gbm_array_output_filepath)
 
 write_tsv(gbm_seq_expression_renamed %>%
             select(-all_of(missing_clinical)),
-          path = gbm_seq_output_filepath)
+          gbm_seq_output_filepath)
 
 write_tsv(gbm_subtypes %>%
             filter(!is.na(subtype)),
-          path = clinical_tsv_output_filepath)
+          clinical_tsv_output_filepath)
