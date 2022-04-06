@@ -87,5 +87,5 @@ plot_obj <- ggplot(plot_df,
 
 ggsave(output_filename,
        plot = plot_obj,
-       height = 5,
-       width = 7.5)
+       height = 4,
+       width = 7.25)

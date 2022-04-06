@@ -133,7 +133,7 @@ plot_small_n <- function(subtypes){
          y = ifelse(using_single_measure,
                     unique(stats_df$measure),
                     "Measure of Similarity"),
-         title = paste(cancer_type, subtypes_nice, "FDR < 10%")) +
+         title = str_c("Small n Experiment: ", paste(cancer_type, subtypes_nice, "FDR < 10%"))) +
     scale_colour_manual(values = cbPalette[c(2, 3)])
   
   if (using_single_measure) {

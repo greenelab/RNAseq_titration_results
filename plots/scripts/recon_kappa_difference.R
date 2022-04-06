@@ -56,15 +56,15 @@ with_df <- read_tsv(with_recon_input_filename,
 
 without_summary_df <- without_df %>%
   group_by(Perc.Seq, Classifier, Normalization, Platform) %>%
-  summarize(median_without = median(Kappa)) %>%
-  ungroup()
+  summarize(median_without = median(Kappa),
+            .groups = "drop")
 
 with_summary_df <- with_df %>%
   filter(Reconstruction == "PCA",
          Measure == "kappa") %>%
   group_by(Perc.Seq, Classifier, Normalization, Platform) %>%
-  summarize(median_with = median(Kappa)) %>%
-  ungroup()
+  summarize(median_with = median(Kappa),
+            .groups = "drop")
 
 # combined data frames and calculate difference in median kappas
 

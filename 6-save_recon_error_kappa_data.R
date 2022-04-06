@@ -100,8 +100,8 @@ kappa.summary.df <-
   dplyr::group_by(Classifier, Normalization, Platform, Perc.seq) %>%
   dplyr::summarise(Median = median(Kappa),
                    Mean = mean(Kappa),
-                   SD = sd(Kappa)) %>%
-  dplyr::ungroup()
+                   SD = sd(Kappa),
+                   .groups = "drop")
 readr::write_tsv(kappa.summary.df,
                  file.path(rcn.res.dir,
                            paste0(file_identifier,
@@ -138,10 +138,9 @@ error.master.df$comp.method <- as.factor(error.master.df$comp.method)
 
 # take the average of each genes error across replicates
 error.mean.df <- error.master.df %>%
-  dplyr::group_by(gene, perc.seq, norm.method, comp.method,
-                  platform) %>%
-  dplyr::summarise(mean_mase = mean(MASE)) %>%
-  dplyr::ungroup()
+  dplyr::group_by(gene, perc.seq, norm.method, comp.method, platform) %>%
+  dplyr::summarise(mean_mase = mean(MASE),
+                   .groups = "drop")
 rm(error.master.df)
 colnames(error.mean.df) <- c("Gene", "Perc.seq", "Normalization",
                              "Method", "Platform", "Mean_Value")
