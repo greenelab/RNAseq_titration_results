@@ -16,6 +16,29 @@ We evaluated six normalization approaches for all methods:
 5. [Training Distribution Matching](https://peerj.com/articles/1621/) (TDM)
 6. z-scoring (Z)
 
+## Requirements
+
+We recommend using the docker image `envest/rnaseq_titration_results:R-4.1.2` to handle package and dependency installation.
+See `docker/R-4.1.2/Dockerfile` for more information.
+
+Our analysis ([v2.0](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.0)) was run using 7 cores on an AWS instance with 16 cores, 128 GB memory, and an allocated 1 TB of space.
+
+#### Setting up the docker container
+
+Pull the docker image using:
+
+```
+docker pull envest/rnaseq_titration_results:R-4.1.2
+```
+
+Then run the command to start up a container, replacing <PASSWORD> with your own password:
+
+```
+docker run --mount type=bind,target=/home/rstudio,source=$PWD -e PASSWORD=<PASSWORD> -p 8787:8787 envest/rnaseq_titration_results:R-4.1.2
+```
+
+Navigate to http://localhost:8787/ and login to the RStudio server with the username `rstudio` and the password you set above.
+
 ## Download data from The Cancer Genome Atlas (TCGA)
 
 TCGA data from 520 breast cancer (BRCA) patients used for these analyses
@@ -28,9 +51,7 @@ Data from 150 glioblastoma (GBM) patients is available from the [Genomic Data Co
 bash download_TCGA_data.sh
 ```
 
-## Analysis
-
-### Recreate manuscript results
+## Recreate manuscript results
 
 After data has been downloaded, running
 
@@ -38,7 +59,9 @@ After data has been downloaded, running
 bash run_all_analyses_and_plots.sh
 ```
 
-with v2.0 of this repository will reproduce the results presented in our manuscript.
+with [v2.0](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.0) of this repository will reproduce the results presented in our manuscript.
+
+## Methods
 
 ### Machine Learning Pipeline
 
@@ -59,18 +82,7 @@ The models were trained to predict tumor subtype (5 classes), and the binary mut
   - _Unsupervised learning_: 
 Holdout sets were projected onto and back out of the training set space using Principal Components Analysis to obtain reconstructed holdout sets.
 The trained subtype classifiers were used to predict on the reconstructed holdout sets.
-[PLIER](https://github.com/wgmao/PLIER) (pathway-level information extractor) identified active gene expression pathways in each cancer type.
-
-```
-# To run the machine learning pipeline, run in top directory:
-bash run_machine_learning_experiments.sh [cancer type] [prediction task] [n cores]
-```
-
-where 
-
-- `[cancer type]` is `BRCA` or `GBM`
-- `[prediction task]` is `subtype`, `TP53`, or `PIK3CA`
-- `[n cores]` is the number of cores you want to run in parallel
+[PLIER](https://github.com/wgmao/PLIER) (Pathway-Level Information ExtractoR) identified active gene expression pathways in each cancer type.
 
 ### Differential Expression Pipeline
 
@@ -91,6 +103,24 @@ For GBM, we compared the Classical and Mesenchymal subtypes as well as Proneural
 
 In the "small n" experiment, between 3 and 50 samples were selected from each subtype for DEG comparison.
 
+
+## Running individual experiments
+
+#### Machine learning
+
+```
+# To run the machine learning pipeline, run in top directory:
+bash run_machine_learning_experiments.sh [cancer type] [prediction task] [n cores]
+```
+
+where 
+
+- `[cancer type]` is `BRCA` or `GBM`
+- `[prediction task]` is `subtype`, `TP53`, or `PIK3CA`
+- `[n cores]` is the number of cores you want to run in parallel
+
+#### Differential expression
+
 ```
 # Note: This requires the data to be processed to include matched samples only, 
 # and split into training and test sets (0-expression_data_overlap_and_split.R)
@@ -107,14 +137,7 @@ where
 - `[subtype vs subtype small]` are the two subtypes to be compared at small sample sizes (comma-separated, e.g. Her2,LumA)
 - `[n cores]` is the number of cores you want to run in parallel
 
-## Requirements
-
-We recommend using the docker image `envest/rnaseq_titration_results:R-4.1.2` to handle package and dependency installation.
-See `docker/R-4.1.2/Dockerfile` for more information.
-
-Our analysis (v2.0) was run using 7 cores on an AWS instance with 16 cores, 128 GB memory, and an allocated 1 TB of space.
-
-## Other scripts
+#### Other scripts
 
 To search for the number of publicly available microarray and RNA-seq samples from [GEO](https://www.ncbi.nlm.nih.gov/geo/) and [ArrayExpress](https://www.ebi.ac.uk/arrayexpress/), run
 
@@ -127,7 +150,7 @@ and check the output in `results/array_rnaseq_ratio`.
 
 | Version | Relevant links |
 | :------ | :------------- |
-| [v2.0](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.0)  | no links yet   |
+| [v2.0](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.0) | [Figshare+ data](https://doi.org/10.25452/figshare.plus.19629864.v1), [Data for plots](https://doi.org/10.6084/m9.figshare.19686453)   |
 | [v1.1](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v1.1) |  [Figshare full results](https://doi.org/10.6084/m9.figshare.5035997.v2) |
 | [v1.0](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v1.0) | [Pre-print](https://doi.org/10.1101/118349) |
 
