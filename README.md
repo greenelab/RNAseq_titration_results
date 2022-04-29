@@ -108,7 +108,7 @@ The models were trained to predict tumor subtype (5 classes), and the binary mut
   - _Unsupervised learning_: 
 Holdout sets were projected onto and back out of the training set space using Principal Components Analysis to obtain reconstructed holdout sets.
 The trained subtype classifiers were used to predict on the reconstructed holdout sets.
-[PLIER](https://github.com/wgmao/PLIER) (Pathway-Level Information ExtractoR) identified coordinated sets of genes pathways in each cancer type.
+[PLIER](https://github.com/wgmao/PLIER) (Pathway-Level Information ExtractoR) identified coordinated sets of genes in each cancer type.
 
 ### Differential Expression Pipeline
 
