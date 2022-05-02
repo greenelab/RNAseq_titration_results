@@ -54,10 +54,10 @@ Pull the docker image using:
 docker pull envest/rnaseq_titration_results:R-4.1.2
 ```
 
-Then run the command to start up a container, replacing <PASSWORD> with your own password:
+Then run the command to start up a container, replacing `[PASSWORD]` with your own password:
 
 ```
-docker run --mount type=bind,target=/home/rstudio,source=$PWD -e PASSWORD=<PASSWORD> -p 8787:8787 envest/rnaseq_titration_results:R-4.1.2
+docker run --mount type=bind,target=/home/rstudio,source=$PWD -e PASSWORD=[PASSWORD] -p 8787:8787 envest/rnaseq_titration_results:R-4.1.2
 ```
 
 Navigate to <http://localhost:8787/> and login to the RStudio server with the username `rstudio` and the password you set above.
@@ -99,15 +99,15 @@ Here's a schematic overview of our machine learning experiments:
 
 1. Matched samples run on both microarray and RNA-seq were split into a training (2/3) and holdout set (1/3).
 2. RNA-seq samples were "titrated" into the training set, 10% at a time (0-100%), replacing their matched array samples, resulting in eleven training sets for each normalization method. 
-3. Machine learning applications
+3. Machine learning applications:
 
   - _Supervised learning_: 
-Three classifiers – LASSO, linear SVM, and Random Forest — were trained on each training set and tested on the microarray and RNA-seq holdout sets.
-The models were trained to predict tumor subtype (5 classes), and the binary mutation status of _TP53_ and _PIK3CA_.
+We trained three classifiers – LASSO, linear SVM, and Random Forest — on each training set and tested them on the microarray and RNA-seq holdout sets.
+The models were trained to predict tumor subtype (both cancer types have 5 subtypes) and the binary mutation status of _TP53_ and _PIK3CA_.
 
   - _Unsupervised learning_: 
-Holdout sets were projected onto and back out of the training set space using Principal Components Analysis to obtain reconstructed holdout sets.
-The trained subtype classifiers were used to predict on the reconstructed holdout sets.
+We projected holdout sets onto and back out of the training set space using Principal Components Analysis to obtain reconstructed holdout sets.
+We then used the trained subtype classifiers to predict on the reconstructed holdout sets.
 [PLIER](https://github.com/wgmao/PLIER) (Pathway-Level Information ExtractoR) identified coordinated sets of genes in each cancer type.
 
 ### Differential Expression Pipeline
