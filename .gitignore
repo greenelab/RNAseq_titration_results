@@ -11,6 +11,7 @@ models
 results
 plots/main/*.pdf
 plots/supplementary/*.pdf
+plots/visualize_expression/*.pdf
 .Rproj.user
 RNAseq_titration_results.Rproj
 ._RNAseq_titration_results.Rproj
