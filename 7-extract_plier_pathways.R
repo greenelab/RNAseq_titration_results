@@ -87,21 +87,21 @@ all.paths <- PLIER::combinePaths(
 )
 
 # Do permutation here only if we want to permute once and re-use the same permuted matrix
-if (permute) {
+#if (permute) {
 
   ### Option 1 for permuting all.paths:
   # permutes only the row names (gene names)
   # keeps all 0-1 values in the same place
-  row.names(all.paths) <- sample(row.names(all.paths))
+  #row.names(all.paths) <- sample(row.names(all.paths))
   
   ### Option 2 for permuting all.paths:
   # permutes all 0-1 values within column (pathway)
   # keeps row names the same
-  all.paths.row.names <- row.names(all.paths)
-  all.paths <- apply(all.paths, 2, sample)
-  row.names(all.paths) <- all.paths.row.names
+  #all.paths.row.names <- row.names(all.paths)
+  #all.paths <- apply(all.paths, 2, sample)
+  #row.names(all.paths) <- all.paths.row.names
 
-}
+#}
 
 PLIER_pathways <- colnames(all.paths)
 
@@ -292,7 +292,7 @@ for (seed_index in 1:length(norm.train.files)) {
   # set random seeds to use inside %dopar% loop for each %seq and norm method
   use_seeds_inside_dopar <- list()
   for (ps in perc_seq) {
-    #use_seeds_inside_dopar[[ps]] <- list()
+    
     if (ps %in% c("0", "100")) {
       for (nm in norm_methods_if_0_100) {
         print(ps)
@@ -361,7 +361,7 @@ for (seed_index in 1:length(norm.train.files)) {
           ### Option 1 for permuting all.paths:
           # permutes only the row names (gene names)
           # keeps all 0-1 values in the same place
-          row.names(all.paths) <- sample(row.names(all.paths))
+          #row.names(all.paths) <- sample(row.names(all.paths))
           
           ### Option 2 for permuting all.paths:
           # permutes all 0-1 values within column (pathway)
