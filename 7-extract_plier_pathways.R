@@ -286,6 +286,25 @@ for (seed_index in 1:length(norm.train.files)) {
   norm_methods_else <- c("log", "npn", "qn", "qn-z", "tdm", "z",
                          "array_only", "seq_only")
 
+  # set random seeds to use inside %dopar% loop for each %seq and norm method
+  use_seeds_inside_dopar <- list()
+  for (ps in perc_seq) {
+    #use_seeds_inside_dopar[[ps]] <- list()
+    if (ps %in% c("0", "100")) {
+      for (nm in norm_methods_if_0_100) {
+        print(ps)
+        print(nm)
+        use_seeds_inside_dopar[[ps]][[nm]] <- sample(1:1000, size = 1)
+      }
+    } else {
+      for (nm in norm_methods_else) {
+        print(ps)
+        print(nm)
+        use_seeds_inside_dopar[[ps]][[nm]] <- sample(1:1000, size = 1)
+      }
+    }
+  }
+  
   plier_results_list <- foreach(
     ps = perc_seq,
     .packages = c("PLIER", "doParallel")
@@ -317,6 +336,9 @@ for (seed_index in 1:length(norm.train.files)) {
       .packages = c("PLIER", "doParallel"),
       .errorhandling = "pass" # let pass on inside loop
     ) %dopar% {
+      
+      # set seed again since we are inside %dopar%
+      set.seed(use_seeds_inside_dopar[[ps]][[nm]])
 
       if (nm %in% names(norm.train.list[[ps]])) {
 
@@ -330,6 +352,23 @@ for (seed_index in 1:length(norm.train.files)) {
           norm.train.list[[ps]][[nm]] <- norm.train.list[[ps]][[nm]][-all.same.indx, ]
         }
 
+        # Do permutation here only if we want to permute every time and never re-use the same permuted matrix
+        if (permute) {
+          
+          ### Option 1 for permuting all.paths:
+          # permutes only the row names (gene names)
+          # keeps all 0-1 values in the same place
+          row.names(all.paths) <- sample(row.names(all.paths))
+          
+          ### Option 2 for permuting all.paths:
+          # permutes all 0-1 values within column (pathway)
+          # keeps row names the same
+          all.paths.row.names <- row.names(all.paths)
+          all.paths <- apply(all.paths, 2, sample)
+          row.names(all.paths) <- all.paths.row.names
+          
+        }
+        
         # get common genes
         common.genes <- PLIER::commonRows(
           all.paths,
