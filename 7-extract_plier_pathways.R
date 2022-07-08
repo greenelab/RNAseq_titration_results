@@ -66,7 +66,10 @@ norm.train.files <- file.path(
 # define output files
 plot_data_filename <- file.path(
   plot.data.dir,
-  str_c(file_identifier, "_PLIER_jaccard.tsv")
+  str_c(file_identifier, "_PLIER_jaccard",
+        ifelse(permute, # distinguish between permuted/not permuted output files
+               ".permuted.tsv",
+               ".tsv"))
 )
 
 #### set up PLIER data ---------------------------------------------------------
@@ -433,7 +436,8 @@ if (length(jaccard_list) > 0) {
       "nmeth" = "L3", # normalization method
       "pseq" = "L2", # percentage RNA-seq
       "seed_index" = "L1"
-    )
+    ) %>%
+    mutate(genes_pathways_permuted = permute)
   
   readr::write_tsv(jaccard_df,
                    plot_data_filename
