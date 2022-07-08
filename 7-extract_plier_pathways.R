@@ -17,7 +17,10 @@ option_list <- list(
   optparse::make_option("--ncores",
                         default = NA_integer_,
                         help = "Set the number of cores to use"
-  )
+  ),
+  optparse::make_option("--permute",
+                        default = FALSE,
+                        help = "Permute the pathway-gene relationship matrix")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list = option_list))
@@ -35,6 +38,7 @@ file_identifier <- str_c(cancer_type, "subtype", sep = "_") # assuming subtype
 ncores <- min(parallel::detectCores() - 1,
               opt$ncores,
               na.rm = TRUE)
+permute <- opt$permute
 
 # set seed
 initial.seed <- opt$seed
@@ -78,6 +82,23 @@ all.paths <- PLIER::combinePaths(
   oncogenicPathways,
   svmMarkers
 )
+
+# Do permutation here only if we want to permute once and re-use the same permuted matrix
+if (permute) {
+
+  ### Option 1 for permuting all.paths:
+  # permutes only the row names (gene names)
+  # keeps all 0-1 values in the same place
+  row.names(all.paths) <- sample(row.names(all.paths))
+  
+  ### Option 2 for permuting all.paths:
+  # permutes all 0-1 values within column (pathway)
+  # keeps row names the same
+  all.paths.row.names <- row.names(all.paths)
+  all.paths <- apply(all.paths, 2, sample)
+  row.names(all.paths) <- all.paths.row.names
+
+}
 
 PLIER_pathways <- colnames(all.paths)
 
