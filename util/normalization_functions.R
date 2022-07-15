@@ -902,6 +902,89 @@ UnNoZTOProcessing <- function(array.dt = NULL, seq.dt = NULL) {
   }
 }
 
+CNProcessing <-  function(array.dt, seq.dt,
+                          paired = FALSE,
+                          scale_inputs = TRUE,
+                          zero.to.one = TRUE,
+                          norm_method = "quantile") {
+  
+  # This function takes array and RNA-seq data in the form of data.table
+  # to be 'mixed' (concatenated) and applies the CrossNorm normalization method.
+  # Columns of the two inputs may be paired (default, not paired)
+  # The two input data sets need to be on the same scale (scale_inputs for 0-1).
+  # To be consistent with other methods, we also scale the final matrix 0-1.
+  # For now, the normalization method available is "quantile".
+  #
+  # Args:
+  #   array.dt: data.table of array data where the first column contains
+  #             gene identifiers, the columns are samples,
+  #             rows are gene measurements
+  #   seq.dt:   data.table of RNA-seq data where the first column contains
+  #             gene identifiers, the columns are samples,
+  #             rows are gene measurements
+  #   paired:   are the columns of array and seq paired (like case/control?)
+  #   scale_inputs:  TRUE if array and seq data are on different scales to start with
+  #   zero.to.one: logical - should data be zero to one transformed?
+  #   norm_method: the normalization method applied (default: quantile)
+  #
+  # Returns:
+  #   cn.mat:   CrossNorm'd data.table, zero to one transformed if zero.to.one = TRUE,
+  #             that contains both array and RNA-seq samples
+  
+  require(data.table)
+  # Error-handling
+  array.is.dt <- "data.table" %in% class(array.dt)
+  seq.is.dt <- "data.table" %in% class(seq.dt)
+  any.not.dt <- !(any(c(array.is.dt, seq.is.dt)))
+  if (any.not.dt) {
+    stop("array.dt and seq.dt must both be data.tables")
+  }
+  if (!(all(array.dt[[1]] %in% seq.dt[[1]]))) {
+    stop("Gene identifiers in data.tables must match")
+  }
+  
+  array.dt <- ensure_numeric_gex(array.dt)
+  seq.dt <- ensure_numeric_gex(seq.dt)
+  
+  if (scale_inputs) {
+    array.dt <- rescale_datatable(array.dt)
+    seq.dt <- rescale_datatable(seq.dt)
+  }
+
+  if (paired) {
+    
+    if (ncol(array.dt) == ncol(seq.dt)) {
+      combined.dt <- rbind(array.dt, seq.dt)  
+    } else {
+      stop("Number of array and seq columns must be same for paired CrossNorm")
+    }
+    
+  } else {
+    
+    n_array = ncol(array.dt)
+    n_seq = ncol(seq.dt)
+    
+    wide_array.dt = t(apply(array.dt, 1, function(x) rep(x, each = n_seq)))
+    wide_seq.dt = matrix(as.matrix(seq.dt),
+                         nrow = nrow(seq.dt),
+                         ncol = n_seq*n_array)
+    
+    combined.dt <- rbind(wide_array.dt, wide_seq.dt)
+  }
+  
+  if (norm_method == "quantile") {
+    
+  } else {
+    
+    stop("Norm method must be quantile until more options are added.")
+    
+  }
+  
+  cn.cat <- data.table(cbind(X, Y[,-1], with = F]))
+  return(data.table(cn.cat))
+  
+}
+
 NormalizationWrapper <- function(array.dt, seq.dt,
                                  zto = TRUE,
                                  add.untransformed = FALSE,
