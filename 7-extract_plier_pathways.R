@@ -86,23 +86,6 @@ all.paths <- PLIER::combinePaths(
   svmMarkers
 )
 
-# Do permutation here only if we want to permute once and re-use the same permuted matrix
-#if (permute) {
-
-  ### Option 1 for permuting all.paths:
-  # permutes only the row names (gene names)
-  # keeps all 0-1 values in the same place
-  #row.names(all.paths) <- sample(row.names(all.paths))
-  
-  ### Option 2 for permuting all.paths:
-  # permutes all 0-1 values within column (pathway)
-  # keeps row names the same
-  #all.paths.row.names <- row.names(all.paths)
-  #all.paths <- apply(all.paths, 2, sample)
-  #row.names(all.paths) <- all.paths.row.names
-
-#}
-
 PLIER_pathways <- colnames(all.paths)
 
 #### Function for converting column to row names -------------------------------
@@ -295,14 +278,10 @@ for (seed_index in 1:length(norm.train.files)) {
     
     if (ps %in% c("0", "100")) {
       for (nm in norm_methods_if_0_100) {
-        print(ps)
-        print(nm)
         use_seeds_inside_dopar[[ps]][[nm]] <- sample(1:1000, size = 1)
       }
     } else {
       for (nm in norm_methods_else) {
-        print(ps)
-        print(nm)
         use_seeds_inside_dopar[[ps]][[nm]] <- sample(1:1000, size = 1)
       }
     }
@@ -355,15 +334,9 @@ for (seed_index in 1:length(norm.train.files)) {
           norm.train.list[[ps]][[nm]] <- norm.train.list[[ps]][[nm]][-all.same.indx, ]
         }
 
-        # Do permutation here only if we want to permute every time and never re-use the same permuted matrix
+        # Permute every time and never re-use the same permuted matrix
         if (permute) {
           
-          ### Option 1 for permuting all.paths:
-          # permutes only the row names (gene names)
-          # keeps all 0-1 values in the same place
-          #row.names(all.paths) <- sample(row.names(all.paths))
-          
-          ### Option 2 for permuting all.paths:
           # permutes all 0-1 values within column (pathway)
           # keeps row names the same
           all.paths.row.names <- row.names(all.paths)
