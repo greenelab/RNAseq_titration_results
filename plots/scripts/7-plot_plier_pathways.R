@@ -47,7 +47,7 @@ output_filename <- file.path(output_directory,
 
 # Read in data
 jaccard_df <- read_tsv(plot_data_filename,
-                       col_types = "dddddcdcdd") %>%
+                       col_types = "dddddcdcddl") %>%
   filter(pseq == 50) %>%
   mutate(sample_size = case_when(nmeth == "array_only" ~ "Single Platform",
                                  nmeth == "seq_only" ~ "Single Platform",
