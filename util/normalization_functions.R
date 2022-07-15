@@ -943,8 +943,14 @@ CNProcessing <-  function(array.dt, seq.dt,
     stop("Gene identifiers in data.tables must match")
   }
   
+  gene_names <- array.dt[[1]]
+  n_genes <- length(gene_names)
+  
   array.dt <- ensure_numeric_gex(array.dt)
   seq.dt <- ensure_numeric_gex(seq.dt)
+  
+  array.colnames <- names(array.dt)
+  seq.colnames <- names(seq.dt)
   
   if (scale_inputs) {
     array.dt <- rescale_datatable(array.dt)
@@ -954,25 +960,28 @@ CNProcessing <-  function(array.dt, seq.dt,
   if (paired) {
     
     if (ncol(array.dt) == ncol(seq.dt)) {
-      combined.dt <- rbind(array.dt, seq.dt)  
+      combined.dt <- rbind(array.dt, seq.dt)[,-1]
     } else {
       stop("Number of array and seq columns must be same for paired CrossNorm")
     }
     
   } else {
     
-    n_array = ncol(array.dt)
-    n_seq = ncol(seq.dt)
+    n_array <- ncol(array.dt[,-1])
+    n_seq <- ncol(seq.dt[,-1])
     
-    wide_array.dt = t(apply(array.dt, 1, function(x) rep(x, each = n_seq)))
-    wide_seq.dt = matrix(as.matrix(seq.dt),
-                         nrow = nrow(seq.dt),
-                         ncol = n_seq*n_array)
+    wide_array.dt <- t(apply(array.dt[,-1], 1, function(x) rep(x, each = n_seq)))
+    wide_seq.dt <- matrix(as.matrix(seq.dt[,-1]),
+                          nrow = n_genes,
+                          ncol = n_seq*n_array)
     
     combined.dt <- rbind(wide_array.dt, wide_seq.dt)
   }
   
   if (norm_method == "quantile") {
+    
+    normed.combined.dt <- preprocessCore::normalize.quantiles(data.matrix(combined.dt),
+                                                              copy = TRUE)
     
   } else {
     
@@ -980,8 +989,24 @@ CNProcessing <-  function(array.dt, seq.dt,
     
   }
   
-  cn.cat <- data.table(cbind(X, Y[,-1], with = F]))
-  return(data.table(cn.cat))
+  normed.array.dt <- sapply(lapply(1:n_array,
+                                   function(x) normed.combined.dt[1:n_genes,
+                                                                  (n_seq*x - n_seq + 1):(n_seq*x)]),
+                            rowMeans,
+                            simplify = TRUE)
+  
+  normed.seq.dt <- sapply(lapply(1:n_seq,
+                                 function(x) normed.combined.dt[(n_genes + 1):(2*n_genes),
+                                                                1:(n_seq*n_array) %% n_seq == (x %% n_seq)]),
+                                 rowMeans,
+                                 simplify = TRUE)
+  
+  cn.cat <- data.table(cbind(gene_names, normed.array.dt, normed.seq.dt))
+  names(cn.cat) <- c(array.colnames, seq.colnames[-1])
+  
+  cn.cat <- ensure_numeric_gex(cn.cat)
+  
+  return(cn.cat)
   
 }
 
