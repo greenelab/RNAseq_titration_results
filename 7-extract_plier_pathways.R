@@ -19,6 +19,7 @@ option_list <- list(
                         help = "Set the number of cores to use"
   ),
   optparse::make_option("--permute",
+                        action = "store_true",
                         default = FALSE,
                         help = "Permute the pathway-gene relationship matrix")
 )
@@ -44,6 +45,8 @@ permute <- opt$permute
 initial.seed <- opt$seed
 set.seed(initial.seed)
 message(paste("\nPLIER initial seed set to:", initial.seed))
+
+print(permute)
 
 # define directories
 data.dir <- here::here("data")
