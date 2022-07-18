@@ -957,18 +957,18 @@ CNProcessing <-  function(array.dt, seq.dt,
     seq.dt <- rescale_datatable(seq.dt)
   }
 
+  n_array <- ncol(array.dt[,-1])
+  n_seq <- ncol(seq.dt[,-1])
+  
   if (paired) {
     
-    if (ncol(array.dt) == ncol(seq.dt)) {
+    if (n_array == n_seq) {
       combined.dt <- rbind(array.dt, seq.dt)[,-1]
     } else {
       stop("Number of array and seq columns must be same for paired CrossNorm")
     }
     
   } else {
-    
-    n_array <- ncol(array.dt[,-1])
-    n_seq <- ncol(seq.dt[,-1])
     
     wide_array.dt <- t(apply(array.dt[,-1], 1, function(x) rep(x, each = n_seq)))
     wide_seq.dt <- matrix(as.matrix(seq.dt[,-1]),
