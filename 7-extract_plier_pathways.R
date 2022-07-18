@@ -17,7 +17,11 @@ option_list <- list(
   optparse::make_option("--ncores",
                         default = NA_integer_,
                         help = "Set the number of cores to use"
-  )
+  ),
+  optparse::make_option("--permute",
+                        action = "store_true",
+                        default = FALSE,
+                        help = "Permute the pathway-gene relationship matrix")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list = option_list))
@@ -35,6 +39,7 @@ file_identifier <- str_c(cancer_type, "subtype", sep = "_") # assuming subtype
 ncores <- min(parallel::detectCores() - 1,
               opt$ncores,
               na.rm = TRUE)
+permute <- opt$permute
 
 # set seed
 initial.seed <- opt$seed
@@ -62,7 +67,10 @@ norm.train.files <- file.path(
 # define output files
 plot_data_filename <- file.path(
   plot.data.dir,
-  str_c(file_identifier, "_PLIER_jaccard.tsv")
+  str_c(file_identifier, "_PLIER_jaccard",
+        ifelse(permute, # distinguish between permuted/not permuted output files
+               ".permuted.tsv",
+               ".tsv"))
 )
 
 #### set up PLIER data ---------------------------------------------------------
@@ -265,6 +273,21 @@ for (seed_index in 1:length(norm.train.files)) {
   norm_methods_else <- c("log", "npn", "qn", "qn-z", "tdm", "z",
                          "array_only", "seq_only")
 
+  # set random seeds to use inside %dopar% loop for each %seq and norm method
+  use_seeds_inside_dopar <- list()
+  for (ps in perc_seq) {
+    
+    if (ps %in% c("0", "100")) {
+      for (nm in norm_methods_if_0_100) {
+        use_seeds_inside_dopar[[ps]][[nm]] <- sample(1:1000, size = 1)
+      }
+    } else {
+      for (nm in norm_methods_else) {
+        use_seeds_inside_dopar[[ps]][[nm]] <- sample(1:1000, size = 1)
+      }
+    }
+  }
+  
   plier_results_list <- foreach(
     ps = perc_seq,
     .packages = c("PLIER", "doParallel")
@@ -296,6 +319,9 @@ for (seed_index in 1:length(norm.train.files)) {
       .packages = c("PLIER", "doParallel"),
       .errorhandling = "pass" # let pass on inside loop
     ) %dopar% {
+      
+      # set seed again since we are inside %dopar%
+      set.seed(use_seeds_inside_dopar[[ps]][[nm]])
 
       if (nm %in% names(norm.train.list[[ps]])) {
 
@@ -309,6 +335,17 @@ for (seed_index in 1:length(norm.train.files)) {
           norm.train.list[[ps]][[nm]] <- norm.train.list[[ps]][[nm]][-all.same.indx, ]
         }
 
+        # Permute every time and never re-use the same permuted matrix
+        if (permute) {
+          
+          # permutes all 0-1 values within column (pathway)
+          # keeps row names the same
+          all.paths.row.names <- row.names(all.paths)
+          all.paths <- apply(all.paths, 2, sample)
+          row.names(all.paths) <- all.paths.row.names
+          
+        }
+        
         # get common genes
         common.genes <- PLIER::commonRows(
           all.paths,
@@ -373,7 +410,8 @@ if (length(jaccard_list) > 0) {
       "nmeth" = "L3", # normalization method
       "pseq" = "L2", # percentage RNA-seq
       "seed_index" = "L1"
-    )
+    ) %>%
+    mutate(genes_pathways_permuted = permute)
   
   readr::write_tsv(jaccard_df,
                    plot_data_filename
