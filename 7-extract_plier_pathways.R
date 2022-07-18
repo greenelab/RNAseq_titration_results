@@ -46,8 +46,6 @@ initial.seed <- opt$seed
 set.seed(initial.seed)
 message(paste("\nPLIER initial seed set to:", initial.seed))
 
-print(permute)
-
 # define directories
 data.dir <- here::here("data")
 norm.data.dir <- here::here("normalized_data")
