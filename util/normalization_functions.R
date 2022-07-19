@@ -910,9 +910,9 @@ CNProcessing <-  function(array.dt, seq.dt,
   
   # This function takes array and RNA-seq data in the form of data.table
   # to be 'mixed' (concatenated) and applies the CrossNorm normalization method.
-  # Columns of the two inputs may be paired (default, not paired)
-  # The two input data sets need to be on the same scale (scale_inputs for 0-1).
-  # To be consistent with other methods, we also scale the final matrix 0-1.
+  # Columns of the two inputs may be paired (default: not paired)
+  # The two input data sets should be scaled 0-1 on the sample level (column).
+  # To be consistent with other methods, we also scale the final matrix gene-wise 0-1.
   # For now, the normalization method available is "quantile".
   #
   # Args:
@@ -923,8 +923,8 @@ CNProcessing <-  function(array.dt, seq.dt,
   #             gene identifiers, the columns are samples,
   #             rows are gene measurements
   #   paired:   are the columns of array and seq paired (like case/control?)
-  #   scale_inputs:  TRUE if array and seq data are on different scales to start with
-  #   zero.to.one: logical - should data be zero to one transformed?
+  #   scale_inputs: logical - scale columns if inputs are on different scales to start with
+  #   zero.to.one: logical - should data be gene-wise zero to one transformed?
   #   norm_method: the normalization method applied (default: quantile)
   #
   # Returns:
@@ -952,15 +952,19 @@ CNProcessing <-  function(array.dt, seq.dt,
   array.colnames <- names(array.dt)
   seq.colnames <- names(seq.dt)
   
+  # if the inputs are on different scales (array and RNA-seq usually are), scale
+  # each sample (column) to be on the same 0-1 scale
   if (scale_inputs) {
     array.dt <- rescale_datatable(array.dt, by_row = FALSE)
     seq.dt <- rescale_datatable(seq.dt, by_row = FALSE)
   }
 
-  n_array <- ncol(array.dt[,-1])
-  n_seq <- ncol(seq.dt[,-1])
+  # The number of array and RNA-seq samples
+  n_array <- ncol(array.dt) - 1
+  n_seq <- ncol(seq.dt) - 1
   
-  if (paired) {
+  # Create the combined data matrix that will be normalized
+  if (paired) { # if the inputs are paired, simply stack the two inputs
     
     if (n_array == n_seq) {
       combined.dt <- rbind(array.dt, seq.dt)[,-1]
@@ -968,13 +972,26 @@ CNProcessing <-  function(array.dt, seq.dt,
       stop("Number of array and seq columns must be same for paired CrossNorm")
     }
     
-  } else {
+  } else { # if the inputs are not paired, then each array sample is matched
+    # with each seq sample to create a matrix with n_array*n_seq columns
     
+    # example, with 3 array samples (a1, a2, a3) and 2 seq samples (s1, s2)
+    # a1 a1 a2 a2 a3 a3
+    # s1 s2 s1 s2 s1 s2
+    # where each element a1, a2, a3, s1, s2 is a vector of length n_genes
+    # creating a combined matrix with dimensions (2*n_genes) x (n_array*n_seq)
+    # (this is the cross of crossnorm)
+    
+    # the array component of the combined matrix must repeat each array column n_seq times
     wide_array.dt <- t(apply(array.dt[,-1], 1, function(x) rep(x, each = n_seq)))
+    
+    # the seq component of the combined matrix must repeat its entire self n_array times
+    # here, we allow the final dimensions of the matrix and then seq.dt[-1] is recycled to fill it
     wide_seq.dt <- matrix(as.matrix(seq.dt[,-1]),
                           nrow = n_genes,
                           ncol = n_seq*n_array)
     
+    # then cat the array and seq components together
     combined.dt <- rbind(wide_array.dt, wide_seq.dt)
   }
   
@@ -989,22 +1006,50 @@ CNProcessing <-  function(array.dt, seq.dt,
     
   }
   
-  normed.array.dt <- sapply(lapply(1:n_array,
-                                   function(x) normed.combined.dt[1:n_genes,
-                                                                  (n_seq*x - n_seq + 1):(n_seq*x)]),
+  if (paired) {
+    
+    # the top half of the combined matrix
+    normed.array.dt <- normed.combined.dt[1:n_genes,]
+    # the bottom half of the combined matrix
+    normed.seq.dt <- normed.combined.dt[(n_genes + 1):(2*n_genes),]
+    
+  } else {
+    
+    # now with a cross-normalized matrix, we have
+    # a1n a1n a2n a2n a3n a3n
+    # s1n s2n s1n s2n s1n s2n
+    # where each element has now been normalized within its column
+    # now we need to find the gene-level mean of each element from the same sample
+    # i.e. vector_mean_of(each a1n), ... vector_mean_of(each s2n)
+  
+    # for array values, that is the top half of the combined data table (1:n_genes)
+    # and chunks of columns (in the example, columns 1:2, 3:4, 5:6)
+    normed.array.dt <- sapply(lapply(1:n_array,
+                                     function(x) normed.combined.dt[1:n_genes,
+                                                                    (n_seq*x - n_seq + 1):(n_seq*x)]),
+                              rowMeans,
+                              simplify = TRUE)
+    
+    # for array values, that is the bottom half of the combined data table (n_genes + 1:(2*n_genes)
+    # and particular columns (in the example, columns 1,3,5 and 2,4,6)
+    normed.seq.dt <- sapply(lapply(1:n_seq,
+                                   function(x) normed.combined.dt[(n_genes + 1):(2*n_genes),
+                                                                  1:(n_seq*n_array) %% n_seq == (x %% n_seq)]),
                             rowMeans,
                             simplify = TRUE)
+    
+  }
   
-  normed.seq.dt <- sapply(lapply(1:n_seq,
-                                 function(x) normed.combined.dt[(n_genes + 1):(2*n_genes),
-                                                                1:(n_seq*n_array) %% n_seq == (x %% n_seq)]),
-                                 rowMeans,
-                                 simplify = TRUE)
-  
+  # cbind it all together, and include column names
   cn.cat <- data.table(cbind(gene_names, normed.array.dt, normed.seq.dt))
   names(cn.cat) <- c(array.colnames, seq.colnames[-1])
   
   cn.cat <- ensure_numeric_gex(cn.cat)
+  
+  # rescale each gene to be 0-1
+  if (zero.to.one) {
+    cn.cat <- rescale_datatable(cn.cat)
+  }
   
   return(cn.cat)
   
