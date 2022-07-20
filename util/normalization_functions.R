@@ -955,8 +955,8 @@ CNProcessing <-  function(array.dt, seq.dt,
   # if the inputs are on different scales (array and RNA-seq usually are), scale
   # each sample (column) to be on the same 0-1 scale
   if (scale_inputs) {
-    array.dt <- rescale_datatable(array.dt, by_row = FALSE)
-    seq.dt <- rescale_datatable(seq.dt, by_row = FALSE)
+    array.dt <- rescale_datatable(array.dt, by_column = TRUE)
+    seq.dt <- rescale_datatable(seq.dt, by_column = TRUE)
   }
 
   # The number of array and RNA-seq samples
