@@ -2,10 +2,10 @@
 # Cheng, L., Lo, L.-Y., Tang, N. L. S., Wang, D. & Leung, K.-S. CrossNorm: a novel normalization strategy for microarray data in cancers. Sci. Rep. 6, 18898 (2016)
 # https://www.nature.com/articles/srep18898
 
-# Specifically, the code is copied directly without modification from the supplementary information here:
+# The code is copied without modification from the Supplementary Information here:
 # https://static-content.springer.com/esm/art%3A10.1038%2Fsrep18898/MediaObjects/41598_2016_BFsrep18898_MOESM1_ESM.pdf
 
-# We thank the authors for making the code publicly available under a Creative Commons CC BY license.
+# We thank the authors of CrossNorm for making the code publicly available under a Creative Commons CC BY license.
 
 #====================================================================================
 # Description:
