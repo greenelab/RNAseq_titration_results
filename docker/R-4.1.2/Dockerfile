@@ -76,15 +76,6 @@ RUN Rscript -e "options(warn = 2); BiocManager::install(c( \
     update = FALSE, \
     version = 3.14)"
 
-# Threading issue with preprocessCore::normalize.quantiles
-# https://support.bioconductor.org/p/122925/#124701
-# https://github.com/bmbolstad/preprocessCore/issues/1#issuecomment-326756305
-#RUN Rscript -e "options(warn = 2); BiocManager::install( \
-#    'preprocessCore', \
-#    configure.args = '--disable-threading', \
-#    force = TRUE, \
-#    update = FALSE)"
-
 # ref = 341eb77105e7efd2654b4f112578648584936e06 is latest greenelab/TDM commit (retrieved 2021-05-28)
 RUN Rscript -e "options(warn = 2); remotes::install_github( \
     'greenelab/TDM', ref = 'b041807835d4076c5549356c86c44f087d713b1a')"
