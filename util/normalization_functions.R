@@ -1204,13 +1204,13 @@ rescale_01 <- function(data_vector){
   }
 }
 
-rescale_datatable <- function(data_table, by_row = TRUE){
+rescale_datatable <- function(data_table, by_column = FALSE){
   # rescale each row (or column) of a data table to [0,1]
   # applies rescale_01() to each row (or column)
   # Inputs: gene expression data table
   #   first column of input is genes
   #   remaining columns are expression values
-  #   by_row = TRUE rescale each row, if FALSE rescale each column
+  #   by_column = FALSE rescale each row, if TRUE rescale each column
   # Returns: scaled gene expression data table
   
   data_table <- ensure_numeric_gex(data_table)
@@ -1218,12 +1218,11 @@ rescale_datatable <- function(data_table, by_row = TRUE){
   data_matrix = data.matrix(data_table[, -1, with = F])
   
   # Rescale each row or column [0,1]
-  if (by_row) {
-    rescaled_data_matrix = t(apply(data_matrix, 1, rescale_01))
-  } else {
+  if (by_column) {
     rescaled_data_matrix = apply(data_matrix, 2, rescale_01)
+  } else {
+    rescaled_data_matrix = t(apply(data_matrix, 1, rescale_01))
   }
-  
   
   # Include gene symbols in result
   result = data.table(data.frame(data_table[,1], rescaled_data_matrix))
