@@ -1,3 +1,5 @@
+source(here::here("util", "CrossNorm.R"))
+
 NAToZero <- function(dt, un=0) suppressWarnings(gdata::NAToUnknown(dt, un, force = TRUE))
 
 #### single platform functions -------------------------------------------------
@@ -902,6 +904,103 @@ UnNoZTOProcessing <- function(array.dt = NULL, seq.dt = NULL) {
   }
 }
 
+CNProcessing <-  function(array.dt, seq.dt,
+                          paired = FALSE,
+                          scale_inputs = TRUE,
+                          zero.to.one = TRUE) {
+  
+  # This function takes array and RNA-seq data in the form of data.table
+  # to be 'mixed' (concatenated) and applies the CrossNorm normalization method.
+  # There are two flavors of CrossNorm: General (default) and Paired
+  # If the columns of the two inputs are paired (e.g. from same patient) use paired = TRUE.
+  # The two input data sets should be scaled 0-1 on the sample level (column).
+  # To be consistent with other methods, we also scale the final matrix gene-wise 0-1.
+  # The normalization method used is "quantile normalization".
+  #
+  # Args:
+  #   array.dt: data.table of array data where the first column contains
+  #             gene identifiers, the columns are samples,
+  #             rows are gene measurements
+  #   seq.dt:   data.table of RNA-seq data where the first column contains
+  #             gene identifiers, the columns are samples,
+  #             rows are gene measurements
+  #   paired:   are the columns of array and seq paired (like before/after from same patient?)
+  #   scale_inputs: logical - scale columns if inputs are on different scales to start with
+  #   zero.to.one: logical - should data be gene-wise zero to one transformed?
+  #
+  # Returns:
+  #   cn.mat:   CrossNorm'd data.table, zero to one transformed if zero.to.one = TRUE,
+  #             that contains both array and RNA-seq samples
+  
+  require(data.table)
+  # Error-handling
+  array.is.dt <- "data.table" %in% class(array.dt)
+  seq.is.dt <- "data.table" %in% class(seq.dt)
+  any.not.dt <- !(any(c(array.is.dt, seq.is.dt)))
+  if (any.not.dt) {
+    stop("array.dt and seq.dt must both be data.tables")
+  }
+  if (!(all(array.dt[[1]] %in% seq.dt[[1]]))) {
+    stop("Gene identifiers in data.tables must match")
+  }
+  
+  gene_names <- array.dt[[1]]
+  n_genes <- length(gene_names)
+  
+  array.dt <- ensure_numeric_gex(array.dt)
+  seq.dt <- ensure_numeric_gex(seq.dt)
+  
+  array.colnames <- names(array.dt)
+  seq.colnames <- names(seq.dt)
+  
+  # if the inputs are on different scales (array and RNA-seq usually are), scale
+  # each sample (column) to be on the same 0-1 scale
+  if (scale_inputs) {
+    array.dt <- rescale_datatable(array.dt, by_column = TRUE)
+    seq.dt <- rescale_datatable(seq.dt, by_column = TRUE)
+  }
+
+  # The number of array and RNA-seq samples
+  n_array <- ncol(array.dt) - 1
+  n_seq <- ncol(seq.dt) - 1
+  
+  combined.dt <- cbind(array.dt[,-1], seq.dt[,-1])
+  array_seq_labels <- c(rep(0, n_array), rep(1, n_seq))
+  
+  # Create the combined data matrix that will be normalized
+  if (paired) { # if the inputs are paired, simply stack the two inputs
+    
+    if (n_array == n_seq) {
+      
+      cn.dt <- PairedCrossNorm(combined.dt, array_seq_labels)
+      
+    } else {
+      
+      stop("Number of array and seq columns must be same for paired CrossNorm")
+      
+    }
+    
+  } else { # if the inputs are not paired, then each array sample is matched
+    # with each seq sample to create a matrix with n_array*n_seq columns
+    
+    cn.dt <- GeneralCrossNorm(combined.dt, array_seq_labels)
+    
+  }
+  
+  cn.dt <- data.table(cbind(gene_names, cn.dt))
+  names(cn.dt) <- c(array.colnames, seq.colnames[-1])
+  
+  cn.dt <- ensure_numeric_gex(cn.dt)
+  
+  # rescale each gene to be 0-1
+  if (zero.to.one) {
+    cn.dt <- rescale_datatable(cn.dt)
+  }
+  
+  return(cn.dt)
+  
+}
+
 NormalizationWrapper <- function(array.dt, seq.dt,
                                  zto = TRUE,
                                  add.untransformed = FALSE,
@@ -1051,21 +1150,26 @@ rescale_01 <- function(data_vector){
   }
 }
 
-rescale_datatable <- function(data_table){
-  # rescale each row of a data table to [0,1]
-  # applies rescale_01() to each row
+rescale_datatable <- function(data_table, by_column = FALSE){
+  # rescale each row (or column) of a data table to [0,1]
+  # applies rescale_01() to each row (or column)
   # Inputs: gene expression data table
   #   first column of input is genes
   #   remaining columns are expression values
+  #   by_column = FALSE rescale each row, if TRUE rescale each column
   # Returns: scaled gene expression data table
   
   data_table <- ensure_numeric_gex(data_table)
   
   data_matrix = data.matrix(data_table[, -1, with = F])
   
-  # Rescale each row [0,1]
-  rescaled_data_matrix = t(apply(data_matrix, 1, rescale_01))
-    
+  # Rescale each row or column [0,1]
+  if (by_column) {
+    rescaled_data_matrix = apply(data_matrix, 2, rescale_01)
+  } else {
+    rescaled_data_matrix = t(apply(data_matrix, 1, rescale_01))
+  }
+  
   # Include gene symbols in result
   result = data.table(data.frame(data_table[,1], rescaled_data_matrix))
   colnames(result) <- colnames(data_table)
