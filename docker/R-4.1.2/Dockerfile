@@ -56,6 +56,15 @@ RUN install2.r --error --deps TRUE \
     styler \
     viridis
 
+# R Bioconductor packages
+RUN Rscript -e "options(warn = 2); BiocManager::install(c( \
+    'EnsDb.Hsapiens.v86' , \
+    'ensembldb', \
+    'limma', \
+    'quantro'), \
+    update = FALSE, \
+    version = 3.14)"
+
 # Threading issue with preprocessCore::normalize.quantiles
 # https://support.bioconductor.org/p/122925/#124701
 # https://github.com/bmbolstad/preprocessCore/issues/1#issuecomment-326756305
@@ -63,16 +72,6 @@ RUN Rscript -e "options(warn = 2); BiocManager::install( \
     'preprocessCore', \
     configure.args = '--disable-threading', \
     force = TRUE, \
-    update = FALSE, \
-    version = 3.14)"
-
-# R Bioconductor packages
-RUN Rscript -e "options(warn = 2); BiocManager::install(c( \
-    'affy', \
-    'EnsDb.Hsapiens.v86' , \
-    'ensembldb', \
-    'limma', \
-    'quantro'), \
     update = FALSE, \
     version = 3.14)"
 
