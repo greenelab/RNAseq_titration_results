@@ -52,6 +52,7 @@ RUN install2.r --error --deps TRUE \
     reshape2 \
     scales \
     sdcMicro \
+    Seurat \
     stringr \
     styler \
     viridis
