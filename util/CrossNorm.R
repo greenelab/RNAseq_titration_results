@@ -2,10 +2,14 @@
 # Cheng, L., Lo, L.-Y., Tang, N. L. S., Wang, D. & Leung, K.-S. CrossNorm: a novel normalization strategy for microarray data in cancers. Sci. Rep. 6, 18898 (2016)
 # https://www.nature.com/articles/srep18898
 
-# The code is copied without modification from the Supplementary Information here:
+# We thank the authors of CrossNorm for making the code publicly available under a Creative Commons CC BY license.
+
+# The code is copied from the Supplementary Information here:
 # https://static-content.springer.com/esm/art%3A10.1038%2Fsrep18898/MediaObjects/41598_2016_BFsrep18898_MOESM1_ESM.pdf
 
-# We thank the authors of CrossNorm for making the code publicly available under a Creative Commons CC BY license.
+# We made slight modifications that do no alter the functionality of the code, including
+#   - We commented out library calls
+#   - We specified the library in preprocessCore::normalize.quantiles() function calls
 
 #====================================================================================
 # Description:
@@ -31,8 +35,8 @@
 # exp.gcn = GeneralCrossNorm(exp, label)
 #====================================================================================
 
-library(affy)
-library(preprocessCore)
+#library(affy)
+#library(preprocessCore)
 
 # -------------------Paired CrossNorm --------------------
 
@@ -42,7 +46,7 @@ PairedCrossNorm <- function(exp, label){
   exp.normal = exp[,label==0];
   exp.disease = exp[,label==1];
   exp.cross = rbind(exp.normal,exp.disease);
-  exp.quantile.cross = normalize.quantiles(exp.cross);
+  exp.quantile.cross = preprocessCore::normalize.quantiles(exp.cross);
   exp.crossnorm.normal = exp.quantile.cross[1:geneLen,];
   exp.crossnorm.disease = exp.quantile.cross[(geneLen+1):(2*geneLen),];
   exp.crossnorm= cbind(exp.crossnorm.normal,exp.crossnorm.disease);
@@ -54,7 +58,7 @@ PairedCrossNorm <- function(exp, label){
 GeneralCrossNorm <- function(exp,label){
   exp = as.matrix(exp);
   exp.cross = Matrix2CrossMatrix(exp,label)
-  exp.quantile.cross = normalize.quantiles(exp.cross)
+  exp.quantile.cross = preprocessCore::normalize.quantiles(exp.cross)
   exp.crossnorm = CrossMatrix2Matrix(exp.quantile.cross,label)
   return(exp.crossnorm)
 }
