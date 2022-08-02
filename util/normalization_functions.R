@@ -1001,6 +1001,88 @@ CNProcessing <-  function(array.dt, seq.dt,
   
 }
 
+
+SeuratIntegration <-  function(array.dt, seq.dt,
+                               n_dims = 50) {
+  
+  # This function takes array and RNA-seq data in the form of data.table
+  # to be 'mixed' (concatenated) and applies Seurat integration.
+  #
+  # Args:
+  #   array.dt: data.table of array data where the first column contains
+  #             gene identifiers, the columns are samples,
+  #             rows are gene measurements
+  #   seq.dt:   data.table of RNA-seq data where the first column contains
+  #             gene identifiers, the columns are samples,
+  #             rows are gene measurements
+  #   n_dims:   number of dimensions for PCA and UMAP (default: 50)
+  #
+  # Returns:
+  #   array_seq.integrated: an integrated Seurat object including array and seq
+  
+  require(data.table)
+  # Error-handling
+  array.is.dt <- "data.table" %in% class(array.dt)
+  seq.is.dt <- "data.table" %in% class(seq.dt)
+  any.not.dt <- !(any(c(array.is.dt, seq.is.dt)))
+  if (any.not.dt) {
+    stop("array.dt and seq.dt must both be data.tables")
+  }
+  if (!(all(array.dt[[1]] %in% seq.dt[[1]]))) {
+    stop("Gene identifiers in data.tables must match")
+  }
+  
+  gene_names <- array.dt[[1]]
+  n_genes <- length(gene_names)
+  
+  array.dt <- ensure_numeric_gex(array.dt)
+  seq.dt <- ensure_numeric_gex(seq.dt)
+  
+  array.colnames <- names(array.dt)
+  seq.colnames <- names(seq.dt)
+  
+  # The number of array and RNA-seq samples
+  n_array <- ncol(array.dt) - 1
+  n_seq <- ncol(seq.dt) - 1
+  
+  # List of seurat objects to be integrated
+  # SCTransform???
+  array_seq_list <- SOMETHING
+  
+    
+  # integration
+  array_seq.anchors <- Seurat::FindIntegrationAnchors(object.list = array_seq_list,
+                                                      dims = 1:n_dims,
+                                                      verbose = FALSE)
+  
+  array_seq.integrated <- Seurat::IntegrateData(anchorset = array_seq.anchors,
+                                                verbose = FALSE,
+                                                dims = 1:n_dims)
+  
+  Seurat::DefaultAssay(array_seq.integrated) <- "integrated"
+  
+  # Run the standard workflow for visualization and clustering
+  array_seq.integrated <- Seurat::ScaleData(array_seq.integrated,
+                                            verbose = FALSE)
+
+  array_seq.integrated <- Seurat::RunPCA(array_seq.integrated,
+                                         npcs = n_dims,
+                                         verbose = FALSE)
+  
+  # UMAP
+  array_seq.integrated <- Seurat::RunUMAP(array_seq.integrated,
+                                          dims = 1:n_dims,
+                                          reduction = "pca",
+                                          return.model = TRUE,
+                                          n.components = n_dims,
+                                          verbose = FALSE)
+  
+  return(array_seq.integrated)
+  
+}
+
+# NEXT: write SeuratGetTrainingMatrix(option: PCA or UMAP), SeuratProjectTestData(option: PCA or UMAP)
+
 NormalizationWrapper <- function(array.dt, seq.dt,
                                  zto = TRUE,
                                  add.untransformed = FALSE,
