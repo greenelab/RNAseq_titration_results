@@ -1003,10 +1003,11 @@ CNProcessing <-  function(array.dt, seq.dt,
 
 
 SeuratIntegration <-  function(array.dt, seq.dt,
+                               vbose = FALSE,
                                n_dims = 50) {
   
-  # This function takes array and RNA-seq data in the form of data.table
-  # to be 'mixed' (concatenated) and applies Seurat integration.
+  # This function takes array and RNA-seq data in the form of data.tables
+  # to be normalized and concatenated through Seurat integration.
   #
   # Args:
   #   array.dt: data.table of array data where the first column contains
@@ -1015,7 +1016,7 @@ SeuratIntegration <-  function(array.dt, seq.dt,
   #   seq.dt:   data.table of RNA-seq data where the first column contains
   #             gene identifiers, the columns are samples,
   #             rows are gene measurements
-  #   n_dims:   number of dimensions for PCA and UMAP (default: 50)
+  #   n_dims:   number of dimensions for reduction (default: 50)
   #
   # Returns:
   #   array_seq.integrated: an integrated Seurat object including array and seq
@@ -1032,56 +1033,132 @@ SeuratIntegration <-  function(array.dt, seq.dt,
     stop("Gene identifiers in data.tables must match")
   }
   
-  gene_names <- array.dt[[1]]
-  n_genes <- length(gene_names)
-  
   array.dt <- ensure_numeric_gex(array.dt)
   seq.dt <- ensure_numeric_gex(seq.dt)
   
-  array.colnames <- names(array.dt)
-  seq.colnames <- names(seq.dt)
-  
-  # The number of array and RNA-seq samples
-  n_array <- ncol(array.dt) - 1
-  n_seq <- ncol(seq.dt) - 1
-  
   # List of seurat objects to be integrated
-  # SCTransform???
-  array_seq_list <- SOMETHING
+  array_seq_list <- list(array = array.dt[,-1],
+                         seq = seq.dt[,-1])
   
+  array_seq_list <- lapply(X = array_seq_list,
+                           FUN = Seurat::CreateSeuratObject)
+  
+  # SCTransform
+  array_seq_list <- lapply(X = array_seq_list,
+                           FUN = Seurat::SCTransform,
+                           verbose = vbose)
+  
+  features <- Seurat::SelectIntegrationFeatures(object.list = array_seq_list,
+                                                verbose = vbose)
+  
+  array_seq_list <- Seurat::PrepSCTIntegration(object.list = array_seq_list,
+                                               anchor.features = features,
+                                               verbose = vbose)
     
   # integration
   array_seq.anchors <- Seurat::FindIntegrationAnchors(object.list = array_seq_list,
+                                                      normalization.method = "SCT",
+                                                      anchor.features = features,
                                                       dims = 1:n_dims,
-                                                      verbose = FALSE)
+                                                      verbose = vbose)
   
   array_seq.integrated <- Seurat::IntegrateData(anchorset = array_seq.anchors,
-                                                verbose = FALSE,
-                                                dims = 1:n_dims)
+                                                normalization.method = "SCT",
+                                                dims = 1:n_dims,
+                                                verbose = vbose)
   
-  Seurat::DefaultAssay(array_seq.integrated) <- "integrated"
-  
-  # Run the standard workflow for visualization and clustering
-  array_seq.integrated <- Seurat::ScaleData(array_seq.integrated,
-                                            verbose = FALSE)
-
+  # PCA
   array_seq.integrated <- Seurat::RunPCA(array_seq.integrated,
                                          npcs = n_dims,
-                                         verbose = FALSE)
+                                         nfeatures.print = n_dims,
+                                         verbose = vbose)
   
   # UMAP
-  array_seq.integrated <- Seurat::RunUMAP(array_seq.integrated,
-                                          dims = 1:n_dims,
-                                          reduction = "pca",
-                                          return.model = TRUE,
-                                          n.components = n_dims,
-                                          verbose = FALSE)
+  #array_seq.integrated <- Seurat::RunUMAP(array_seq.integrated,
+  #                                        dims = 1:n_dims,
+  #                                        reduction = "pca",
+  #                                        return.model = TRUE,
+  #                                        n.components = n_dims,
+  #                                        verbose = vbose)
   
   return(array_seq.integrated)
   
 }
 
-# NEXT: write SeuratGetTrainingMatrix(option: PCA or UMAP), SeuratProjectTestData(option: PCA or UMAP)
+SeuratPCATrainingData <- function(integrated_seurat_object) {
+  
+  # This function returns the PCA reduction of training data from the integrated Seurat object
+  #
+  # Args:
+  #   integrated_seurat_object:  output from SeuratIntegration, an integrated
+  #             Seurat object with both array and RNA-seq data combined
+  #
+  # Returns:
+  #   properly formatted data.table (with dimension names as column 1, sample names as column names)
+  
+  reduced.dt <- integrated_seurat_object@reductions$pca@cell.embeddings %>%
+    t() %>%
+    as.data.frame() %>%
+    tibble::rownames_to_column("dimension") %>%
+    data.table::as.data.table() %>%
+    ensure_numeric_gex()
+  
+  return(reduced.dt)
+  
+}
+
+SeuratProjectPCATestData <- function(test_data.dt,
+                                     integrated_seurat_object) {
+  
+  # This function transforms test data (SCTransform), then projects it to the
+  # reduced dimension PCA space of the integrated_seurat_object.
+  #
+  # Args:
+  #   test_data.dt: a data.table of test data (column 1 = gene)
+  #   integrated_seurat_object:  output from SeuratIntegration, an integrated
+  #             Seurat object with both array and RNA-seq data combined
+  #
+  # Returns:
+  #   properly formatted data.table (with dimension names as column 1, sample names as column names)
+  
+  require(data.table)
+  # Error-handling
+  test_data.is.dt <- "data.table" %in% class(test_data.dt)
+  if (!test_data.is.dt) {
+    stop("test_data must be data.table")
+  }
+  
+  test_data.dt <- ensure_numeric_gex(test_data.dt)
+
+  # Create query single cell object based on test data
+  query.sct <- Seurat::CreateSeuratObject(test_data.dt[,-1]) %>%
+    Seurat::SCTransform()
+  
+  # Detect transfer anchors between training and test
+  ref_dims <- dim(integrated_seurat_object@reductions$pca@cell.embeddings)[2]
+  anchors <- Seurat::FindTransferAnchors(reference = integrated_seurat_object,
+                                         query = query.sct,
+                                         dims = 1:ref_dims,
+                                         reference.reduction = "pca")
+  
+  # Add PCA mapping to query 
+  query.sct <- Seurat::MapQuery(anchorset = anchors,
+                                reference = integrated_seurat_object,
+                                query = query.sct,
+                                reference.reduction = "pca")
+  
+  # Convert samples x PCs to PCs by sample and name rows same as training
+  test_reduced.dt <- query.sct@reductions$ref.pca@cell.embeddings %>%
+    t() %>%
+    as.data.frame() %>%
+    tibble::rownames_to_column("dimension") %>%
+    mutate(dimension = stringr::str_replace(dimension, "refpca", "PC")) %>%
+    data.table::as.data.table() %>%
+    ensure_numeric_gex()
+  
+  return(test_reduced.dt)
+  
+}
 
 NormalizationWrapper <- function(array.dt, seq.dt,
                                  zto = TRUE,
