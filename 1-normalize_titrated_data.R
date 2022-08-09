@@ -165,6 +165,8 @@ parallel::stopCluster(cl)
 # sort out names
 names(norm.titrate.list)[2:10] <- names(titrate.mix.dt.list)[2:10]
 
+message("gets here 1")
+
 # single platform seq normalization
 norm.titrate.list[["100"]] <-
   SinglePlatformNormalizationWrapper(titrate.mix.dt.list[[11]]$seq,
@@ -174,6 +176,8 @@ norm.titrate.list[["100"]] <-
 
 # save train data
 saveRDS(norm.titrate.list, file = file.path(norm.data.dir, norm.train.object))
+
+message("gets here 2")
 
 #### normalize test data -------------------------------------------------------
 array.test <-
@@ -191,6 +195,8 @@ array.test.norm.list <-
                                      add.cn.test = TRUE,
                                      add.seurat.test = TRUE,
                                      training.list = norm.titrate.list)
+
+message("gets here 3")
 
 # seq normalization
 # initialize list to hold normalized seq data
@@ -308,6 +314,8 @@ seq.test.norm.list[["cn"]] <- rescale_datatable(seq.test,
 # Seurat RNA-seq test
 # for 10-90% seq - use the integrated training data at each %RNA-seq
 
+message("gets here 5")
+
 # parallel backend
 cl <- parallel::makeCluster(ncores)
 doParallel::registerDoParallel(cl)
@@ -322,6 +330,8 @@ names(seq.seurat.list) <- names(norm.titrate.list)[2:10] # 2:10 corresponds to 1
 
 # stop parallel backend
 parallel::stopCluster(cl)
+
+message("gets here 6")
 
 # add Seurat RNA-seq test data to list of normalized test data
 seq.test.norm.list[["seurat"]] <- seq.seurat.list
