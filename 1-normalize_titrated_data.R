@@ -312,13 +312,13 @@ seq.test.norm.list[["cn"]] <- rescale_datatable(seq.test,
 cl <- parallel::makeCluster(ncores)
 doParallel::registerDoParallel(cl)
 
-seq.seurat.list <- foreach(i = 2:10) %dopar% { #1:9 corresponds to 10%-90%
+seq.seurat.list <- foreach(i = 2:10) %dopar% { # 2:10 corresponds to 10%-90%
   SeuratProjectPCATestData(seq.test,
                            norm.titrate.list[[i]][["seurat_model"]],
                            vbose = TRUE)
 }
 
-names(seq.seurat.list) <- names(norm.titrate.list)[2:10] #10%-90%
+names(seq.seurat.list) <- names(norm.titrate.list)[2:10] # 2:10 corresponds to 10%-90%
 
 # stop parallel backend
 parallel::stopCluster(cl)

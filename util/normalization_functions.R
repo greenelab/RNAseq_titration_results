@@ -486,20 +486,13 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
   # do this in parallel for 10-90% RNA-seq using integration from each %
   if (add.seurat.test) {
     
-    # parallel backend
-    cl <- parallel::makeCluster(ncores)
-    doParallel::registerDoParallel(cl)
-    
-    seurat_projection_list <- foreach(i = 2:10) %dopar% { #2:10 corresponds to 10%-90%
+    seurat_projection_list <- foreach(i = 2:10) %do% { #2:10 corresponds to 10%-90%
       SeuratProjectPCATestData(dt,
                                training.list[[i]][["seurat_model"]],
                                vbose = TRUE)
     }
     
     names(seurat_projection_list) <- names(training.list)[2:10] #10%-90%
-    
-    # stop parallel backend
-    parallel::stopCluster(cl)
     
     # add Seurat RNA-seq test data to list of normalized test data
     norm.list[["seurat"]] <- seurat_projection_list
