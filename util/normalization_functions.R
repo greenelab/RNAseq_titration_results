@@ -398,7 +398,10 @@ TDMSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
 SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
                                                zto = TRUE,
                                                add.untransformed = FALSE,
-                                               add.qn.z = FALSE){
+                                               add.qn.z = FALSE,
+                                               add.cn.test = FALSE,
+                                               add.seurat.test = FALSE,
+                                               seurat_list = NULL){
   # This function is a wrapper for processing expression data.tables that
   # contain only one RNA assay platform (array or seq). It returns a list of
   # normalized data.tables.
@@ -413,6 +416,9 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
   #	                     be added to the list?
   #	  add.qn.z: logical - should quantile normalized data that is then z-scored
   #	            be added to the list?
+  #   add.cn.test =  logical - should CrossNorm data be added to the list?
+  #   add.seurat.test =  logical - should Seurat test data be added to the list? Does NOT get zero-to-one transformed
+  #   seurat_list = if we want to add Seurat data (test), where does it come from?
   #
   # Returns:
   #   norm.list: a list of normalized,
@@ -461,8 +467,46 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
       norm.list[["un"]] <- dt
     }
   } else {
+    
     stop("platform parameter should be set to 'array' or 'seq'")
+    
   }
+  
+  # Whether platform == array or seq, do we add CrossNorm and/or Seurat?
+  
+  # should CrossNorm be added?
+  # Rescale each column, quantile normalize, then rescale each row
+  if (add.cn.test){
+    norm.list[["cn"]] <- rescale_datatable(dt,
+                                           by_column = TRUE) %>%
+      QNSingleDT(zero.to.one = zto)
+  }
+  
+  # should Seurat test data be added?
+  # do this in parallel for 10-90% RNA-seq using integration from each %
+  if (add.seurat.test) {
+    
+    # parallel backend
+    cl <- parallel::makeCluster(ncores)
+    doParallel::registerDoParallel(cl)
+    
+    seurat_projection_list <- foreach(i = 1:9) %dopar% { #1:9 corresponds to 10%-90%
+      SeuratProjectPCATestData(dt,
+                               seurat_list[[i]],
+                               vbose = TRUE)
+    }
+    
+    names(seurat_projection_list) <- names(seurat_list) #10%-90%
+    
+    # stop parallel backend
+    parallel::stopCluster(cl)
+    
+    # add Seurat RNA-seq test data to list of normalized test data
+    norm.list[["seurat"]] <- seurat_projection_list
+    rm(seurat_projection_list)
+    
+  }
+  
   return(norm.list)
 }
 
@@ -1160,7 +1204,10 @@ SeuratProjectPCATestData <- function(test_data.dt,
 NormalizationWrapper <- function(array.dt, seq.dt,
                                  zto = TRUE,
                                  add.untransformed = FALSE,
-                                 add.qn.z = FALSE){
+                                 add.qn.z = FALSE,
+                                 add.cn = FALSE,
+                                 add.seurat.training = FALSE,
+                                 seurat_object = NULL){
   # This function takes array and RNA-seq data in the form of data.table
   # to be 'mixed' (concatenated) and returns a list of normalized data.tables
   #
@@ -1176,6 +1223,9 @@ NormalizationWrapper <- function(array.dt, seq.dt,
   #	                     be concatenated to array data and added to the list?
   #	  add.qn.z: logical - should quantile normalized data that is then z-scored
   #	            be added to the list?
+  #   add.cn =  logical - should CrossNorm data be added to the list?
+  #   add.seurat.training =  logical - should Seurat training data be added to the list? Does NOT get zero-to-one transformed
+  #   seurat_object = if we want to add Seurat data (training), where does it come from?
   #
   # Returns:
   #	  norm.list: a list of normalized, zero to one 'mixed' data.tables
@@ -1228,6 +1278,15 @@ NormalizationWrapper <- function(array.dt, seq.dt,
   # should untransformed data be added?
   if (add.untransformed) {
     norm.list[["un"]] <- UnNoZTOProcessing(array.dt, seq.dt)
+  }
+  # should CrossNorm be added?
+  if (add.cn) {
+    norm.list[["cn"]] <- CNProcessing(array.dt = array.dt,
+                                      seq.dt = seq.dt)
+  }
+  # should Seurat training data be added?
+  if (add.seurat.training) {
+    norm.list[["seurat"]] <- SeuratPCATrainingData(seurat_object)
   }
   return(norm.list)
 }

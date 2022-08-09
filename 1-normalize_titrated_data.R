@@ -46,6 +46,9 @@ ncores <- min(parallel::detectCores() - 1,
               opt$ncores,
               na.rm = TRUE)
 
+add.seurat <- TRUE
+add.cn <- TRUE
+
 # set seed
 filename.seed <- as.integer(opt$seed1)
 initial.seed <- as.integer(opt$seed2)
@@ -130,6 +133,29 @@ seq.train <-
 titrate.mix.dt.list <- lapply(titrate.sample.list,
                               function(x) GetDataTablesForMixing(array.train,
                                                                  seq.train, x))
+
+#### create list of integrated Seurat objects (based on training data) ---------
+
+if (add.seurat) {
+  
+  # parallel backend
+  cl <- parallel::makeCluster(ncores)
+  doParallel::registerDoParallel(cl)
+  
+  integrated_seurat_object_list <- foreach(n = 2:10) %dopar% {
+    SeuratIntegration(titrate.mix.dt.list[[n]]$array,
+                      titrate.mix.dt.list[[n]]$seq,
+                      n_dims = 50,
+                      vbose = TRUE)
+  }
+  
+  # stop parallel backend
+  parallel::stopCluster(cl)
+  # sort out names
+  names(integrated_seurat_object_list) <- names(titrate.mix.dt.list)[2:10]
+  
+}
+
 #### normalize train data ------------------------------------------------------
 
 # initialize in the list to hold normalized data
@@ -152,7 +178,10 @@ norm.titrate.list[2:10] <-
     NormalizationWrapper(titrate.mix.dt.list[[n]]$array,
                          titrate.mix.dt.list[[n]]$seq,
                          add.untransformed = TRUE,
-                         add.qn.z = TRUE)
+                         add.qn.z = TRUE,
+                         add.cn = TRUE,
+                         add.seurat.training = TRUE,
+                         seurat_object = integrated_seurat_object_list[[n-1]])
   }
 
 # stop parallel backend
@@ -182,7 +211,10 @@ array.test.norm.list <-
   SinglePlatformNormalizationWrapper(array.test,
                                      platform = "array",
                                      add.untransformed = TRUE,
-                                     add.qn.z = TRUE)
+                                     add.qn.z = TRUE,
+                                     add.cn.test = TRUE,
+                                     add.seurat.test = TRUE,
+                                     seurat_list = integrated_seurat_object_list)
 
 # seq normalization
 # initialize list to hold normalized seq data
@@ -290,6 +322,34 @@ seq.test.norm.list[["z"]] <- ZScoreSingleDT(seq.test)
 
 # untransformed seq test data
 seq.test.norm.list[["un"]] <- seq.test
+
+# CrossNorm RNA-seq test
+# Rescale each column, quantile normalize, then rescale each row
+seq.test.norm.list[["cn"]] <- rescale_datatable(seq.test,
+                                                by_column = TRUE) %>%
+  QNSingleDT(zero.to.one = TRUE)
+
+# Seurat RNA-seq test
+# for 10-90% seq - use the integrated training data at each %RNA-seq
+
+# parallel backend
+cl <- parallel::makeCluster(ncores)
+doParallel::registerDoParallel(cl)
+
+seq.seurat.list <- foreach(i = 1:9) %dopar% { #1:9 corresponds to 10%-90%
+  SeuratProjectPCATestData(seq.test,
+                           integrated_seurat_object_list[[i]],
+                           vbose = TRUE)
+}
+
+names(seq.seurat.list) <- names(integrated_seurat_object_list) #10%-90%
+
+# stop parallel backend
+parallel::stopCluster(cl)
+
+# add Seurat RNA-seq test data to list of normalized test data
+seq.test.norm.list[["seurat"]] <- seq.seurat.list
+rm(seq.seurat.list)
 
 # combine array and seq test data into a list
 test.norm.list <- list(array = array.test.norm.list,
