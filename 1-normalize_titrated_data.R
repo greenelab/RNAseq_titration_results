@@ -46,9 +46,6 @@ ncores <- min(parallel::detectCores() - 1,
               opt$ncores,
               na.rm = TRUE)
 
-add.seurat <- TRUE
-add.cn <- TRUE
-
 # set seed
 filename.seed <- as.integer(opt$seed1)
 initial.seed <- as.integer(opt$seed2)
@@ -127,34 +124,14 @@ if (length(all.same.indx) > 0) {
 array.train <-
   data.table(array.data[,
                         c(1, which(colnames(array.data) %in% train.sample.names))])
+
 seq.train <-
   data.table(seq.data[,
                       c(1, which(colnames(seq.data) %in% train.sample.names))])
+
 titrate.mix.dt.list <- lapply(titrate.sample.list,
                               function(x) GetDataTablesForMixing(array.train,
                                                                  seq.train, x))
-
-#### create list of integrated Seurat objects (based on training data) ---------
-
-if (add.seurat) {
-  
-  # parallel backend
-  cl <- parallel::makeCluster(ncores)
-  doParallel::registerDoParallel(cl)
-  
-  integrated_seurat_object_list <- foreach(n = 2:10) %dopar% {
-    SeuratIntegration(titrate.mix.dt.list[[n]]$array,
-                      titrate.mix.dt.list[[n]]$seq,
-                      n_dims = 50,
-                      vbose = TRUE)
-  }
-  
-  # stop parallel backend
-  parallel::stopCluster(cl)
-  # sort out names
-  names(integrated_seurat_object_list) <- names(titrate.mix.dt.list)[2:10]
-  
-}
 
 #### normalize train data ------------------------------------------------------
 
@@ -180,8 +157,7 @@ norm.titrate.list[2:10] <-
                          add.untransformed = TRUE,
                          add.qn.z = TRUE,
                          add.cn = TRUE,
-                         add.seurat.training = TRUE,
-                         seurat_object = integrated_seurat_object_list[[n-1]])
+                         add.seurat.training = TRUE)
   }
 
 # stop parallel backend
@@ -214,7 +190,7 @@ array.test.norm.list <-
                                      add.qn.z = TRUE,
                                      add.cn.test = TRUE,
                                      add.seurat.test = TRUE,
-                                     seurat_list = integrated_seurat_object_list)
+                                     training.list = norm.titrate.list)
 
 # seq normalization
 # initialize list to hold normalized seq data
@@ -336,13 +312,13 @@ seq.test.norm.list[["cn"]] <- rescale_datatable(seq.test,
 cl <- parallel::makeCluster(ncores)
 doParallel::registerDoParallel(cl)
 
-seq.seurat.list <- foreach(i = 1:9) %dopar% { #1:9 corresponds to 10%-90%
+seq.seurat.list <- foreach(i = 2:10) %dopar% { #1:9 corresponds to 10%-90%
   SeuratProjectPCATestData(seq.test,
-                           integrated_seurat_object_list[[i]],
+                           norm.titrate.list[[i]][["seurat_model"]],
                            vbose = TRUE)
 }
 
-names(seq.seurat.list) <- names(integrated_seurat_object_list) #10%-90%
+names(seq.seurat.list) <- names(norm.titrate.list)[2:10] #10%-90%
 
 # stop parallel backend
 parallel::stopCluster(cl)
