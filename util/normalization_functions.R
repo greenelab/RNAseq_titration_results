@@ -1003,8 +1003,8 @@ CNProcessing <-  function(array.dt, seq.dt,
 
 
 SeuratIntegration <-  function(array.dt, seq.dt,
-                               vbose = FALSE,
-                               n_dims = 50) {
+                               n_dims = 50,
+                               vbose = TRUE) {
   
   # This function takes array and RNA-seq data in the form of data.tables
   # to be normalized and concatenated through Seurat integration.
@@ -1017,6 +1017,7 @@ SeuratIntegration <-  function(array.dt, seq.dt,
   #             gene identifiers, the columns are samples,
   #             rows are gene measurements
   #   n_dims:   number of dimensions for reduction (default: 50)
+  #   vbose:    use verbose screen output (default: TRUE, may give error if FALSE)
   #
   # Returns:
   #   array_seq.integrated: an integrated Seurat object including array and seq
@@ -1073,14 +1074,6 @@ SeuratIntegration <-  function(array.dt, seq.dt,
                                          nfeatures.print = n_dims,
                                          verbose = vbose)
   
-  # UMAP
-  #array_seq.integrated <- Seurat::RunUMAP(array_seq.integrated,
-  #                                        dims = 1:n_dims,
-  #                                        reduction = "pca",
-  #                                        return.model = TRUE,
-  #                                        n.components = n_dims,
-  #                                        verbose = vbose)
-  
   return(array_seq.integrated)
   
 }
@@ -1108,7 +1101,8 @@ SeuratPCATrainingData <- function(integrated_seurat_object) {
 }
 
 SeuratProjectPCATestData <- function(test_data.dt,
-                                     integrated_seurat_object) {
+                                     integrated_seurat_object,
+                                     vbose = TRUE) {
   
   # This function transforms test data (SCTransform), then projects it to the
   # reduced dimension PCA space of the integrated_seurat_object.
@@ -1117,6 +1111,7 @@ SeuratProjectPCATestData <- function(test_data.dt,
   #   test_data.dt: a data.table of test data (column 1 = gene)
   #   integrated_seurat_object:  output from SeuratIntegration, an integrated
   #             Seurat object with both array and RNA-seq data combined
+  #   vbose:    use verbose screen output (default: TRUE, may give error if FALSE)
   #
   # Returns:
   #   properly formatted data.table (with dimension names as column 1, sample names as column names)
@@ -1132,20 +1127,22 @@ SeuratProjectPCATestData <- function(test_data.dt,
 
   # Create query single cell object based on test data
   query.sct <- Seurat::CreateSeuratObject(test_data.dt[,-1]) %>%
-    Seurat::SCTransform()
+    Seurat::SCTransform(verbose = vbose)
   
   # Detect transfer anchors between training and test
   ref_dims <- dim(integrated_seurat_object@reductions$pca@cell.embeddings)[2]
   anchors <- Seurat::FindTransferAnchors(reference = integrated_seurat_object,
                                          query = query.sct,
                                          dims = 1:ref_dims,
-                                         reference.reduction = "pca")
+                                         reference.reduction = "pca",
+                                         verbose = vbose)
   
   # Add PCA mapping to query 
   query.sct <- Seurat::MapQuery(anchorset = anchors,
                                 reference = integrated_seurat_object,
                                 query = query.sct,
-                                reference.reduction = "pca")
+                                reference.reduction = "pca",
+                                verbose = vbose)
   
   # Convert samples x PCs to PCs by sample and name rows same as training
   test_reduced.dt <- query.sct@reductions$ref.pca@cell.embeddings %>%
