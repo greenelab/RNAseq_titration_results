@@ -1282,7 +1282,9 @@ NormalizationWrapper <- function(array.dt, seq.dt,
     
     norm.list[["seurat_model"]] <- SeuratIntegration(array.dt,
                                                      seq.dt,
-                                                     n_dims = 50,
+                                                     n_dims = min(ncol(array.dt) - 1,
+                                                                  ncol(seq.dt) - 1,
+                                                                  50),
                                                      vbose = TRUE)
     
     
