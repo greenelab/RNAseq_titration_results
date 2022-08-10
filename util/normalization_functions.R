@@ -450,6 +450,40 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
     if (add.untransformed){
       norm.list[["un"]] <- UnNoZTOProcessing(array.dt = dt)
     }
+    # should CrossNorm be added?
+    # Rescale each column, quantile normalize, then rescale each row
+    if (add.cn.test){
+      
+      norm.list[["cn"]] <-  QNSingleDT(rescale_datatable(norm.list$log,
+                                                         by_column = TRUE),
+                                       zero.to.one = zto)
+      
+    }
+    # should Seurat test data be added?
+    # do this in parallel for 10-90% RNA-seq using integration from each %
+    if (add.seurat.test) {
+      
+      seurat_projection_list <- foreach(i = 2:10) %do% { #2:10 corresponds to 10%-90%
+        
+        if (!is.null(training.list[[i]][["seurat_model"]])) {
+          
+          SeuratProjectPCATestData(norm.list$log,
+                                   training.list[[i]][["seurat_model"]],
+                                   vbose = TRUE)
+          
+        } else {
+          NULL
+        }
+        
+      }
+      
+      names(seurat_projection_list) <- names(training.list)[2:10] #10%-90%
+      
+      # add Seurat RNA-seq test data to list of normalized test data
+      norm.list[["seurat"]] <- seurat_projection_list
+      rm(seurat_projection_list)
+      
+    }
   } else if (platform == "seq") {
     norm.list[["log"]] <- LOGSeqOnly(dt, zto)
     norm.list[["npn"]] <- NPNSingleDT(dt, zto)
@@ -466,43 +500,46 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
       # to the list
       norm.list[["un"]] <- dt
     }
+    # should CrossNorm be added?
+    # Rescale each column, quantile normalize, then rescale each row
+    if (add.cn.test){
+      
+      norm.list[["cn"]] <-  QNSingleDT(rescale_datatable(dt,
+                                                         by_column = TRUE),
+                                       zero.to.one = zto)
+      
+    }
+    
+    # should Seurat test data be added?
+    # do this in parallel for 10-90% RNA-seq using integration from each %
+    if (add.seurat.test) {
+      seurat_projection_list <- foreach(i = 2:10) %do% { #2:10 corresponds to 10%-90%
+        
+        if (!is.null(training.list[[i]][["seurat_model"]])) {
+          
+          SeuratProjectPCATestData(dt,
+                                   training.list[[i]][["seurat_model"]],
+                                   vbose = TRUE)
+          
+        } else {
+          NULL
+        }
+        
+      }
+      
+      names(seurat_projection_list) <- names(training.list)[2:10] #10%-90%
+      
+      # add Seurat RNA-seq test data to list of normalized test data
+      norm.list[["seurat"]] <- seurat_projection_list
+      rm(seurat_projection_list)
+      
+    }
   } else {
     
     stop("platform parameter should be set to 'array' or 'seq'")
     
   }
-  
-  # Whether platform == array or seq, do we add CrossNorm and/or Seurat?
-  
-  # should CrossNorm be added?
-  # Rescale each column, quantile normalize, then rescale each row
-  if (add.cn.test){
-    
-    norm.list[["cn"]] <-  QNSingleDT(rescale_datatable(dt, by_column = TRUE),
-                                     zero.to.one = zto)
-    
-  }
-  
-  # should Seurat test data be added?
-  # do this in parallel for 10-90% RNA-seq using integration from each %
-  if (add.seurat.test) {
-    
-    seurat_projection_list <- foreach(i = 2:10) %do% { #2:10 corresponds to 10%-90%
-      
-      SeuratProjectPCATestData(dt,
-                               training.list[[i]][["seurat_model"]],
-                               vbose = TRUE)
-      
-    }
-    
-    names(seurat_projection_list) <- names(training.list)[2:10] #10%-90%
-    
-    # add Seurat RNA-seq test data to list of normalized test data
-    norm.list[["seurat"]] <- seurat_projection_list
-    rm(seurat_projection_list)
-    
-  }
-  
+
   return(norm.list)
 }
 
@@ -1163,6 +1200,8 @@ SeuratProjectPCATestData <- function(test_data.dt,
     stop("test_data must be data.table")
   }
   
+  n_test <- ncol(test_data.dt) - 1
+  
   test_data.dt <- ensure_numeric_gex(test_data.dt)
 
   # Create query single cell object based on test data
@@ -1174,26 +1213,35 @@ SeuratProjectPCATestData <- function(test_data.dt,
   anchors <- Seurat::FindTransferAnchors(reference = integrated_seurat_object,
                                          query = query.sct,
                                          dims = 1:ref_dims,
+                                         k.filter = min(n_test, 200),
                                          reference.reduction = "pca",
                                          verbose = vbose)
   
-  # Add PCA mapping to query 
-  query.sct <- Seurat::MapQuery(anchorset = anchors,
-                                reference = integrated_seurat_object,
-                                query = query.sct,
-                                reference.reduction = "pca",
-                                verbose = vbose)
-  
-  # Convert samples x PCs to PCs by sample and name rows same as training
-  test_reduced.dt <- query.sct@reductions$ref.pca@cell.embeddings %>%
-    t() %>%
-    as.data.frame() %>%
-    tibble::rownames_to_column("dimension") %>%
-    mutate(dimension = stringr::str_replace(dimension, "refpca", "PC")) %>%
-    data.table::as.data.table() %>%
-    ensure_numeric_gex()
-  
-  return(test_reduced.dt)
+  if (dim(anchors@anchors)[1] > n_test ) {
+    
+    # Add PCA mapping to query 
+    query.sct <- Seurat::MapQuery(anchorset = anchors,
+                                  reference = integrated_seurat_object,
+                                  query = query.sct,
+                                  reference.reduction = "pca",
+                                  verbose = vbose)
+    
+    # Convert samples x PCs to PCs by sample and name rows same as training
+    test_reduced.dt <- query.sct@reductions$ref.pca@cell.embeddings %>%
+      t() %>%
+      as.data.frame() %>%
+      tibble::rownames_to_column("dimension") %>%
+      mutate(dimension = stringr::str_replace(dimension, "refpca", "PC")) %>%
+      data.table::as.data.table() %>%
+      ensure_numeric_gex()
+    
+    return(test_reduced.dt)
+    
+  } else {
+    
+    return(NULL)
+    
+  }
   
 }
 
