@@ -401,7 +401,7 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
                                                add.qn.z = FALSE,
                                                add.cn.test = FALSE,
                                                add.seurat.test = FALSE,
-                                               norm.list = NULL){
+                                               training.list = NULL){
   # This function is a wrapper for processing expression data.tables that
   # contain only one RNA assay platform (array or seq). It returns a list of
   # normalized data.tables.
