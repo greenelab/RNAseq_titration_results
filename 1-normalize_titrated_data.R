@@ -321,9 +321,17 @@ cl <- parallel::makeCluster(ncores)
 doParallel::registerDoParallel(cl)
 
 seq.seurat.list <- foreach(i = 2:10, .packages = "magrittr") %dopar% { # 2:10 corresponds to 10%-90%
-  SeuratProjectPCATestData(seq.test,
-                           norm.titrate.list[[i]][["seurat_model"]],
-                           vbose = TRUE)
+  
+  if (!is.null(norm.titrate.list[[i]][["seurat_model"]])) {
+    
+    SeuratProjectPCATestData(seq.test,
+                             norm.titrate.list[[i]][["seurat_model"]],
+                             vbose = TRUE)
+    
+  } else {
+    NULL
+  }
+  
 }
 
 names(seq.seurat.list) <- names(norm.titrate.list)[2:10] # 2:10 corresponds to 10%-90%
