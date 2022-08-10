@@ -467,6 +467,9 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
       cl <- parallel::makeCluster(ncores)
       doParallel::registerDoParallel(cl)
       
+      parallel::clusterExport(cl, c("SeuratProjectPCATestData",
+                                    "ensure_numeric_gex"))
+      
       seurat_projection_list <- foreach(i = 2:10, .packages = "tidyverse") %dopar%
         
         if (!is.null(training.list[[i]][["seurat_model"]])) {
@@ -522,6 +525,9 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
       # parallel backend
       cl <- parallel::makeCluster(ncores)
       doParallel::registerDoParallel(cl)
+      
+      parallel::clusterExport(cl, c("SeuratProjectPCATestData",
+                                    "ensure_numeric_gex"))
       
       seurat_projection_list <- foreach(i = 2:10, .packages = "tidyverse") %dopar% { #2:10 corresponds to 10%-90%
         
