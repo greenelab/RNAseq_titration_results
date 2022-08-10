@@ -477,9 +477,10 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
   # should CrossNorm be added?
   # Rescale each column, quantile normalize, then rescale each row
   if (add.cn.test){
-    norm.list[["cn"]] <- rescale_datatable(dt,
-                                           by_column = TRUE) %>%
-      QNSingleDT(zero.to.one = zto)
+    
+    norm.list[["cn"]] <-  QNSingleDT(rescale_datatable(dt, by_column = TRUE),
+                                     zero.to.one = zto)
+    
   }
   
   # should Seurat test data be added?
@@ -487,9 +488,11 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
   if (add.seurat.test) {
     
     seurat_projection_list <- foreach(i = 2:10) %do% { #2:10 corresponds to 10%-90%
+      
       SeuratProjectPCATestData(dt,
                                training.list[[i]][["seurat_model"]],
                                vbose = TRUE)
+      
     }
     
     names(seurat_projection_list) <- names(training.list)[2:10] #10%-90%
