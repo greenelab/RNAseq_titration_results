@@ -151,7 +151,7 @@ doParallel::registerDoParallel(cl)
 
 # 'mixed' both platform normalization
 norm.titrate.list[2:10] <-
-  foreach(n = 2:10) %dopar% {
+  foreach(n = 2:10, .packages = "magrittr") %dopar% {
     NormalizationWrapper(titrate.mix.dt.list[[n]]$array,
                          titrate.mix.dt.list[[n]]$seq,
                          add.untransformed = TRUE,
@@ -320,7 +320,7 @@ message("gets here 5")
 cl <- parallel::makeCluster(ncores)
 doParallel::registerDoParallel(cl)
 
-seq.seurat.list <- foreach(i = 2:10) %dopar% { # 2:10 corresponds to 10%-90%
+seq.seurat.list <- foreach(i = 2:10, .packages = "magrittr") %dopar% { # 2:10 corresponds to 10%-90%
   SeuratProjectPCATestData(seq.test,
                            norm.titrate.list[[i]][["seurat_model"]],
                            vbose = TRUE)
