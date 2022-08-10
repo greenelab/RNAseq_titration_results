@@ -518,7 +518,7 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
       cl <- parallel::makeCluster(ncores)
       doParallel::registerDoParallel(cl)
       
-      seurat_projection_list <- foreach(i = 2:10, .packages = "magrittr") %dopar% { #2:10 corresponds to 10%-90%
+      seurat_projection_list <- foreach(i = 2:10, .packages = "tidyverse") %dopar% { #2:10 corresponds to 10%-90%
         
         if (!is.null(training.list[[i]][["seurat_model"]])) {
           
