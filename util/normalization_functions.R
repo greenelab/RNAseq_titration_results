@@ -1280,17 +1280,16 @@ NormalizationWrapper <- function(array.dt, seq.dt,
   # should Seurat training data be added?
   if (add.seurat.training) {
     
-    # number of dimensions must be strictly less than the number of cells (samples) in smaller data set
-    norm.list[["seurat_model"]] <- SeuratIntegration(array.dt,
-                                                     seq.dt,
-                                                     n_dims = min(ncol(array.dt) - 2,
-                                                                  ncol(seq.dt) - 2,
-                                                                  50),
-                                                     vbose = TRUE)
-    
-    
-    norm.list[["seurat"]] <- SeuratPCATrainingData(norm.list[["seurat_model"]])
-    
+    # only run Seurat when there are sufficient samples in both data sets
+    if (ncol(array.dt) > 100 & ncol(seq.dt) > 100) {
+      
+      norm.list[["seurat_model"]] <- SeuratIntegration(array.dt,
+                                                       seq.dt,
+                                                       vbose = TRUE)
+      
+      
+      norm.list[["seurat"]] <- SeuratPCATrainingData(norm.list[["seurat_model"]])  
+    }
   }
   
   return(norm.list)
