@@ -1309,24 +1309,24 @@ NormalizationWrapper <- function(array.dt, seq.dt,
   # save array data.table to be used as 'reference' for test data
   norm.list[["raw.array"]] <- array.dt
   # normalization methods, concatenation, zero to one transformation
-  #norm.list[["log"]] <- LOGProcessing(array.dt, seq.dt, zto)
-  #norm.list[["npn"]] <- NPNProcessing(array.dt, seq.dt, zto)
-  #norm.list[["qn"]] <- QNProcessing(array.dt, seq.dt, zto)
-  #norm.list[["tdm"]] <- TDMProcessing(array.dt, seq.dt, zto)
-  #norm.list[["z"]] <- ZScoreProcessing(array.dt, seq.dt, zto)
+  norm.list[["log"]] <- LOGProcessing(array.dt, seq.dt, zto)
+  norm.list[["npn"]] <- NPNProcessing(array.dt, seq.dt, zto)
+  norm.list[["qn"]] <- QNProcessing(array.dt, seq.dt, zto)
+  norm.list[["tdm"]] <- TDMProcessing(array.dt, seq.dt, zto)
+  norm.list[["z"]] <- ZScoreProcessing(array.dt, seq.dt, zto)
   # should quantile normalized data that then z-transformed be added?
-  #if (add.qn.z) {
-  #  norm.list[["qn-z"]] <- QNZProcessing(array.dt, seq.dt, zto)
-  #}
+  if (add.qn.z) {
+    norm.list[["qn-z"]] <- QNZProcessing(array.dt, seq.dt, zto)
+  }
   # should untransformed data be added?
-  #if (add.untransformed) {
-  #  norm.list[["un"]] <- UnNoZTOProcessing(array.dt, seq.dt)
-  #}
+  if (add.untransformed) {
+    norm.list[["un"]] <- UnNoZTOProcessing(array.dt, seq.dt)
+  }
   # should CrossNorm be added?
-  #if (add.cn) {
-  #  norm.list[["cn"]] <- CNProcessing(array.dt = array.dt,
-  #                                    seq.dt = seq.dt)
-  #}
+  if (add.cn) {
+    norm.list[["cn"]] <- CNProcessing(array.dt = array.dt,
+                                      seq.dt = seq.dt)
+  }
 
   # should Seurat training data be added?
   if (add.seurat.training) {
