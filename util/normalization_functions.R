@@ -1044,31 +1044,38 @@ SeuratIntegration <-  function(array.dt, seq.dt,
   array_seq_list <- lapply(X = array_seq_list,
                            FUN = Seurat::CreateSeuratObject)
   
-  # SCTransform
+  # SCTransform is the default option for normalizing input data to Seurat pipelines prior to integration.
+  # The following links detail reasons for its use and standard implementation.
+  # https://satijalab.org/seurat/articles/sctransform_vignette.html
+  # https://satijalab.org/seurat/articles/integration_introduction.html#performing-integration-on-datasets-normalized-with-sctransform-1
   array_seq_list <- lapply(X = array_seq_list,
                            FUN = Seurat::SCTransform,
                            verbose = vbose)
   
+  # identifies features found to be highly variable across multiple data sets
+  # to use as features during integration
   features <- Seurat::SelectIntegrationFeatures(object.list = array_seq_list,
+                                                nfeatures = 2000, # default
                                                 verbose = vbose)
   
   array_seq_list <- Seurat::PrepSCTIntegration(object.list = array_seq_list,
                                                anchor.features = features,
                                                verbose = vbose)
     
-  # integration
+  # identifies an anchor set used for integration
   array_seq.anchors <- Seurat::FindIntegrationAnchors(object.list = array_seq_list,
                                                       normalization.method = "SCT",
                                                       anchor.features = features,
                                                       dims = 1:n_dims,
                                                       verbose = vbose)
   
+  # integration using pre-computed anchor set
   array_seq.integrated <- Seurat::IntegrateData(anchorset = array_seq.anchors,
                                                 normalization.method = "SCT",
                                                 dims = 1:n_dims,
                                                 verbose = vbose)
   
-  # PCA
+  # PCA on integrated data set
   array_seq.integrated <- Seurat::RunPCA(array_seq.integrated,
                                          npcs = n_dims,
                                          nfeatures.print = n_dims,
