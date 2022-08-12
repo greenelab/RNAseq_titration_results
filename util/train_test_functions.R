@@ -356,6 +356,7 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
       foreach(mdl.iter = seq_along(model.names)) %do% {
         mdl <- model.names[mdl.iter]  # use model name rather than model index
         # do parallel prediction
+        print(c(mthd, mdl))
         ParallelPredictFunction(model.list =
                                   train.model.list[[mthd]][mdl, ][[mdl]],
                                 pred.data.list = input.list,
@@ -381,7 +382,10 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
   # if only returning Kappa -- melt the list into a data.frame and return
   # the data.frame
   if (only.kap) {
-    kappa.df <- reshape2::melt(norm.list)
+    kappa.df <- norm.list %>%
+      # when there is null test data at a particular %RNA-seq, discard that null
+      purrr::modify_depth(2, function(x) discard(x, is.null)) %>%
+      reshape2::melt()
     colnames(kappa.df) <- c("kappa", "perc.seq", "classifier", "norm.method")
     return(kappa.df)
   } else {  # otherwise, return two objects:
@@ -392,8 +396,10 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
     # level 3 of norm.list is confusion matrix associated with %seq, classifier, and normalization method
     # purrr::modify_depth applies a function to confusion matrix to return kappa
     # list can then be melted and columns renamed
-    kappa.df <- purrr::modify_depth(norm.list, 3,
-                                    function(x) x$overall["Kappa"]) %>%
+    kappa.df <- norm.list %>%
+      # when there is null test data at a particular %RNA-seq, discard that null
+      purrr::modify_depth(2, function(x) discard(x, is.null)) %>%
+      purrr::modify_depth(3, function(x) x$overall["Kappa"]) %>%
       reshape2::melt() %>%
       dplyr::rename("kappa" = "value",
                     "perc.seq" = "L3",
