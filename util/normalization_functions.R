@@ -454,9 +454,9 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
     # Rescale each column, quantile normalize, then rescale each row
     if (add.cn.test){
       
-      norm.list[["cn"]] <-  QNSingleDT(rescale_datatable(norm.list$log,
-                                                         by_column = TRUE),
-                                       zero.to.one = zto)
+      norm.list[["qn (cn)"]] <-  QNSingleDT(rescale_datatable(norm.list$log,
+                                                              by_column = TRUE),
+                                            zero.to.one = zto)
       
     }
     # should Seurat test data be added?
@@ -512,9 +512,9 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
     # Rescale each column, quantile normalize, then rescale each row
     if (add.cn.test){
       
-      norm.list[["cn"]] <-  QNSingleDT(rescale_datatable(dt,
-                                                         by_column = TRUE),
-                                       zero.to.one = zto)
+      norm.list[["qn (cn)"]] <-  QNSingleDT(rescale_datatable(dt,
+                                                              by_column = TRUE),
+                                            zero.to.one = zto)
       
     }
     
@@ -1350,8 +1350,8 @@ NormalizationWrapper <- function(array.dt, seq.dt,
   }
   # should CrossNorm be added?
   if (add.cn) {
-    norm.list[["cn"]] <- CNProcessing(array.dt = array.dt,
-                                      seq.dt = seq.dt)
+    norm.list[["qn (cn)"]] <- CNProcessing(array.dt = array.dt,
+                                           seq.dt = seq.dt)
   }
 
   # should Seurat training data be added?
