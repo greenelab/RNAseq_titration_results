@@ -14,7 +14,11 @@ option_list <- list(
                         help = "Use delta kappa input data"),
   optparse::make_option("--output_directory",
                         default = NA_character_,
-                        help = "Output directory for plot (absolute or relative path)")
+                        help = "Output directory for plot (absolute or relative path)"),
+  optparse::make_option("--include_seurat",
+                        action = "store_true",
+                        default = FALSE,
+                        help = "Include Seurat results in plot (default: FALSE)")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
@@ -58,6 +62,13 @@ plot_df <- read_tsv(input_filename,
                     col_types = "ddccc") %>%
   mutate(Perc.Seq = factor(Perc.Seq,
                            levels = seq(0, 100, 10)))
+
+# default behavior: exclude (!include) seurat results
+if (!include_seurat) {
+  plot_df <- plot_df %>%
+    filter(Normalization != "SEURAT") %>%
+    droplevels()
+}
 
 # plot
 
