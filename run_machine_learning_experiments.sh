@@ -19,10 +19,10 @@ fi
 # Run ten repeats of the supervised analysis
 # if the predictor is a gene, also generate null models
 if [ $predictor == "TP53" ] || [ $predictor == "PIK3CA" ]; then
-  Rscript classifier_repeat_wrapper.R --cancer_type $cancer_type --predictor $predictor --n_repeats 10 --ncores $ncores
-  Rscript classifier_repeat_wrapper.R --cancer_type $cancer_type --predictor $predictor --n_repeats 10 --null_model --ncores $ncores
+  Rscript classifier_repeat_wrapper.R --cancer_type $cancer_type --predictor $predictor --n_repeats 3 --ncores $ncores
+  Rscript classifier_repeat_wrapper.R --cancer_type $cancer_type --predictor $predictor --n_repeats 3 --null_model --ncores $ncores
 else
-  Rscript classifier_repeat_wrapper.R --cancer_type $cancer_type --predictor $predictor --n_repeats 10 --ncores $ncores
+  Rscript classifier_repeat_wrapper.R --cancer_type $cancer_type --predictor $predictor --n_repeats 3 --ncores $ncores
 fi
 
 # Run the unsupervised analyses using subtype models
