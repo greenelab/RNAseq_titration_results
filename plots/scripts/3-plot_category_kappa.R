@@ -34,6 +34,7 @@ cancer_type <- opt$cancer_type
 predictor <- opt$predictor
 null_model <- opt$null_model
 file_identifier <- str_c(cancer_type, predictor, sep = "_")
+include_seurat <- opt$include_seurat
 
 # define directories
 plot.dir <- here::here("plots")
