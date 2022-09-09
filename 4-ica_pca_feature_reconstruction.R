@@ -97,9 +97,11 @@ for (seed in filename.seeds) {
   test.data <- readRDS(test.rds)
   train.data <- RestructureNormList(train.data)
 
-  # get rid of TDM at 0 & 100% seq levels
-  train.data$tdm$`0` <- NULL
-  train.data$tdm$`100` <- NULL
+  # get rid of TDM, QN (CN), and Seurat NULL values
+  # helpful to not specify each one individually because Seurat NULLs differ
+  train.data <- purrr::modify_depth(train.data,
+                                    1, # work on the first level lists
+                                    purrr::discard, is.null) # discard if null
 
   # for each method to be used for reconstruction
   for (rcn in recon.methods) {
