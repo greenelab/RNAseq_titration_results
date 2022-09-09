@@ -102,6 +102,9 @@ for (seed in filename.seeds) {
   train.data <- purrr::modify_depth(train.data,
                                     1, # work on the first level lists
                                     purrr::discard, is.null) # discard if null
+  
+  # inconsistent %RNA-seq levels make Seurat unreliable for this application
+  train.data$seurat <- NULL
 
   # for each method to be used for reconstruction
   for (rcn in recon.methods) {
