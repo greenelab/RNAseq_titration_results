@@ -356,7 +356,6 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
       foreach(mdl.iter = seq_along(model.names)) %do% {
         mdl <- model.names[mdl.iter]  # use model name rather than model index
         # do parallel prediction
-        print(c(mthd, mdl))
         ParallelPredictFunction(model.list =
                                   train.model.list[[mthd]][mdl, ][[mdl]],
                                 pred.data.list = input.list,

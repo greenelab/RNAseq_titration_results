@@ -6,7 +6,7 @@
 # error' (MASE).
 #
 # It should be run from the command line.
-# USAGE: Rscript 4-ica_pca_feature_reconstruction.R --cancer_type --predictor --n_components --seed --null_model
+# USAGE: Rscript 4-ica_pca_feature_reconstruction.R --cancer_type --predictor --n_components --seed --null_model --include_seurat
 # n_components refers to the number of components (PC/IC) that should be used
 # for reconstruction.
 
@@ -26,7 +26,11 @@ option_list <- list(
   optparse::make_option("--null_model",
                         action = "store_true",
                         default = FALSE,
-                        help = "Refer to models with permuted dependent variable (within subtype if predictor is a gene)")
+                        help = "Refer to models with permuted dependent variable (within subtype if predictor is a gene)"),
+  optparse::make_option("--include_seurat",
+                        action = "store_true",
+                        default = FALSE,
+                        help = "Include Seurat in this analysis (default: FALSE)")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
@@ -46,6 +50,7 @@ file_identifier <- ifelse(null_model,
                           str_c(cancer_type, predictor, "null", sep = "_"),
                           str_c(cancer_type, predictor, sep = "_"))
 n.comp <- as.integer(opt$n_components)
+include_seurat <- opt$include_seurat
 
 # set seed
 initial.seed <- as.integer(opt$seed)
@@ -103,9 +108,11 @@ for (seed in filename.seeds) {
                                     1, # work on the first level lists
                                     purrr::discard, is.null) # discard if null
   
-  # inconsistent %RNA-seq levels make Seurat unreliable for this application
-  train.data$seurat <- NULL
-
+  # include Seurat for PCA only if indicated by command line option
+  if (!include_seurat) {
+    train.data$seurat <- NULL
+  }
+  
   # for each method to be used for reconstruction
   for (rcn in recon.methods) {
     message(paste("  ", rcn, "on training set"))
