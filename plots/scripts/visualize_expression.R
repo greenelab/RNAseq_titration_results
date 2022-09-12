@@ -121,19 +121,7 @@ for (nm in norm_methods) {
   
   if (nm %in% c("seurat")) next
   
-  if (nm == "qn (cn)") {
-    for (pct_rna_seq in as.character(seq(10, 90, 10))) { # NULL at 0% and 100% RNA-seq
-      # both array and seq test data vary across %RNA-seq
-      array_values <- as.vector(as.matrix(normalized_test_data$array[[nm]][[pct_rna_seq]][gene_rows_included, -1]))
-      seq_values <- as.vector(as.matrix(normalized_test_data$seq[[nm]][[pct_rna_seq]][gene_rows_included, -1]))
-      method_title <- str_c(str_to_upper(nm), pct_rna_seq, sep = "_")
-      
-      plot_matched_expression(array_values, seq_values,
-                              method_title, plot_type = "hex",
-                              viz.dir, file_identifier)
-      
-    }
-  } else if (nm == "tdm") {
+  if (nm == "tdm") {
     # array has no TDM (it is already log)
     array_values <- as.vector(as.matrix(normalized_test_data$array[["log"]][gene_rows_included, -1]))
     for (pct_rna_seq in as.character(seq(0, 90, 10))) { # NULL at 100% RNA-seq

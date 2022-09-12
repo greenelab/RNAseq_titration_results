@@ -299,7 +299,7 @@ seq.test.norm.list[["un"]] <- seq.test
 # CrossNorm RNA-seq test
 # Rescale each column, quantile normalize, then rescale each row
 seq.test.norm.list[["qn (cn)"]] <- rescale_datatable(seq.test,
-                                                by_column = TRUE) %>%
+                                                     by_column = TRUE) %>%
   QNSingleDT(zero.to.one = TRUE)
 
 # Seurat RNA-seq test
