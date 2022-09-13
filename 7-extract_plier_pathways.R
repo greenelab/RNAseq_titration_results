@@ -270,11 +270,9 @@ for (seed_index in 1:length(norm.train.files)) {
   
   perc_seq <- as.character(seq(0, 100, 50))
   norm_methods_if_0_100 <- c("log")
-  #norm_methods_else <- c("log", "npn", "qn", "qn (cn)", "qn-z", "seurat", "tdm", "z",
-  #                       "array_only", "seq_only")
-  norm_methods_else <- c("log", "seurat",
+  norm_methods_else <- c("log", "npn", "qn", "qn (cn)", "qn-z", "tdm", "z",
                          "array_only", "seq_only")
-
+  
   # set random seeds to use inside %dopar% loop for each %seq and norm method
   use_seeds_inside_dopar <- list()
   for (ps in perc_seq) {
