@@ -416,7 +416,7 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
   #	                     be added to the list?
   #	  add.qn.z: logical - should quantile normalized data that is then z-scored
   #	            be added to the list?
-  #   add.cn.test =  logical - should CrossNorm data be added to the list?
+  #   add.cn.test =  logical - should CrossNorm test data be added to the list?
   #   add.seurat.test =  logical - should Seurat test data be added to the list? Does NOT get zero-to-one transformed
   #   training.list = list containing normalized training data, needed when add.seurat.test = TRUE
   #
