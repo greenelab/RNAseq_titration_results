@@ -97,7 +97,7 @@ for (seed in filename.seeds) {
   test.data <- readRDS(test.rds)
   train.data <- RestructureNormList(train.data)
 
-  # remove Seurat from this analysis due to inconsistency in %RNA-seq
+  # remove Seurat data from this analysis because it is already in reduced space
   train.data$seurat <- NULL
   
   # get rid of TDM and QN (CN) null values

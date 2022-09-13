@@ -324,7 +324,7 @@ for (seed_index in 1:length(norm.train.files)) {
       set.seed(use_seeds_inside_dopar[[ps]][[nm]])
 
       # check that the norm method exists at the %RNA-seq and it is not null
-      if (nm %in% names(norm.train.list[[ps]]) & !is.null(norm.train.list[[ps]][[nm]])) {
+      if (nm %in% names(norm.train.list[[ps]])) {
 
         # remove any rows with all the same value
         all.same.indx <- which(apply(
