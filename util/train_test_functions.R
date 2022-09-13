@@ -141,6 +141,8 @@ TrainThreeModels <- function(dt, category, seed, folds.list){
 
     fit.control <- trainControl(method = "cv",
                                 number = 5, # 5-fold cross-validation
+                                savePredictions = TRUE,
+                                classProbs = TRUE,
                                 seeds = seed.list,
                                 index = folds.list, # list of 5 sets of indices
                                 allowParallel = T) # use parallel processing
@@ -163,7 +165,7 @@ TrainThreeModels <- function(dt, category, seed, folds.list){
                                         family = "multinomial",
                                         foldid = fold.vector, # fold 'labels'
                                         parallel = T,
-                                        type.measure="class")
+                                        type.measure = "class")
     # Random Forest
     train.list[["rf"]] <- train(t_dt,
                                 category,
