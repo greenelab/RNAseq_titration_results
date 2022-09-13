@@ -10,11 +10,7 @@ option_list <- list(
                         help = "Predictor used"),
   optparse::make_option("--output_directory",
                         default = NA_character_,
-                        help = "Output directory for plot (absolute or relative path)"),
-  optparse::make_option("--include_seurat",
-                        action = "store_true",
-                        default = FALSE,
-                        help = "Include Seurat results in plot (default: FALSE)")
+                        help = "Output directory for plot (absolute or relative path)")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
@@ -52,13 +48,6 @@ plot_df <- readr::read_tsv(input_filename,
                            col_types = "dcccdcc") %>%
   mutate(Perc.seq = factor(Perc.seq,
                            levels = seq(0, 100, 10)))
-
-# default behavior: exclude (!include) seurat results
-if (!include_seurat) {
-  plot_df <- plot_df %>%
-    filter(Normalization != "SEURAT") %>%
-    droplevels()
-}
 
 # for each normalization method, plot kappa stats
 plot_obj <- ggplot(plot_df,

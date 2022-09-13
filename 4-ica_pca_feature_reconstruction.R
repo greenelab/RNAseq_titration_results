@@ -6,7 +6,7 @@
 # error' (MASE).
 #
 # It should be run from the command line.
-# USAGE: Rscript 4-ica_pca_feature_reconstruction.R --cancer_type --predictor --n_components --seed --null_model --include_seurat
+# USAGE: Rscript 4-ica_pca_feature_reconstruction.R --cancer_type --predictor --n_components --seed --null_model
 # n_components refers to the number of components (PC/IC) that should be used
 # for reconstruction.
 
@@ -26,11 +26,7 @@ option_list <- list(
   optparse::make_option("--null_model",
                         action = "store_true",
                         default = FALSE,
-                        help = "Refer to models with permuted dependent variable (within subtype if predictor is a gene)"),
-  optparse::make_option("--include_seurat",
-                        action = "store_true",
-                        default = FALSE,
-                        help = "Include Seurat in this analysis (default: FALSE)")
+                        help = "Refer to models with permuted dependent variable (within subtype if predictor is a gene)")
 )
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
@@ -102,16 +98,13 @@ for (seed in filename.seeds) {
   test.data <- readRDS(test.rds)
   train.data <- RestructureNormList(train.data)
 
-  # get rid of TDM, QN (CN), and Seurat NULL values
-  # helpful to not specify each one individually because Seurat NULLs differ
+  # remove Seurat from this analysis due to inconsistency in %RNA-seq
+  train.data$seurat <- NULL
+  
+  # get rid of TDM and QN (CN) null values
   train.data <- purrr::modify_depth(train.data,
                                     1, # work on the first level lists
                                     purrr::discard, is.null) # discard if null
-  
-  # include Seurat for PCA only if indicated by command line option
-  if (!include_seurat) {
-    train.data$seurat <- NULL
-  }
   
   # for each method to be used for reconstruction
   for (rcn in recon.methods) {
