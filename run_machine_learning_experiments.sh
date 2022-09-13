@@ -19,10 +19,10 @@ fi
 # Run ten repeats of the supervised analysis
 # if the predictor is a gene, also generate null models
 if [ $predictor == "TP53" ] || [ $predictor == "PIK3CA" ]; then
-  Rscript classifier_repeat_wrapper.R --cancer_type $cancer_type --predictor $predictor --n_repeats 3 --ncores $ncores
-  Rscript classifier_repeat_wrapper.R --cancer_type $cancer_type --predictor $predictor --n_repeats 3 --null_model --ncores $ncores
+  Rscript classifier_repeat_wrapper.R --cancer_type $cancer_type --predictor $predictor --n_repeats 10 --ncores $ncores
+  Rscript classifier_repeat_wrapper.R --cancer_type $cancer_type --predictor $predictor --n_repeats 10 --null_model --ncores $ncores
 else
-  Rscript classifier_repeat_wrapper.R --cancer_type $cancer_type --predictor $predictor --n_repeats 3 --ncores $ncores
+  Rscript classifier_repeat_wrapper.R --cancer_type $cancer_type --predictor $predictor --n_repeats 10 --ncores $ncores
 fi
 
 # Run the unsupervised analyses using subtype models
@@ -30,6 +30,6 @@ if [ $predictor == "subtype" ]; then
   Rscript 4-ica_pca_feature_reconstruction.R --cancer_type $cancer_type --predictor $predictor --n_components 50
   Rscript 5-predict_category_reconstructed_data.R --cancer_type $cancer_type --predictor $predictor
   Rscript 6-save_recon_error_kappa_data.R --cancer_type $cancer_type --predictor $predictor
-  #Rscript 7-extract_plier_pathways.R --cancer_type $cancer_type --ncores $ncores
-  #Rscript 7-extract_plier_pathways.R --cancer_type $cancer_type --ncores $ncores --permute
+  Rscript 7-extract_plier_pathways.R --cancer_type $cancer_type --ncores $ncores
+  Rscript 7-extract_plier_pathways.R --cancer_type $cancer_type --ncores $ncores --permute
 fi
