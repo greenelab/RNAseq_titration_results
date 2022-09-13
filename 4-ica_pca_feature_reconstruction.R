@@ -46,7 +46,6 @@ file_identifier <- ifelse(null_model,
                           str_c(cancer_type, predictor, "null", sep = "_"),
                           str_c(cancer_type, predictor, sep = "_"))
 n.comp <- as.integer(opt$n_components)
-include_seurat <- opt$include_seurat
 
 # set seed
 initial.seed <- as.integer(opt$seed)

@@ -25,7 +25,6 @@ source(here::here("util/color_blind_friendly_palette.R"))
 cancer_type <- opt$cancer_type
 predictor <- opt$predictor
 file_identifier <- str_c(cancer_type, predictor, sep = "_")
-include_seurat <- opt$include_seurat
 
 # define directories
 plot.dir <- here::here("plots")
