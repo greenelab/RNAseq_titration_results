@@ -313,9 +313,10 @@ seq.seurat.list <- foreach(i = 2:10, .packages = "tidyverse") %dopar% { # 2:10 c
   
   if (!is.null(norm.titrate.list[[i]][["seurat_model"]])) {
     
-    SeuratProjectPCATestData(seq.test,
-                             norm.titrate.list[[i]][["seurat_model"]],
-                             vbose = TRUE)
+    tryCatch(SeuratProjectPCATestData(seq.test,
+                                      norm.titrate.list[[i]][["seurat_model"]],
+                                      vbose = TRUE),
+             error = function(e) NULL)
     
   } else {
     NULL
