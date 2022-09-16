@@ -141,7 +141,7 @@ TrainThreeModels <- function(dt, category, seed, folds.list){
 
     fit.control <- trainControl(method = "cv",
                                 number = 5, # 5-fold cross-validation
-                                savePredictions = TRUE,
+                                #savePredictions = TRUE,
                                 classProbs = TRUE,
                                 seeds = seed.list,
                                 index = folds.list, # list of 5 sets of indices
