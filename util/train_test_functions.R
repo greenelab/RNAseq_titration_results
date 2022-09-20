@@ -214,7 +214,6 @@ RestructureNormList <- function(norm.list){
   return(restr.norm.list)
 }
 
-
 RestructureTrainedList <- function(train.list){
   # This function takes a train.list (from applying TrainThreeModels),
   # which is organized from top to bottom: normalization method -> percent
@@ -311,11 +310,19 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
 
         # if pred.dt is not null, then perform prediction
         if (!is.null(pred.dt)) {
-          PredictCM(model = trained.model,
-                    dt = pred.dt,
-                    sample.df = sample.dataframe,
-                    model.type = mdl.type,
-                    return.only.kappa = only.kappa)
+          
+          kappa <- PredictCM(model = trained.model,
+                             dt = pred.dt,
+                             sample.df = sample.dataframe,
+                             model.type = mdl.type,
+                             return.only.kappa = only.kappa)
+          
+          auc <- PredictAUC(model = trained.model,
+                            dt = pred.dt,
+                            sample.df = sample.dataframe,
+                            model.type = mdl.type)
+          
+          return(c(kappa, auc))
 
         }
 
@@ -387,7 +394,7 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
       # when there is null test data at a particular %RNA-seq, discard that null
       purrr::modify_depth(2, function(x) discard(x, is.null)) %>%
       reshape2::melt()
-    colnames(kappa.df) <- c("kappa", "perc.seq", "classifier", "norm.method")
+    colnames(kappa.df) <- c("kappa", "auc", "perc.seq", "classifier", "norm.method")
     return(kappa.df)
   } else {  # otherwise, return two objects:
     # 1. the list of confusionMatrix objects (norm.list)
@@ -412,4 +419,65 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
                 "kappa_statistics" = kappa.df))
   }
 
+}
+
+mean_one_versus_all_AUC <- function(probabilities_matrix,
+                                    true_subtypes) {
+  
+  true_subtypes <- factor(true_subtypes)
+  
+  if (sort(levels(true_subtypes)) != sort(colnames(probabilities_matrix))) {
+    
+    # if true subtypes do not match the categories with probabilities
+    stop("True subtype label levels do not match predicted subtype levels in mean_one_versus_all_AUC().")
+    
+  } else {
+    
+    # calculate the AUC value for each subtype vs. all others
+    auc_vector <- purrr::map_dbl(.x = levels(true_subtypes),
+                                 .f = function(subtype) MLmetrics::AUC(y_pred = probabilities_matrix[,subtype],
+                                                                       y_true = as.numeric(true_subtypes == subtype)))
+    
+  }
+  
+  # take the unweighted mean of the AUC values
+  # (this matches the caret::multiClassSummary value of AUC)
+  return(mean(auc_vector))
+  
+}
+
+PredictAUC <- function(model, dt, sample.df,
+                       model.type = NULL) {
+  
+  category <- GetOrderedCategoryLabels(dt, sample.df)
+  dt.mat <- t(dt[, -1, with = F])
+  colnames(dt.mat) <- paste0("c", seq(1:ncol(dt.mat)))
+  
+  # check if dt.mat is character -- if so, make numeric
+  if (any(apply(dt.mat, 1, is.character))) {
+    dt.mat <- apply(dt.mat, 2, as.numeric)
+  }
+  
+  if (model.type == "glmnet") {
+    
+    predicted_probabilities <- predict(model,
+                                       dt.mat,
+                                       s = model$lambda.1se,
+                                       type = "response")[,,1]
+    
+    mean_auc <- mean_one_versus_all_AUC(probabilities_matrix = predicted_probabilities,
+                                        true_subtypes = category)
+    
+  } else { # if model.type == "rf" or "svm"
+    
+    predicted_probabilities <- predict(model,
+                                       dt.mat,
+                                       type = "prob")
+    
+    mean_auc <- mean_one_versus_all_AUC(probabilities_matrix = predicted_probabilities,
+                                        true_subtypes = category)
+  }
+  
+  return(mean_auc)
+  
 }
