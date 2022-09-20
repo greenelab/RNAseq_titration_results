@@ -311,34 +311,47 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
         # if pred.dt is not null, then perform prediction
         if (!is.null(pred.dt)) {
           
-          kappa <- PredictCM(model = trained.model,
-                             dt = pred.dt,
-                             sample.df = sample.dataframe,
-                             model.type = mdl.type,
-                             return.only.kappa = only.kappa)
-          
-          auc <- PredictAUC(model = trained.model,
+          if (only.kappa) {
+            kappa <- PredictCM(model = trained.model,
+                               dt = pred.dt,
+                               sample.df = sample.dataframe,
+                               model.type = mdl.type,
+                               return.only.kappa = only.kappa)
+            
+            auc <- PredictAUC(model = trained.model,
+                              dt = pred.dt,
+                              sample.df = sample.dataframe,
+                              model.type = mdl.type)  
+            
+            return(data.frame("kappa" = kappa,
+                              "auc" = auc))
+            
+          } else {
+            
+            CM <- PredictCM(model = trained.model,
                             dt = pred.dt,
                             sample.df = sample.dataframe,
-                            model.type = mdl.type)
+                            model.type = mdl.type,
+                            return.only.kappa = only.kappa)
+            
+            return(CM)
+            
+          }
           
-          return(data.frame("kappa" = kappa,
-                            "auc" = auc))
-
         }
-
+        
       }
-
+    
     names(return.list) <- names(model.list)
-
+    
     return(return.list)
-
+    
   }
-
+  
   if (run.parallel) {  # if run.parallel is false, %dopar% in
     # ParallelPredictionFunction will run sequentially without parallel
     # backend
-
+    
     # start parallel backend
     cl <- parallel::makeCluster(2)
     doParallel::registerDoParallel(cl)
@@ -350,7 +363,7 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
                               "PredictAUC",
                               "mean_one_versus_all_AUC"))
   }
-
+  
   norm.methods <- names(train.model.list)
   model.names <- c("glmnet", "rf", "svm")
   norm.list <-
@@ -374,11 +387,11 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
                                 sample.dataframe = sample.df,
                                 mdl.type = mdl,
                                 only.kappa = only.kap)
-
+        
       }
-
+      
     }
-
+  
   if (run.parallel) {
     # stop parallel backend
     parallel::stopCluster(cl)
