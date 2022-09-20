@@ -345,7 +345,9 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
     parallel::clusterExport(cl,
                             c("PredictCM",
                               "GetCM",
-                              "GetOrderedCategoryLabels"))
+                              "GetOrderedCategoryLabels",
+                              "PredictAUC",
+                              "mean_one_versus_all_AUC"))
   }
 
   norm.methods <- names(train.model.list)
