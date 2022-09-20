@@ -322,7 +322,8 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
                             sample.df = sample.dataframe,
                             model.type = mdl.type)
           
-          return(c(kappa, auc))
+          return(data.frame("kappa" = kappa,
+                            "auc" = auc))
 
         }
 
@@ -395,8 +396,10 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
     kappa.df <- norm.list %>%
       # when there is null test data at a particular %RNA-seq, discard that null
       purrr::modify_depth(2, function(x) discard(x, is.null)) %>%
-      reshape2::melt()
-    colnames(kappa.df) <- c("kappa", "auc", "perc.seq", "classifier", "norm.method")
+      reshape2::melt() %>%
+      tidyr::pivot_wider(names_from = "variable",
+                         values_from = "value")
+    colnames(kappa.df) <- c("perc.seq", "classifier", "norm.method", "kappa", "auc")
     return(kappa.df)
   } else {  # otherwise, return two objects:
     # 1. the list of confusionMatrix objects (norm.list)
