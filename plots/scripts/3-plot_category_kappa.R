@@ -60,7 +60,7 @@ output_filename <- file.path(output_directory,
 
 # read in data
 plot_df <- read_tsv(input_filename,
-                    col_types = "ddccc") %>%
+                    col_types = "dddccc") %>%
   mutate(Perc.Seq = factor(Perc.Seq,
                            levels = seq(0, 100, 10)))
 
