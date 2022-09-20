@@ -396,7 +396,7 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
     kappa.df <- norm.list %>%
       # when there is null test data at a particular %RNA-seq, discard that null
       purrr::modify_depth(2, function(x) discard(x, is.null)) %>%
-      reshape2::melt() %>%
+      reshape2::melt(id.vars = NULL) %>%
       tidyr::pivot_wider(names_from = "variable",
                          values_from = "value")
     colnames(kappa.df) <- c("perc.seq", "classifier", "norm.method", "kappa", "auc")
