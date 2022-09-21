@@ -349,14 +349,26 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
                                model.type = mdl.type,
                                return.only.kappa = only.kappa)
             
-            if (mdl.type == "glmnet" | trained.model$control$classProbs) {
-              # the model is glmnet OR if the model used classProbs = TRUE
+            if (mdl.type == "glmnet") {
+              # the model is glmnet
+              
+              auc <- PredictAUC(model = trained.model,
+                                dt = pred.dt,
+                                sample.df = sample.dataframe,
+                                model.type = mdl.type)
+              
+            } else if (trained.model$control$classProbs) {
+              # the model used classProbs = TRUE
+              
               auc <- PredictAUC(model = trained.model,
                                 dt = pred.dt,
                                 sample.df = sample.dataframe,
                                 model.type = mdl.type)  
+              
             } else { # if the model was Random Forest or SVM and used classProbs = FALSE we can't calculate AUC
+              
               auc <- NA
+              
             }
             
             return(data.frame("kappa" = kappa,
@@ -480,7 +492,7 @@ mean_one_versus_all_AUC <- function(probabilities_matrix,
   
   true_subtypes <- factor(true_subtypes)
   
-  if (sort(levels(true_subtypes)) != sort(colnames(probabilities_matrix))) {
+  if (!all(sort(levels(true_subtypes)) == sort(colnames(probabilities_matrix)))) {
     
     # if true subtypes do not match the categories with probabilities
     stop("True subtype label levels do not match predicted subtype levels in mean_one_versus_all_AUC().")
