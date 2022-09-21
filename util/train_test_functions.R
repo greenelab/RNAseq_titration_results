@@ -490,6 +490,16 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
 mean_one_versus_all_AUC <- function(probabilities_matrix,
                                     true_subtypes) {
   
+  # Calculate the one vs. all AUC values for each subtype and return the mean
+  #
+  # Args:
+  #   probabilities_matrix: matrix with one column per subtype, one row per
+  #     sample, and with each row summing to 1, usually the output of predict()
+  #   true_subtypes: vector of true subtype labels
+  #
+  # Returns:
+  #   AUC value (mean of one vs. all AUCs)
+  
   true_subtypes <- factor(true_subtypes)
   
   if (!all(sort(levels(true_subtypes)) == sort(colnames(probabilities_matrix)))) {
@@ -514,6 +524,20 @@ mean_one_versus_all_AUC <- function(probabilities_matrix,
 
 PredictAUC <- function(model, dt, sample.df,
                        model.type = NULL) {
+  
+  # Given a prediction model and new data, return the AUC (area under curve).
+  #
+  # Args:
+  #   model: a predictive model of the class train OR class cv.glmnet
+  #   dt: a data table where the columns are the samples and the rows are genes
+  #   sample.df: the data frame that maps sample name/header to category and
+  #              train/test set labels
+  #              output of 0-expression_data_overlap_and_split.R
+  #   model.type: is the model from glmnet (class: cv.glmnet) or from caret
+  #               class
+  #
+  # Returns:
+  #  AUC value (mean of one vs. all AUCs)
   
   category <- GetOrderedCategoryLabels(dt, sample.df)
   dt.mat <- t(dt[, -1, with = F])
