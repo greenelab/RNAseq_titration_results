@@ -157,12 +157,12 @@ readr::write_tsv(test.df,
 # get summary data.frame + write to file
 summary.df <- test.df %>%
   dplyr::group_by(Classifier, Normalization, Platform, Perc.Seq) %>%
-  dplyr::summarise(Median_Kappa = median(Kappa),
-                   Mean_Kappa = mean(Kappa),
-                   SD_Kappa = sd(Kappa),
-                   Median_AUC = median(AUC),
-                   Mean_AUC = mean(AUC),
-                   SD_AUC = sd(AUC),
+  dplyr::summarise(Median_Kappa = median(Kappa, na.rm = TRUE),
+                   Mean_Kappa = mean(Kappa, na.rm = TRUE),
+                   SD_Kappa = sd(Kappa, na.rm = TRUE),
+                   Median_AUC = median(AUC, na.rm = TRUE),
+                   Mean_AUC = mean(AUC, na.rm = TRUE),
+                   SD_AUC = sd(AUC, na.rm = TRUE),
                    .groups = "drop")
 
 readr::write_tsv(summary.df,
