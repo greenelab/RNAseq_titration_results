@@ -139,14 +139,6 @@ TrainThreeModels <- function(dt, category, seed, folds.list){
     for (i in 1:5) seed.list[[i]]<- sample.int(n=1000, 6) # needs 6 even though tuneLength is 3?
     seed.list[[6]] <- sample.int(n=1000, 1) # last model
 
-    fit.control <- trainControl(method = "cv",
-                                number = 5, # 5-fold cross-validation
-                                #savePredictions = TRUE,
-                                classProbs = TRUE,
-                                seeds = seed.list,
-                                index = folds.list, # list of 5 sets of indices
-                                allowParallel = T) # use parallel processing
-
     fold.vector <- vector()  # foldids for cv.glmnet so the folds are the same
     # as caret models
     for (i in 1:length(category)) {
@@ -164,20 +156,58 @@ TrainThreeModels <- function(dt, category, seed, folds.list){
                                         category,
                                         family = "multinomial",
                                         foldid = fold.vector, # fold 'labels'
-                                        parallel = T,
+                                        parallel = TRUE,
                                         type.measure = "class")
+    
+    # For Random Forest and Linear SVM, we use caret's trControl (train control)
+    # method to set some modeling parameters. Caret uses resampling to help
+    # calculate class probabilities (classProbs = TRUE), and class probabilities
+    # are required for AUC measurements. Sometimes, resampling may lead to a
+    # model not converging (?) in the backend process, causing NA metrics and
+    # returning an error. In those cases, we can proceed with classProbs = FALSE
+    # with the limitation that no AUC would be calculated for that model. Kappa
+    # is not affected.
+    
+    fit.control.classProbs_TRUE <- trainControl(method = "cv",
+                                                number = 5, # 5-fold cross-validation
+                                                classProbs = TRUE, # allows calculation of per-class probabilities and therefore AUC
+                                                seeds = seed.list,
+                                                index = folds.list, # list of 5 sets of indices
+                                                allowParallel = T) # use parallel processing
+    
+    fit.control.classProbs_FALSE <- trainControl(method = "cv",
+                                                 number = 5, # 5-fold cross-validation
+                                                 classProbs = FALSE, # the default for trainControl
+                                                 seeds = seed.list,
+                                                 index = folds.list, # list of 5 sets of indices
+                                                 allowParallel = T) # use parallel processing
+    
+    # With tryCatch, we first try to train the model using classProbs = TRUE.
+    # If it fails, we then try to train the model using classProbs = FALSE.
+    # Later, we can tell what value of classProbs succeeded with model$control$classProbs.
+    
     # Random Forest
-    train.list[["rf"]] <- train(t_dt,
-                                category,
-                                method = "ranger",
-                                trControl = fit.control,
-                                tuneLength = 3)
+    train.list[["rf"]] <- tryCatch(train(t_dt,
+                                         category,
+                                         method = "ranger",
+                                         trControl = fit.control.classProbs_TRUE,
+                                         tuneLength = 3),
+                                   error = function(e) train(t_dt,
+                                                             category,
+                                                             method = "ranger",
+                                                             trControl = fit.control.classProbs_FALSE,
+                                                             tuneLength = 3))
     # Linear SVM
-    train.list[["svm"]] <- train(t_dt,
-                                 category,
-                                 method = "svmLinear",
-                                 trControl = fit.control,
-                                 tuneLength = 3)
+    train.list[["svm"]] <- tryCatch(train(t_dt,
+                                          category,
+                                          method = "svmLinear",
+                                          trControl = fit.control.classProbs_TRUE,
+                                          tuneLength = 3),
+                                    error = function(e) train(t_dt,
+                                                              category,
+                                                              method = "svmLinear",
+                                                              trControl = fit.control.classProbs_FALSE,
+                                                              tuneLength = 3))
 
     train.list[["seeds"]] <- seed.list
     return(train.list)
@@ -312,16 +342,22 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
         if (!is.null(pred.dt)) {
           
           if (only.kappa) {
+            
             kappa <- PredictCM(model = trained.model,
                                dt = pred.dt,
                                sample.df = sample.dataframe,
                                model.type = mdl.type,
                                return.only.kappa = only.kappa)
             
-            auc <- PredictAUC(model = trained.model,
-                              dt = pred.dt,
-                              sample.df = sample.dataframe,
-                              model.type = mdl.type)  
+            if (mdl.type == "glmnet" | trained.model$control$classProbs) {
+              # the model is glmnet OR if the model used classProbs = TRUE
+              auc <- PredictAUC(model = trained.model,
+                                dt = pred.dt,
+                                sample.df = sample.dataframe,
+                                model.type = mdl.type)  
+            } else { # if the model was Random Forest or SVM and used classProbs = FALSE we can't calculate AUC
+              auc <- NA
+            }
             
             return(data.frame("kappa" = kappa,
                               "auc" = auc))
