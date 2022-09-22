@@ -3,6 +3,7 @@ FROM rocker/tidyverse:4.1.2
 # Update apt-get and install other libraries
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
+    libfftw3-dev \
     libbz2-dev \
     libgdal-dev \
     libgeos-dev \
@@ -17,6 +18,27 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install pyrefinebio v0.3.4
 RUN pip3 install pyrefinebio==0.3.4
+
+# Install some Bioconductor packages dependencies
+RUN Rscript -e "options(warn = 2); BiocManager::install(c( \
+    'DESeq2', \
+    'EnsDb.Hsapiens.v86' , \
+    'ensembldb', \
+    'GenomicRanges', \
+    'GenomeInfoDb', \
+    'IRanges', \
+    'limma', \
+    'MAST', \
+    'monocle', \
+    'multtest', \
+    'quantro', \
+    'qvalue', \
+    'rtracklayer', \
+    'S4Vectors', \
+    'SingleCellExperiment', \
+    'SummarizedExperiment'), \
+    update = FALSE, \
+    version = 3.14)"
 
 # R packages
 RUN install2.r --error --deps TRUE \
@@ -52,6 +74,7 @@ RUN install2.r --error --deps TRUE \
     reshape2 \
     scales \
     sdcMicro \
+    Seurat \
     stringr \
     styler \
     viridis
@@ -63,16 +86,6 @@ RUN Rscript -e "options(warn = 2); BiocManager::install( \
     'preprocessCore', \
     configure.args = '--disable-threading', \
     force = TRUE, \
-    update = FALSE, \
-    version = 3.14)"
-
-# R Bioconductor packages
-RUN Rscript -e "options(warn = 2); BiocManager::install(c( \
-    'affy', \
-    'EnsDb.Hsapiens.v86' , \
-    'ensembldb', \
-    'limma', \
-    'quantro'), \
     update = FALSE, \
     version = 3.14)"
 

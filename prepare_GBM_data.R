@@ -202,6 +202,7 @@ gbm_subtypes <- readxl::read_xlsx(path = clinical_xlxs_input_filepath,
          "IDH1_mutation_status" = "IDH1\r\n status",
          "subtype" = "Expression\r\nSubclass") %>%
   mutate(subtype = na_if(subtype, "NA")) %>%
+  mutate(subtype = stringr::str_remove(subtype, "-")) %>% # G-CIMP to GCIMP
   mutate(Type = "tumor")
 
 missing_clinical <- gbm_subtypes %>%

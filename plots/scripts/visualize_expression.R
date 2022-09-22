@@ -119,35 +119,41 @@ norm_methods <- names(normalized_test_data$seq) # get all normalization methods
 
 for (nm in norm_methods) {
   
-  # get vector of array values
-  if (nm == "tdm") { # array has no TDM (it is already log)
-    array_values <- as.vector(as.matrix(normalized_test_data$array[["log"]][gene_rows_included, -1]))
-  } else {
-    array_values <- as.vector(as.matrix(normalized_test_data$array[[nm]][gene_rows_included, -1]))
-  }
+  if (nm %in% c("seurat")) next
   
-  # get vector of RNA-seq values
-  if (nm %in% c("qn", "qn-z", "tdm")) { # test data for normalization methods qn and tdm varies with RNA-seq % in training data
+  if (nm == "tdm") {
+    # array has no TDM (it is already log)
+    array_values <- as.vector(as.matrix(normalized_test_data$array[["log"]][gene_rows_included, -1]))
+    for (pct_rna_seq in as.character(seq(0, 90, 10))) { # NULL at 100% RNA-seq
+      # only seq varies across %RNA-seq
+      seq_values <- as.vector(as.matrix(normalized_test_data$seq[[nm]][[pct_rna_seq]][gene_rows_included, -1]))
+      method_title <- str_c(str_to_upper(nm), pct_rna_seq, sep = "_")
+      
+      plot_matched_expression(array_values, seq_values,
+                              method_title, plot_type = "hex",
+                              viz.dir, file_identifier)
+      
+    } 
+  } else if (nm %in% c("qn", "qn-z")) {
+    array_values <- as.vector(as.matrix(normalized_test_data$array[[nm]][gene_rows_included, -1]))
     for (pct_rna_seq in as.character(seq(0, 100, 10))) {
-      if (!is.null(normalized_test_data$seq[[nm]][[pct_rna_seq]])) { # TDM is NULL at 100% RNA-seq
-        seq_values <- as.vector(as.matrix(normalized_test_data$seq[[nm]][[pct_rna_seq]][gene_rows_included, -1]))
-        method_title <- str_c(str_to_upper(nm), pct_rna_seq, sep = "_")
-        plot_matched_expression(array_values, seq_values,
-                                method_title, plot_type = "point",
-                                viz.dir, file_identifier)
-        plot_matched_expression(array_values, seq_values,
-                                method_title, plot_type = "hex",
-                                viz.dir, file_identifier)
-      }
+      # only seq varies across %RNA-seq
+      seq_values <- as.vector(as.matrix(normalized_test_data$seq[[nm]][[pct_rna_seq]][gene_rows_included, -1]))
+      method_title <- str_c(str_to_upper(nm), pct_rna_seq, sep = "_")
+      
+      plot_matched_expression(array_values, seq_values,
+                              method_title, plot_type = "hex",
+                              viz.dir, file_identifier)
+      
     }
   } else { # test data for normalization methods that do not vary with RNA-seq % in training data
+    array_values <- as.vector(as.matrix(normalized_test_data$array[[nm]][gene_rows_included, -1]))
     seq_values <- as.vector(as.matrix(normalized_test_data$seq[[nm]][gene_rows_included, -1]))
     method_title <- str_to_upper(nm)
-    plot_matched_expression(array_values, seq_values,
-                            method_title, plot_type = "point",
-                            viz.dir, file_identifier)
+    
     plot_matched_expression(array_values, seq_values,
                             method_title, plot_type = "hex",
                             viz.dir, file_identifier)
+    
   }
 }

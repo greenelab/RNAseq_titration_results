@@ -270,9 +270,9 @@ for (seed_index in 1:length(norm.train.files)) {
   
   perc_seq <- as.character(seq(0, 100, 50))
   norm_methods_if_0_100 <- c("log")
-  norm_methods_else <- c("log", "npn", "qn", "qn-z", "tdm", "z",
+  norm_methods_else <- c("log", "npn", "qn", "qn (cn)", "qn-z", "tdm", "z",
                          "array_only", "seq_only")
-
+  
   # set random seeds to use inside %dopar% loop for each %seq and norm method
   use_seeds_inside_dopar <- list()
   for (ps in perc_seq) {
@@ -323,6 +323,7 @@ for (seed_index in 1:length(norm.train.files)) {
       # set seed again since we are inside %dopar%
       set.seed(use_seeds_inside_dopar[[ps]][[nm]])
 
+      # check that the norm method exists at the %RNA-seq and it is not null
       if (nm %in% names(norm.train.list[[ps]])) {
 
         # remove any rows with all the same value

@@ -111,7 +111,7 @@ if (null_model) {
                 by = c("perc.seq", "classifier", "norm.method"),
                 suffix = c(".true", ".null")) %>%
       mutate(delta_kappa = kappa.true - kappa.null) %>% # regular kappa - null kappa
-      select(delta_kappa, perc.seq, classifier, norm.method)
+      select(delta_kappa, auc.true, perc.seq, classifier, norm.method)
   }
   
 }
@@ -122,8 +122,10 @@ if (null_model) {
   array.df <- data.table::rbindlist(delta_kappa_array.list)
   seq.df <- data.table::rbindlist(delta_kappa_seq.list)
 } else {
-  array.df <- data.table::rbindlist(array.list)
-  seq.df <- data.table::rbindlist(seq.list)
+  array.df <- data.table::rbindlist(array.list) %>%
+    select(kappa, auc, perc.seq, classifier, norm.method)
+  seq.df <- data.table::rbindlist(seq.list) %>%
+    select(kappa, auc, perc.seq, classifier, norm.method)
 }
 
 #### save test set results -----------------------------------------------------
@@ -133,7 +135,7 @@ test.df <- cbind(rbind(array.df, seq.df),
                  c(rep("Microarray", nrow(array.df)),
                    rep("RNA-seq", nrow(seq.df))))
 
-colnames(test.df) <- c("Kappa", "Perc.Seq", "Classifier",
+colnames(test.df) <- c("Kappa", "AUC", "Perc.Seq", "Classifier",
                        "Normalization", "Platform")
 
 # order %seq to display 0-100
@@ -155,9 +157,12 @@ readr::write_tsv(test.df,
 # get summary data.frame + write to file
 summary.df <- test.df %>%
   dplyr::group_by(Classifier, Normalization, Platform, Perc.Seq) %>%
-  dplyr::summarise(Median = median(Kappa),
-                   Mean = mean(Kappa),
-                   SD = sd(Kappa),
+  dplyr::summarise(Median_Kappa = median(Kappa, na.rm = TRUE),
+                   Mean_Kappa = mean(Kappa, na.rm = TRUE),
+                   SD_Kappa = sd(Kappa, na.rm = TRUE),
+                   Median_AUC = median(AUC, na.rm = TRUE),
+                   Mean_AUC = mean(AUC, na.rm = TRUE),
+                   SD_AUC = sd(AUC, na.rm = TRUE),
                    .groups = "drop")
 
 readr::write_tsv(summary.df,

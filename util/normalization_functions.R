@@ -398,7 +398,10 @@ TDMSingleWithRef <- function(ref.dt, targ.dt, zero.to.one = TRUE){
 SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
                                                zto = TRUE,
                                                add.untransformed = FALSE,
-                                               add.qn.z = FALSE){
+                                               add.qn.z = FALSE,
+                                               add.cn.test = FALSE,
+                                               add.seurat.test = FALSE,
+                                               training.list = NULL){
   # This function is a wrapper for processing expression data.tables that
   # contain only one RNA assay platform (array or seq). It returns a list of
   # normalized data.tables.
@@ -413,6 +416,9 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
   #	                     be added to the list?
   #	  add.qn.z: logical - should quantile normalized data that is then z-scored
   #	            be added to the list?
+  #   add.cn.test =  logical - should CrossNorm test data be added to the list?
+  #   add.seurat.test =  logical - should Seurat test data be added to the list? Does NOT get zero-to-one transformed
+  #   training.list = list containing normalized training data, needed when add.seurat.test = TRUE
   #
   # Returns:
   #   norm.list: a list of normalized,
@@ -444,6 +450,48 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
     if (add.untransformed){
       norm.list[["un"]] <- UnNoZTOProcessing(array.dt = dt)
     }
+    # should CrossNorm be added?
+    # Rescale each column, quantile normalize, then rescale each row
+    if (add.cn.test){
+      
+      norm.list[["qn (cn)"]] <-  QNSingleDT(rescale_datatable(norm.list$log,
+                                                              by_column = TRUE),
+                                            zero.to.one = zto)
+      
+    }
+    # should Seurat test data be added?
+    # do this in parallel for 10-90% RNA-seq using integration from each %
+    if (add.seurat.test) {
+      
+      # parallel backend
+      cl <- parallel::makeCluster(ncores)
+      doParallel::registerDoParallel(cl)
+      
+      parallel::clusterExport(cl, c("SeuratProjectPCATestData",
+                                    "ensure_numeric_gex"))
+      
+      seurat_projection_list <- foreach(i = 2:10, .packages = "tidyverse") %dopar%
+        
+        if (!is.null(training.list[[i]][["seurat_model"]])) {
+          
+          SeuratProjectPCATestData(norm.list$log,
+                                   training.list[[i]][["seurat_model"]],
+                                   vbose = TRUE)
+          
+        } else {
+          NULL
+        }
+      
+      
+      # stop parallel backend
+      parallel::stopCluster(cl)
+      names(seurat_projection_list) <- names(training.list)[2:10] #10%-90%
+      
+      # add Seurat RNA-seq test data to list of normalized test data
+      norm.list[["seurat"]] <- seurat_projection_list
+      rm(seurat_projection_list)
+      
+    }
   } else if (platform == "seq") {
     norm.list[["log"]] <- LOGSeqOnly(dt, zto)
     norm.list[["npn"]] <- NPNSingleDT(dt, zto)
@@ -460,9 +508,57 @@ SinglePlatformNormalizationWrapper <- function(dt, platform = "array",
       # to the list
       norm.list[["un"]] <- dt
     }
+    # should CrossNorm be added?
+    # Rescale each column, quantile normalize, then rescale each row
+    if (add.cn.test){
+      
+      norm.list[["qn (cn)"]] <-  QNSingleDT(rescale_datatable(dt,
+                                                              by_column = TRUE),
+                                            zero.to.one = zto)
+      
+    }
+    
+    # should Seurat test data be added?
+    # do this in parallel for 10-90% RNA-seq using integration from each %
+    if (add.seurat.test) {
+      
+      # parallel backend
+      cl <- parallel::makeCluster(ncores)
+      doParallel::registerDoParallel(cl)
+      
+      parallel::clusterExport(cl, c("SeuratProjectPCATestData",
+                                    "ensure_numeric_gex"))
+      
+      seurat_projection_list <- foreach(i = 2:10, .packages = "tidyverse") %dopar% { #2:10 corresponds to 10%-90%
+        
+        if (!is.null(training.list[[i]][["seurat_model"]])) {
+          
+          SeuratProjectPCATestData(dt,
+                                   training.list[[i]][["seurat_model"]],
+                                   vbose = TRUE)
+          
+        } else {
+          NULL
+        }
+        
+      }
+      
+      # stop parallel backend
+      parallel::stopCluster(cl)
+      
+      names(seurat_projection_list) <- names(training.list)[2:10] #10%-90%
+      
+      # add Seurat RNA-seq test data to list of normalized test data
+      norm.list[["seurat"]] <- seurat_projection_list
+      rm(seurat_projection_list)
+      
+    }
   } else {
+    
     stop("platform parameter should be set to 'array' or 'seq'")
+    
   }
+
   return(norm.list)
 }
 
@@ -1001,10 +1097,187 @@ CNProcessing <-  function(array.dt, seq.dt,
   
 }
 
+
+SeuratIntegration <-  function(array.dt, seq.dt,
+                               n_dims = 50,
+                               vbose = TRUE) {
+  
+  # This function takes array and RNA-seq data in the form of data.tables
+  # to be normalized and concatenated through Seurat integration.
+  #
+  # Args:
+  #   array.dt: data.table of array data where the first column contains
+  #             gene identifiers, the columns are samples,
+  #             rows are gene measurements
+  #   seq.dt:   data.table of RNA-seq data where the first column contains
+  #             gene identifiers, the columns are samples,
+  #             rows are gene measurements
+  #   n_dims:   number of dimensions for reduction (default: 50)
+  #   vbose:    use verbose screen output (default: TRUE, may give error if FALSE)
+  #
+  # Returns:
+  #   array_seq.integrated: an integrated Seurat object including array and seq
+  
+  require(data.table)
+  # Error-handling
+  array.is.dt <- "data.table" %in% class(array.dt)
+  seq.is.dt <- "data.table" %in% class(seq.dt)
+  any.not.dt <- !(any(c(array.is.dt, seq.is.dt)))
+  if (any.not.dt) {
+    stop("array.dt and seq.dt must both be data.tables")
+  }
+  if (!(all(array.dt[[1]] %in% seq.dt[[1]]))) {
+    stop("Gene identifiers in data.tables must match")
+  }
+  
+  array.dt <- ensure_numeric_gex(array.dt)
+  seq.dt <- ensure_numeric_gex(seq.dt)
+  
+  # List of seurat objects to be integrated
+  array_seq_list <- list(array = array.dt[,-1],
+                         seq = seq.dt[,-1])
+  
+  array_seq_list <- lapply(X = array_seq_list,
+                           FUN = Seurat::CreateSeuratObject)
+  
+  # SCTransform is the default option for normalizing input data to Seurat pipelines prior to integration.
+  # The following links detail reasons for its use and standard implementation.
+  # https://satijalab.org/seurat/articles/sctransform_vignette.html
+  # https://satijalab.org/seurat/articles/integration_introduction.html#performing-integration-on-datasets-normalized-with-sctransform-1
+  array_seq_list <- lapply(X = array_seq_list,
+                           FUN = Seurat::SCTransform,
+                           verbose = vbose)
+  
+  # identifies features found to be highly variable across multiple data sets
+  # to use as features during integration
+  features <- Seurat::SelectIntegrationFeatures(object.list = array_seq_list,
+                                                nfeatures = 2000, # default
+                                                verbose = vbose)
+  
+  array_seq_list <- Seurat::PrepSCTIntegration(object.list = array_seq_list,
+                                               anchor.features = features,
+                                               verbose = vbose)
+    
+  # identifies an anchor set used for integration
+  array_seq.anchors <- Seurat::FindIntegrationAnchors(object.list = array_seq_list,
+                                                      normalization.method = "SCT",
+                                                      anchor.features = features,
+                                                      dims = 1:n_dims,
+                                                      verbose = vbose)
+  
+  # integration using pre-computed anchor set
+  array_seq.integrated <- Seurat::IntegrateData(anchorset = array_seq.anchors,
+                                                normalization.method = "SCT",
+                                                dims = 1:n_dims,
+                                                verbose = vbose)
+  
+  # PCA on integrated data set
+  array_seq.integrated <- Seurat::RunPCA(array_seq.integrated,
+                                         npcs = n_dims,
+                                         nfeatures.print = n_dims,
+                                         verbose = vbose)
+  
+  return(array_seq.integrated)
+  
+}
+
+SeuratPCATrainingData <- function(integrated_seurat_object) {
+  
+  # This function returns the PCA reduction of training data from the integrated Seurat object
+  #
+  # Args:
+  #   integrated_seurat_object:  output from SeuratIntegration, an integrated
+  #             Seurat object with both array and RNA-seq data combined
+  #
+  # Returns:
+  #   properly formatted data.table (with dimension names as column 1, sample names as column names)
+  
+  reduced.dt <- integrated_seurat_object@reductions$pca@cell.embeddings %>%
+    t() %>%
+    as.data.frame() %>%
+    tibble::rownames_to_column("dimension") %>%
+    data.table::as.data.table() %>%
+    ensure_numeric_gex()
+  
+  return(reduced.dt)
+  
+}
+
+SeuratProjectPCATestData <- function(test_data.dt,
+                                     integrated_seurat_object,
+                                     vbose = TRUE) {
+  
+  # This function transforms test data (SCTransform), then projects it to the
+  # reduced dimension PCA space of the integrated_seurat_object.
+  #
+  # Args:
+  #   test_data.dt: a data.table of test data (column 1 = gene)
+  #   integrated_seurat_object:  output from SeuratIntegration, an integrated
+  #             Seurat object with both array and RNA-seq data combined
+  #   vbose:    use verbose screen output (default: TRUE, may give error if FALSE)
+  #
+  # Returns:
+  #   properly formatted data.table (with dimension names as column 1, sample names as column names)
+  
+  require(data.table)
+  # Error-handling
+  test_data.is.dt <- "data.table" %in% class(test_data.dt)
+  if (!test_data.is.dt) {
+    stop("test_data must be data.table")
+  }
+  
+  n_test <- ncol(test_data.dt) - 1
+  
+  test_data.dt <- ensure_numeric_gex(test_data.dt)
+
+  # Create query single cell object based on test data
+  query.sct <- Seurat::CreateSeuratObject(test_data.dt[,-1]) %>%
+    Seurat::SCTransform(verbose = vbose)
+  
+  # Detect transfer anchors between training and test
+  ref_dims <- dim(integrated_seurat_object@reductions$pca@cell.embeddings)[2]
+  anchors <- Seurat::FindTransferAnchors(reference = integrated_seurat_object,
+                                         query = query.sct,
+                                         dims = 1:ref_dims,
+                                         k.filter = min(n_test, 200),
+                                         reference.reduction = "pca",
+                                         verbose = vbose)
+  
+  if (dim(anchors@anchors)[1] > n_test ) {
+    
+    # Add PCA mapping to query 
+    query.sct <- Seurat::MapQuery(anchorset = anchors,
+                                  reference = integrated_seurat_object,
+                                  query = query.sct,
+                                  reference.reduction = "pca",
+                                  verbose = vbose)
+    
+    # Convert samples x PCs to PCs by sample and name rows same as training
+    test_reduced.dt <- query.sct@reductions$ref.pca@cell.embeddings %>%
+      t() %>%
+      as.data.frame() %>%
+      tibble::rownames_to_column("dimension") %>%
+      mutate(dimension = stringr::str_replace(dimension, "refpca", "PC")) %>%
+      data.table::as.data.table() %>%
+      ensure_numeric_gex()
+    
+    return(test_reduced.dt)
+    
+  } else {
+    
+    return(NULL)
+    
+  }
+  
+}
+
 NormalizationWrapper <- function(array.dt, seq.dt,
                                  zto = TRUE,
                                  add.untransformed = FALSE,
-                                 add.qn.z = FALSE){
+                                 add.qn.z = FALSE,
+                                 add.cn = FALSE,
+                                 add.seurat.training = FALSE){
+  
   # This function takes array and RNA-seq data in the form of data.table
   # to be 'mixed' (concatenated) and returns a list of normalized data.tables
   #
@@ -1020,6 +1293,8 @@ NormalizationWrapper <- function(array.dt, seq.dt,
   #	                     be concatenated to array data and added to the list?
   #	  add.qn.z: logical - should quantile normalized data that is then z-scored
   #	            be added to the list?
+  #   add.cn =  logical - should CrossNorm data be added to the list?
+  #   add.seurat.training =  logical - should Seurat training data be added to the list? Does NOT get zero-to-one transformed
   #
   # Returns:
   #	  norm.list: a list of normalized, zero to one 'mixed' data.tables
@@ -1073,7 +1348,29 @@ NormalizationWrapper <- function(array.dt, seq.dt,
   if (add.untransformed) {
     norm.list[["un"]] <- UnNoZTOProcessing(array.dt, seq.dt)
   }
+  # should CrossNorm be added?
+  if (add.cn) {
+    norm.list[["qn (cn)"]] <- CNProcessing(array.dt = array.dt,
+                                           seq.dt = seq.dt)
+  }
+
+  # should Seurat training data be added?
+  if (add.seurat.training) {
+    
+    # only run Seurat when there are sufficient samples in both data sets
+    if (ncol(array.dt) > 100 & ncol(seq.dt) > 100) {
+      
+      norm.list[["seurat_model"]] <- SeuratIntegration(array.dt,
+                                                       seq.dt,
+                                                       vbose = TRUE)
+      
+      
+      norm.list[["seurat"]] <- SeuratPCATrainingData(norm.list[["seurat_model"]])  
+    }
+  }
+  
   return(norm.list)
+  
 }
 
 GetDataTablesForMixing <- function(array.data, seq.data,

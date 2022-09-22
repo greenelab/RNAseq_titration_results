@@ -97,10 +97,14 @@ for (seed in filename.seeds) {
   test.data <- readRDS(test.rds)
   train.data <- RestructureNormList(train.data)
 
-  # get rid of TDM at 0 & 100% seq levels
-  train.data$tdm$`0` <- NULL
-  train.data$tdm$`100` <- NULL
-
+  # remove Seurat data from this analysis because it is already in reduced space
+  train.data$seurat <- NULL
+  
+  # get rid of TDM and QN (CN) null values
+  train.data <- purrr::modify_depth(train.data,
+                                    1, # work on the first level lists
+                                    purrr::discard, is.null) # discard if null
+  
   # for each method to be used for reconstruction
   for (rcn in recon.methods) {
     message(paste("  ", rcn, "on training set"))

@@ -139,12 +139,6 @@ TrainThreeModels <- function(dt, category, seed, folds.list){
     for (i in 1:5) seed.list[[i]]<- sample.int(n=1000, 6) # needs 6 even though tuneLength is 3?
     seed.list[[6]] <- sample.int(n=1000, 1) # last model
 
-    fit.control <- trainControl(method = "cv",
-                                number = 5, # 5-fold cross-validation
-                                seeds = seed.list,
-                                index = folds.list, # list of 5 sets of indices
-                                allowParallel = T) # use parallel processing
-
     fold.vector <- vector()  # foldids for cv.glmnet so the folds are the same
     # as caret models
     for (i in 1:length(category)) {
@@ -162,20 +156,58 @@ TrainThreeModels <- function(dt, category, seed, folds.list){
                                         category,
                                         family = "multinomial",
                                         foldid = fold.vector, # fold 'labels'
-                                        parallel = T,
-                                        type.measure="class")
+                                        parallel = TRUE,
+                                        type.measure = "class")
+    
+    # For Random Forest and Linear SVM, we use caret's trControl (train control)
+    # method to set some modeling parameters. Caret uses resampling to help
+    # calculate class probabilities (classProbs = TRUE), and class probabilities
+    # are required for AUC measurements. Sometimes, resampling may lead to a
+    # model not converging (?) in the backend process, causing NA metrics and
+    # returning an error. In those cases, we can proceed with classProbs = FALSE
+    # with the limitation that no AUC would be calculated for that model. Kappa
+    # is not affected.
+    
+    fit.control.classProbs_TRUE <- trainControl(method = "cv",
+                                                number = 5, # 5-fold cross-validation
+                                                classProbs = TRUE, # allows calculation of per-class probabilities and therefore AUC
+                                                seeds = seed.list,
+                                                index = folds.list, # list of 5 sets of indices
+                                                allowParallel = T) # use parallel processing
+    
+    fit.control.classProbs_FALSE <- trainControl(method = "cv",
+                                                 number = 5, # 5-fold cross-validation
+                                                 classProbs = FALSE, # the default for trainControl
+                                                 seeds = seed.list,
+                                                 index = folds.list, # list of 5 sets of indices
+                                                 allowParallel = T) # use parallel processing
+    
+    # With tryCatch, we first try to train the model using classProbs = TRUE.
+    # If it fails, we then try to train the model using classProbs = FALSE.
+    # Later, we can tell what value of classProbs succeeded with model$control$classProbs.
+    
     # Random Forest
-    train.list[["rf"]] <- train(t_dt,
-                                category,
-                                method = "ranger",
-                                trControl = fit.control,
-                                tuneLength = 3)
+    train.list[["rf"]] <- tryCatch(train(t_dt,
+                                         category,
+                                         method = "ranger",
+                                         trControl = fit.control.classProbs_TRUE,
+                                         tuneLength = 3),
+                                   error = function(e) train(t_dt,
+                                                             category,
+                                                             method = "ranger",
+                                                             trControl = fit.control.classProbs_FALSE,
+                                                             tuneLength = 3))
     # Linear SVM
-    train.list[["svm"]] <- train(t_dt,
-                                 category,
-                                 method = "svmLinear",
-                                 trControl = fit.control,
-                                 tuneLength = 3)
+    train.list[["svm"]] <- tryCatch(train(t_dt,
+                                          category,
+                                          method = "svmLinear",
+                                          trControl = fit.control.classProbs_TRUE,
+                                          tuneLength = 3),
+                                    error = function(e) train(t_dt,
+                                                              category,
+                                                              method = "svmLinear",
+                                                              trControl = fit.control.classProbs_FALSE,
+                                                              tuneLength = 3))
 
     train.list[["seeds"]] <- seed.list
     return(train.list)
@@ -211,7 +243,6 @@ RestructureNormList <- function(norm.list){
   }
   return(restr.norm.list)
 }
-
 
 RestructureTrainedList <- function(train.list){
   # This function takes a train.list (from applying TrainThreeModels),
@@ -309,26 +340,66 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
 
         # if pred.dt is not null, then perform prediction
         if (!is.null(pred.dt)) {
-          PredictCM(model = trained.model,
-                    dt = pred.dt,
-                    sample.df = sample.dataframe,
-                    model.type = mdl.type,
-                    return.only.kappa = only.kappa)
-
+          
+          if (only.kappa) {
+            
+            kappa <- PredictCM(model = trained.model,
+                               dt = pred.dt,
+                               sample.df = sample.dataframe,
+                               model.type = mdl.type,
+                               return.only.kappa = only.kappa)
+            
+            if (mdl.type == "glmnet") {
+              # the model is glmnet
+              
+              auc <- PredictAUC(model = trained.model,
+                                dt = pred.dt,
+                                sample.df = sample.dataframe,
+                                model.type = mdl.type)
+              
+            } else if (trained.model$control$classProbs) {
+              # the model used classProbs = TRUE
+              
+              auc <- PredictAUC(model = trained.model,
+                                dt = pred.dt,
+                                sample.df = sample.dataframe,
+                                model.type = mdl.type)  
+              
+            } else { # if the model was Random Forest or SVM and used classProbs = FALSE we can't calculate AUC
+              
+              auc <- NA
+              
+            }
+            
+            return(data.frame("kappa" = kappa,
+                              "auc" = auc))
+            
+          } else {
+            
+            CM <- PredictCM(model = trained.model,
+                            dt = pred.dt,
+                            sample.df = sample.dataframe,
+                            model.type = mdl.type,
+                            return.only.kappa = only.kappa)
+            
+            return(CM)
+            
+          }
+          
         }
-
+        
       }
-
+    
     names(return.list) <- names(model.list)
-
+    
     return(return.list)
-
+    
   }
-
+  
   if (run.parallel) {  # if run.parallel is false, %dopar% in
     # ParallelPredictionFunction will run sequentially without parallel
     # backend
-
+    
     # start parallel backend
     cl <- parallel::makeCluster(2)
     doParallel::registerDoParallel(cl)
@@ -336,9 +407,11 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
     parallel::clusterExport(cl,
                             c("PredictCM",
                               "GetCM",
-                              "GetOrderedCategoryLabels"))
+                              "GetOrderedCategoryLabels",
+                              "PredictAUC",
+                              "mean_one_versus_all_AUC"))
   }
-
+  
   norm.methods <- names(train.model.list)
   model.names <- c("glmnet", "rf", "svm")
   norm.list <-
@@ -362,11 +435,11 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
                                 sample.dataframe = sample.df,
                                 mdl.type = mdl,
                                 only.kappa = only.kap)
-
+        
       }
-
+      
     }
-
+  
   if (run.parallel) {
     # stop parallel backend
     parallel::stopCluster(cl)
@@ -381,8 +454,13 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
   # if only returning Kappa -- melt the list into a data.frame and return
   # the data.frame
   if (only.kap) {
-    kappa.df <- reshape2::melt(norm.list)
-    colnames(kappa.df) <- c("kappa", "perc.seq", "classifier", "norm.method")
+    kappa.df <- norm.list %>%
+      # when there is null test data at a particular %RNA-seq, discard that null
+      purrr::modify_depth(2, function(x) discard(x, is.null)) %>%
+      reshape2::melt(id.vars = NULL) %>%
+      tidyr::pivot_wider(names_from = "variable",
+                         values_from = "value")
+    colnames(kappa.df) <- c("perc.seq", "classifier", "norm.method", "kappa", "auc")
     return(kappa.df)
   } else {  # otherwise, return two objects:
     # 1. the list of confusionMatrix objects (norm.list)
@@ -392,8 +470,10 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
     # level 3 of norm.list is confusion matrix associated with %seq, classifier, and normalization method
     # purrr::modify_depth applies a function to confusion matrix to return kappa
     # list can then be melted and columns renamed
-    kappa.df <- purrr::modify_depth(norm.list, 3,
-                                    function(x) x$overall["Kappa"]) %>%
+    kappa.df <- norm.list %>%
+      # when there is null test data at a particular %RNA-seq, discard that null
+      purrr::modify_depth(2, function(x) discard(x, is.null)) %>%
+      purrr::modify_depth(3, function(x) x$overall["Kappa"]) %>%
       reshape2::melt() %>%
       dplyr::rename("kappa" = "value",
                     "perc.seq" = "L3",
@@ -405,4 +485,85 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
                 "kappa_statistics" = kappa.df))
   }
 
+}
+
+mean_one_versus_all_AUC <- function(probabilities_matrix,
+                                    true_subtypes) {
+  
+  # Calculate the one vs. all AUC values for each subtype and return the mean
+  #
+  # Args:
+  #   probabilities_matrix: matrix with one column per subtype, one row per
+  #     sample, and with each row summing to 1, usually the output of predict()
+  #   true_subtypes: vector of true subtype labels
+  #
+  # Returns:
+  #   AUC value (mean of one vs. all AUCs)
+  
+  # calculate the AUC value for each subtype vs. all others
+  auc_vector <- purrr::map_dbl(.x = levels(true_subtypes),
+                               .f = function(subtype) MLmetrics::AUC(y_pred = probabilities_matrix[,subtype],
+                                                                     y_true = as.numeric(true_subtypes == subtype)))
+  
+  # take the unweighted mean of the AUC values
+  # (this matches the caret::multiClassSummary value of AUC)
+  return(mean(auc_vector))
+  
+}
+
+PredictAUC <- function(model, dt, sample.df,
+                       model.type = NULL) {
+  
+  # Given a prediction model and new data, return the AUC (area under curve).
+  #
+  # Args:
+  #   model: a predictive model of the class train OR class cv.glmnet
+  #   dt: a data table where the columns are the samples and the rows are genes
+  #   sample.df: the data frame that maps sample name/header to category and
+  #              train/test set labels
+  #              output of 0-expression_data_overlap_and_split.R
+  #   model.type: is the model from glmnet (class: cv.glmnet) or from caret
+  #               class
+  #
+  # Returns:
+  #  AUC value (mean of one vs. all AUCs)
+  
+  category <- factor(GetOrderedCategoryLabels(dt, sample.df))
+  dt.mat <- t(dt[, -1, with = F])
+  colnames(dt.mat) <- paste0("c", seq(1:ncol(dt.mat)))
+  
+  # check if dt.mat is character -- if so, make numeric
+  if (any(apply(dt.mat, 1, is.character))) {
+    dt.mat <- apply(dt.mat, 2, as.numeric)
+  }
+  
+  if (model.type == "glmnet") {
+    
+    predicted_probabilities <- predict(model,
+                                       dt.mat,
+                                       s = model$lambda.1se,
+                                       type = "response")[,,1]
+
+  } else { # if model.type == "rf" or "svm"
+    
+    predicted_probabilities <- predict(model,
+                                       dt.mat,
+                                       type = "prob")
+    
+  }
+  
+  if (!all(sort(levels(category)) == sort(colnames(predicted_probabilities)))) {
+    
+    # if true subtypes do not match the categories with probabilities
+    stop("True subtype label category levels do not match predicted subtype levels in PredictAUC().")
+    
+  } else {
+    
+    mean_auc <- mean_one_versus_all_AUC(probabilities_matrix = predicted_probabilities,
+                                        true_subtypes = category)
+    
+  }
+  
+  return(mean_auc)
+  
 }

@@ -124,12 +124,15 @@ if (length(all.same.indx) > 0) {
 array.train <-
   data.table(array.data[,
                         c(1, which(colnames(array.data) %in% train.sample.names))])
+
 seq.train <-
   data.table(seq.data[,
                       c(1, which(colnames(seq.data) %in% train.sample.names))])
+
 titrate.mix.dt.list <- lapply(titrate.sample.list,
                               function(x) GetDataTablesForMixing(array.train,
                                                                  seq.train, x))
+
 #### normalize train data ------------------------------------------------------
 
 # initialize in the list to hold normalized data
@@ -148,11 +151,13 @@ doParallel::registerDoParallel(cl)
 
 # 'mixed' both platform normalization
 norm.titrate.list[2:10] <-
-  foreach(n = 2:10) %dopar% {
+  foreach(n = 2:10, .packages = "tidyverse") %dopar% {
     NormalizationWrapper(titrate.mix.dt.list[[n]]$array,
                          titrate.mix.dt.list[[n]]$seq,
                          add.untransformed = TRUE,
-                         add.qn.z = TRUE)
+                         add.qn.z = TRUE,
+                         add.cn = TRUE,
+                         add.seurat.training = TRUE)
   }
 
 # stop parallel backend
@@ -167,9 +172,6 @@ norm.titrate.list[["100"]] <-
                                      add.untransformed = TRUE,
                                      add.qn.z = TRUE)
 
-# save train data
-saveRDS(norm.titrate.list, file = file.path(norm.data.dir, norm.train.object))
-
 #### normalize test data -------------------------------------------------------
 array.test <-
   data.table(array.data[,
@@ -182,7 +184,10 @@ array.test.norm.list <-
   SinglePlatformNormalizationWrapper(array.test,
                                      platform = "array",
                                      add.untransformed = TRUE,
-                                     add.qn.z = TRUE)
+                                     add.qn.z = TRUE,
+                                     add.cn.test = TRUE,
+                                     add.seurat.test = TRUE,
+                                     training.list = norm.titrate.list)
 
 # seq normalization
 # initialize list to hold normalized seq data
@@ -291,9 +296,55 @@ seq.test.norm.list[["z"]] <- ZScoreSingleDT(seq.test)
 # untransformed seq test data
 seq.test.norm.list[["un"]] <- seq.test
 
+# CrossNorm RNA-seq test
+# Rescale each column, quantile normalize, then rescale each row
+seq.test.norm.list[["qn (cn)"]] <- rescale_datatable(seq.test,
+                                                     by_column = TRUE) %>%
+  QNSingleDT(zero.to.one = TRUE)
+
+# Seurat RNA-seq test
+# for 10-90% seq - use the integrated training data at each %RNA-seq
+
+# parallel backend
+cl <- parallel::makeCluster(ncores)
+doParallel::registerDoParallel(cl)
+
+seq.seurat.list <- foreach(i = 2:10, .packages = "tidyverse") %dopar% { # 2:10 corresponds to 10%-90%
+  
+  if (!is.null(norm.titrate.list[[i]][["seurat_model"]])) {
+    
+    tryCatch(SeuratProjectPCATestData(seq.test,
+                                      norm.titrate.list[[i]][["seurat_model"]],
+                                      vbose = TRUE),
+             error = function(e) NULL)
+    
+  } else {
+    NULL
+  }
+  
+}
+
+names(seq.seurat.list) <- names(norm.titrate.list)[2:10] # 2:10 corresponds to 10%-90%
+
+# stop parallel backend
+parallel::stopCluster(cl)
+
+# add Seurat RNA-seq test data to list of normalized test data
+seq.test.norm.list[["seurat"]] <- seq.seurat.list
+rm(seq.seurat.list)
+
 # combine array and seq test data into a list
 test.norm.list <- list(array = array.test.norm.list,
                        seq = seq.test.norm.list)
 
 # save test data
 saveRDS(test.norm.list, file = file.path(norm.data.dir, norm.test.object))
+
+# save train data after removing Seurat models (just keep Seurat-normed data)
+for (n in names(norm.titrate.list)) {
+  if ("seurat_model" %in% names(norm.titrate.list[[n]])) {
+    norm.titrate.list[[n]][["seurat_model"]] <- NULL
+  }
+}
+
+saveRDS(norm.titrate.list, file = file.path(norm.data.dir, norm.train.object))

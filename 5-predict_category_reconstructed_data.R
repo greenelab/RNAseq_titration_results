@@ -88,7 +88,10 @@ for (seed in filename.seeds) {
   # read in supervised models (LASSO, linear SVM, random forest)
   train.rds <- supervised.model.files[grep(seed, supervised.model.files)]
   train.list <- readRDS(train.rds)
-
+  
+  # remove Seurat data from this analysis because it is already in reduced space
+  train.list$seurat <- NULL
+  
   # need to read in corresponding sample.df
   sample.df.file <-
     file.path(res.dir,
