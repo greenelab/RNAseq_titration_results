@@ -350,8 +350,8 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
                                return.only.kappa = FALSE)
             
             kappa <- cm$overall["Kappa"]
-            sens <- mean(x$byClass[,"Sensitivity"])
-            spec <- mean(x$byClass[,"Specificity"])
+            sens <- mean(cm$byClass[,"Sensitivity"])
+            spec <- mean(cm$byClass[,"Specificity"])
             
             if (mdl.type == "glmnet") {
               # the model is glmnet
