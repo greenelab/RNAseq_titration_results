@@ -500,21 +500,10 @@ mean_one_versus_all_AUC <- function(probabilities_matrix,
   # Returns:
   #   AUC value (mean of one vs. all AUCs)
   
-  true_subtypes <- factor(true_subtypes)
-  
-  if (!all(sort(levels(true_subtypes)) == sort(colnames(probabilities_matrix)))) {
-    
-    # if true subtypes do not match the categories with probabilities
-    stop("True subtype label levels do not match predicted subtype levels in mean_one_versus_all_AUC().")
-    
-  } else {
-    
-    # calculate the AUC value for each subtype vs. all others
-    auc_vector <- purrr::map_dbl(.x = levels(true_subtypes),
-                                 .f = function(subtype) MLmetrics::AUC(y_pred = probabilities_matrix[,subtype],
-                                                                       y_true = as.numeric(true_subtypes == subtype)))
-    
-  }
+  # calculate the AUC value for each subtype vs. all others
+  auc_vector <- purrr::map_dbl(.x = levels(true_subtypes),
+                               .f = function(subtype) MLmetrics::AUC(y_pred = probabilities_matrix[,subtype],
+                                                                     y_true = as.numeric(true_subtypes == subtype)))
   
   # take the unweighted mean of the AUC values
   # (this matches the caret::multiClassSummary value of AUC)
@@ -539,7 +528,7 @@ PredictAUC <- function(model, dt, sample.df,
   # Returns:
   #  AUC value (mean of one vs. all AUCs)
   
-  category <- GetOrderedCategoryLabels(dt, sample.df)
+  category <- factor(GetOrderedCategoryLabels(dt, sample.df))
   dt.mat <- t(dt[, -1, with = F])
   colnames(dt.mat) <- paste0("c", seq(1:ncol(dt.mat)))
   
@@ -554,18 +543,25 @@ PredictAUC <- function(model, dt, sample.df,
                                        dt.mat,
                                        s = model$lambda.1se,
                                        type = "response")[,,1]
-    
-    mean_auc <- mean_one_versus_all_AUC(probabilities_matrix = predicted_probabilities,
-                                        true_subtypes = category)
-    
+
   } else { # if model.type == "rf" or "svm"
     
     predicted_probabilities <- predict(model,
                                        dt.mat,
                                        type = "prob")
     
+  }
+  
+  if (!all(sort(levels(category)) == sort(colnames(predicted_probabilities)))) {
+    
+    # if true subtypes do not match the categories with probabilities
+    stop("True subtype label category levels do not match predicted subtype levels in PredictAUC().")
+    
+  } else {
+    
     mean_auc <- mean_one_versus_all_AUC(probabilities_matrix = predicted_probabilities,
                                         true_subtypes = category)
+    
   }
   
   return(mean_auc)
