@@ -111,7 +111,7 @@ if (null_model) {
                 by = c("perc.seq", "classifier", "norm.method"),
                 suffix = c(".true", ".null")) %>%
       mutate(delta_kappa = kappa.true - kappa.null) %>% # regular kappa - null kappa
-      select(delta_kappa, auc.true, perc.seq, classifier, norm.method)
+      select(delta_kappa, auc.true, sensitivity.true, specificity.true, perc.seq, classifier, norm.method)
   }
   
 }
@@ -123,9 +123,9 @@ if (null_model) {
   seq.df <- data.table::rbindlist(delta_kappa_seq.list)
 } else {
   array.df <- data.table::rbindlist(array.list) %>%
-    select(kappa, auc, perc.seq, classifier, norm.method)
+    select(kappa, auc, sensitivity, specificity, perc.seq, classifier, norm.method)
   seq.df <- data.table::rbindlist(seq.list) %>%
-    select(kappa, auc, perc.seq, classifier, norm.method)
+    select(kappa, auc, sensitivity, specificity, perc.seq, classifier, norm.method)
 }
 
 #### save test set results -----------------------------------------------------
@@ -135,7 +135,7 @@ test.df <- cbind(rbind(array.df, seq.df),
                  c(rep("Microarray", nrow(array.df)),
                    rep("RNA-seq", nrow(seq.df))))
 
-colnames(test.df) <- c("Kappa", "AUC", "Perc.Seq", "Classifier",
+colnames(test.df) <- c("Kappa", "AUC", "Sensitivity", "Specificity", "Perc.Seq", "Classifier",
                        "Normalization", "Platform")
 
 # order %seq to display 0-100
@@ -163,6 +163,12 @@ summary.df <- test.df %>%
                    Median_AUC = median(AUC, na.rm = TRUE),
                    Mean_AUC = mean(AUC, na.rm = TRUE),
                    SD_AUC = sd(AUC, na.rm = TRUE),
+                   Median_Sensitivity = median(Sensitivity, na.rm = TRUE),
+                   Mean_Sensitivity = mean(Sensitivity, na.rm = TRUE),
+                   SD_Sensitivity = sd(Sensitivity, na.rm = TRUE),
+                   Median_Specificity = median(Specificity, na.rm = TRUE),
+                   Mean_Specificity = mean(Specificity, na.rm = TRUE),
+                   SD_Specificity = sd(Specificity, na.rm = TRUE),
                    .groups = "drop")
 
 readr::write_tsv(summary.df,

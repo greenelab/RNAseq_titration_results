@@ -343,11 +343,15 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
           
           if (only.kappa) {
             
-            kappa <- PredictCM(model = trained.model,
+            cm <- PredictCM(model = trained.model,
                                dt = pred.dt,
                                sample.df = sample.dataframe,
                                model.type = mdl.type,
-                               return.only.kappa = only.kappa)
+                               return.only.kappa = FALSE)
+            
+            kappa <- cm$overall["Kappa"]
+            sens <- mean(x$byClass[,"Sensitivity"])
+            spec <- mean(x$byClass[,"Specificity"])
             
             if (mdl.type == "glmnet") {
               # the model is glmnet
@@ -372,7 +376,9 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
             }
             
             return(data.frame("kappa" = kappa,
-                              "auc" = auc))
+                              "auc" = auc,
+                              "sens" = sens,
+                              "spec" = spec))
             
           } else {
             
@@ -460,7 +466,7 @@ PredictWrapper <- function(train.model.list, pred.list, sample.df,
       reshape2::melt(id.vars = NULL) %>%
       tidyr::pivot_wider(names_from = "variable",
                          values_from = "value")
-    colnames(kappa.df) <- c("perc.seq", "classifier", "norm.method", "kappa", "auc")
+    colnames(kappa.df) <- c("perc.seq", "classifier", "norm.method", "kappa", "auc", "sensitivity", "specificity")
     return(kappa.df)
   } else {  # otherwise, return two objects:
     # 1. the list of confusionMatrix objects (norm.list)
