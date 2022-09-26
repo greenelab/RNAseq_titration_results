@@ -98,18 +98,27 @@ convert_row_names <- function(expr, cancer_type) {
   # Inputs: gene expression matrix with genes in first column, and cancer type
   # Returns: modified gene expression matrix with gene names as row names
   
-  if (cancer_type == "GBM") {
-    expr <- expr %>%
-      mutate(gene = ensembldb::select(EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86,
-                                      keys = as.character(gene),
-                                      keytype = "GENEID",
-                                      columns = "SYMBOL"
-      )$SYMBOL)
+  if ("gene" %in% colnames(expr)) { # check that gene column exists
+    
+    if (cancer_type == "GBM") {
+      expr <- expr %>%
+        mutate(gene = ensembldb::select(EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86,
+                                        keys = as.character(gene),
+                                        keytype = "GENEID",
+                                        columns = "SYMBOL"
+        )$SYMBOL)
+    }
+    
+    column_to_rownames(expr,
+                       var = "gene"
+    )
+    
+  } else { # return NULL when no gene column exists (Seurat)
+    
+    return(NULL)
+    
   }
   
-  column_to_rownames(expr,
-                     var = "gene"
-  )
 }
 
 #### Failure of PLIER to converge may manifest in different error messages...
