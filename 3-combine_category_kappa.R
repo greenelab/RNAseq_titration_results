@@ -105,7 +105,7 @@ if (null_model) {
                 by = c("perc.seq", "classifier", "norm.method"),
                 suffix = c(".true", ".null")) %>%
       mutate(delta_kappa = kappa.true - kappa.null) %>% # regular kappa - null kappa
-      select(delta_kappa, perc.seq, classifier, norm.method)
+      select(delta_kappa, auc.true, sensitivity.true, specificity.true, perc.seq, classifier, norm.method)
     delta_kappa_seq.list[[pair_index]] <- seq.list[[pair_index]] %>%
       left_join(null_seq.list[[pair_index]],
                 by = c("perc.seq", "classifier", "norm.method"),
