@@ -46,14 +46,13 @@ output_filename <- file.path(output_directory,
                                    "_PLIER_jaccard.pdf"))
 
 # sample size levels
-sample_size_levels = c("Single Platform\n(half sample size)",
-                       "Combined Array and RNA-seq (full sample size)",
-                       "Single Platform\n(full sample size)")
+sample_size_levels <- c("Single Platform\n(half sample size)",
+                        "Combined Array and RNA-seq (full sample size)",
+                        "Single Platform\n(full sample size)")
 
 # Read in data
 jaccard_df <- read_tsv(plot_data_filename,
                        col_types = "dddddcdcddl") %>%
-  #filter(pseq == 50) %>%
   mutate(sample_size = case_when(nmeth == "array_only" ~ sample_size_levels[1],
                                  nmeth == "seq_only" ~ sample_size_levels[1],
                                  pseq == 0 ~ sample_size_levels[3],
