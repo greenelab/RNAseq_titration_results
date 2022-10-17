@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # This script runs analysis code and plotting scripts for the publication,
-# including both cancer types [both] or just one [BRCA] or GBM.
+# including both cancer types (both) or just one cancer type (BRCA or GBM).
 # The script calls:
 #  1. run_machine_learning_experiments.sh
 #  2. run_differential_expression_experiments.sh (subtype only)
