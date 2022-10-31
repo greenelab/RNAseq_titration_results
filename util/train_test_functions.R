@@ -182,38 +182,31 @@ TrainThreeModels <- function(dt, category, seed, folds.list){
                                                  index = folds.list, # list of 5 sets of indices
                                                  allowParallel = T) # use parallel processing
     
-    # With tryCatch, we first try to train the model using classProbs = TRUE.
-    # If it fails, we then try to train the model using classProbs = FALSE.
-    # Later, we can tell what value of classProbs succeeded with model$control$classProbs.
+    # Random Forest (works the same way with classProbs = TRUE)
+    train.list[["rf"]] <- train(t_dt,
+                                category,
+                                method = "ranger",
+                                trControl = fit.control.classProbs_TRUE,
+                                tuneLength = 3)
     
-    # Random Forest
-    train.list[["rf"]] <- tryCatch(train(t_dt,
-                                         category,
-                                         method = "ranger",
-                                         trControl = fit.control.classProbs_TRUE,
-                                         tuneLength = 3),
-                                   error = function(e) train(t_dt,
-                                                             category,
-                                                             method = "ranger",
-                                                             trControl = fit.control.classProbs_FALSE,
-                                                             tuneLength = 3))
-    # Linear SVM
-    train.list[["svm"]] <- tryCatch(train(t_dt,
-                                          category,
-                                          method = "svmLinear",
-                                          trControl = fit.control.classProbs_TRUE,
-                                          tuneLength = 3),
-                                    error = function(e) train(t_dt,
-                                                              category,
-                                                              method = "svmLinear",
-                                                              trControl = fit.control.classProbs_FALSE,
-                                                              tuneLength = 3))
+    # Linear SVM (works differently with classProbs = TRUE, so make it FALSE (default))
+    # see https://stat.ethz.ch/pipermail/r-help/2013-November/363273.html
+    train.list[["svm"]] <- train(t_dt,
+                                 category,
+                                 method = "svmLinear",
+                                 trControl = fit.control.classProbs_FALSE,
+                                 tuneLength = 3)
 
     train.list[["seeds"]] <- seed.list
+    
     return(train.list)
+    
   } else {
+    
     return(list(NULL))
+    
   }
+  
 }
 
 RestructureNormList <- function(norm.list){

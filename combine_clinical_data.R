@@ -53,7 +53,11 @@ mutation_df <- read_tsv(mutation_input_filepath, # treat all columns equally
 # start join with clinical_df because later scripts expect column name = Sample
 combined_df <- clinical_df %>%
   left_join(mutation_df,
-            by = c("Sample" = "tcga_id"))
+            by = c("Sample" = "tcga_id")) %>%
+  mutate(PIK3CA = case_when(PIK3CA == 0 ~ "No_PIK3CA_mutation",
+                            TRUE ~ "PIK3CA_mutation"),
+         TP53 = case_when(TP53 == 0 ~ "No_TP53_mutation",
+                          TRUE ~ "TP53_mutation"))
 
 ################################################################################
 # Save output file
