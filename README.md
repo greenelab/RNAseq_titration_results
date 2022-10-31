@@ -36,6 +36,9 @@ We evaluated seven normalization approaches for all methods:
 6. [Training Distribution Matching](https://peerj.com/articles/1621/) (TDM)
 7. z-scoring (Z)
 
+We also explored the use of [Seurat](https://satijalab.org/seurat/) to normalize array and RNA-seq data.
+Due to low sample numbers at the edges of our titration protocol, many experimental conditions could not be integrated.
+
 ## Requirements
 
 We recommend using the docker image `envest/rnaseq_titration_results:R-4.1.2` to handle package and dependency installation.
