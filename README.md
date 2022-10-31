@@ -150,4 +150,5 @@ This work was supported by the Gordon and Betty Moore Foundation [GBMF 4552], Al
 
 **Can I normalize array data to match RNA-seq data?**
 
-*We generally do not advise this study design. We expect array data to have less precision at higher expression levels due to saturation, while counts-based RNA-seq data does not have that problem. We recommend reshaping the broader, more precise data (RNA-seq) to fit the narrower and less precise (array) distribution. See also [TDM FAQs](https://github.com/greenelab/TDM#faq).*
+*We generally do not advise this study design. We expect array data to have less precision at higher expression levels due to saturation, while counts-based RNA-seq data does not have that problem. We recommend reshaping the data expected to have more dynamic range (RNA-seq) to fit the narrower and less precise (array) distribution. See also [TDM FAQs](https://github.com/greenelab/TDM#faq).*
+
