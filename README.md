@@ -136,9 +136,8 @@ and check the output in `results/array_rnaseq_ratio`.
 
 | Version | Relevant links |
 | :------ | :------------- |
-| [v2.1](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.1) | [Figshare+ data](https://doi.org/10.25452/figshare.plus.19629864.v2), [Data for plots](https://doi.org/10.6084/m9.figshare.19686453.v2)   |
-
-| [v2.0](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.0) | [Figshare+ data](https://doi.org/10.25452/figshare.plus.19629864.v1), [Data for plots](https://doi.org/10.6084/m9.figshare.19686453.v1)   |
+| [v2.1](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.1) | [Figshare+ data](https://doi.org/10.25452/figshare.plus.19629864.v2), [Data for plots](https://doi.org/10.6084/m9.figshare.19686453.v2) |
+| [v2.0](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.0) | [Figshare+ data](https://doi.org/10.25452/figshare.plus.19629864.v1), [Data for plots](https://doi.org/10.6084/m9.figshare.19686453.v1) |
 | [v1.1](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v1.1) |  [Figshare full results](https://doi.org/10.6084/m9.figshare.5035997.v2) |
 | [v1.0](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v1.0) | [Pre-print](https://doi.org/10.1101/118349) |
 
