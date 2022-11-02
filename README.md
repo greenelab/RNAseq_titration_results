@@ -11,10 +11,8 @@
 - [Recreate manuscript results](#recreate-manuscript-results)
 - [Methods](#methods)
   - [Machine Learning Pipeline](#machine-learning-pipeline)
-  - [Differential Expression Pipeline](#differential-expression-pipeline)
 - [Running individual experiments](#running-individual-experiments)
     - [Machine learning](#machine-learning)
-    - [Differential expression](#differential-expression)
     - [Other scripts](#other-scripts)
 - [Manuscript versions](#manuscript-versions)
 - [Funding](#funding)
@@ -28,23 +26,25 @@ evaluations, as well as differential expression and pathway analyses, to assess 
 normalization methods are best suited for combining data from microarray and 
 RNA-seq platforms. 
 
-We evaluated six normalization approaches for all methods: 
+We evaluated seven normalization approaches for all methods: 
 
 1. log-transformation (LOG) 
 2. [non-paranormal transformation](https://arxiv.org/abs/0903.0649) (NPN)
 3. [quantile normalization](http://bmbolstad.com/misc/normalize/bolstad_norm_paper.pdf) (QN)
-4. quantile normalization followed by z-scoring (QN-Z)
-5. [Training Distribution Matching](https://peerj.com/articles/1621/) (TDM)
-6. z-scoring (Z)
+4. [quantile normalization via CrossNorm](https://www.nature.com/articles/srep18898)
+5. quantile normalization followed by z-scoring (QN-Z)
+6. [Training Distribution Matching](https://peerj.com/articles/1621/) (TDM)
+7. z-scoring (Z)
 
-
+We also explored the use of [Seurat](https://satijalab.org/seurat/) to normalize array and RNA-seq data.
+Due to low sample numbers at the edges of our titration protocol, many experimental conditions could not be integrated.
 
 ## Requirements
 
 We recommend using the docker image `envest/rnaseq_titration_results:R-4.1.2` to handle package and dependency installation.
 See `docker/R-4.1.2/Dockerfile` for more information.
 
-Our analysis ([v2.0](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.0)) was run using 7 cores on an AWS instance with 16 cores, 128 GB memory, and an allocated 1 TB of space.
+Our analysis ([v2.1](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.1)) was run using 7 cores on an AWS instance with 16 cores, 128 GB memory, and an allocated 1 TB of space.
 
 ### Obtaining and running the Docker container
 
@@ -84,7 +84,7 @@ After data has been downloaded, running
 bash run_all_analyses_and_plots.sh
 ```
 
-with [v2.0](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.0) of this repository will reproduce the results presented in our manuscript.
+with [v2.1](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.1) of this repository will reproduce the results presented in our manuscript.
 We recommend running all analyses within the project Docker container.
 
 ## Methods
@@ -110,26 +110,6 @@ We projected holdout sets onto and back out of the training set space using Prin
 We then used the trained subtype classifiers to predict on the reconstructed holdout sets.
 [PLIER](https://github.com/wgmao/PLIER) (Pathway-Level Information ExtractoR) identified coordinated sets of genes in each cancer type.
 
-### Differential Expression Pipeline
-
-Here's a schematic overview of our main differential expression experiment:
-
-![](diagrams/RNA-seq_titration_diff_expression_overview.png)
-
-**Overview of differential expression experiment.** 
-
-1. All matched samples were considered when building the platform-specific “silver standards.”
-These standards are the genes that were differentially expressed at a specified False Discovery Rate (FDR) using data sets comprised entirely of one platform and processed in a standard way: log2-transformed 
-microarray data and “untransformed” RNA-seq data. 
-2. RNA-seq samples were "titrated" into the data set, 10% at a time (0-100%), replacing their matched array samples, resulting in eleven experimental sets for each normalization method. 
-3. Differentially expressed genes (DEGs) were identified usingthe `limma` package.
-For BRCA, we compared the Her2 and LumA subtypes as well as Basal v. all other subtypes. 
-For GBM, we compared the Classical and Mesenchymal subtypes as well as Proneural v. all other subtypes.
-4. Lists of experimental DEGs were compared to standard genesets using Jaccard similarity and Spearman rank correlation. 
-
-In the "small n" experiment, between 3 and 50 samples were selected from each subtype for DEG comparison.
-
-
 ## Running individual experiments
 
 #### Machine learning
@@ -146,24 +126,6 @@ where
 - `[prediction task]` is `subtype`, `TP53`, or `PIK3CA`
 - `[n cores]` is the number of cores you want to run in parallel
 
-#### Differential expression
-
-⚠️ _This requires the data to be processed to include matched samples only, and split into training and test sets via `0-expression_data_overlap_and_split.R` in the machine learning pipeline._
-
-To run the differential expression pipeline, run in top directory:
-
-```
-bash run_differential_expression_experiments.sh [cancer type] [subtype vs others] [subtype vs subtype] [subtype vs subtype small] [n cores]
-```
-
-where 
-
-- `[cancer type]` is `BRCA` or `GBM`
-- `[subtype vs others]` is the subtype to be compared against all other subtypes
-- `[subtype vs subtype]` are the two subtypes to be compared (comma-separated, e.g. `Her2,LumA`)
-- `[subtype vs subtype small]` are the two subtypes to be compared at small sample sizes (comma-separated, e.g. `Her2,LumA`)
-- `[n cores]` is the number of cores you want to run in parallel
-
 #### Other scripts
 
 To search for the number of publicly available microarray and RNA-seq samples from [GEO](https://www.ncbi.nlm.nih.gov/geo/) and [ArrayExpress](https://www.ebi.ac.uk/arrayexpress/), run
@@ -177,10 +139,19 @@ and check the output in `results/array_rnaseq_ratio`.
 
 | Version | Relevant links |
 | :------ | :------------- |
-| [v2.0](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.0) | [Figshare+ data](https://doi.org/10.25452/figshare.plus.19629864.v1), [Data for plots](https://doi.org/10.6084/m9.figshare.19686453)   |
+| [v2.1](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.1) | [Figshare+ data](https://doi.org/10.25452/figshare.plus.19629864.v2), [Data for plots](https://doi.org/10.6084/m9.figshare.19686453.v2) |
+| [v2.0](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.0) | [Figshare+ data](https://doi.org/10.25452/figshare.plus.19629864.v1), [Data for plots](https://doi.org/10.6084/m9.figshare.19686453.v1) |
 | [v1.1](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v1.1) |  [Figshare full results](https://doi.org/10.6084/m9.figshare.5035997.v2) |
 | [v1.0](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v1.0) | [Pre-print](https://doi.org/10.1101/118349) |
 
 ## Funding
 
 This work was supported by the Gordon and Betty Moore Foundation [GBMF 4552], Alex's Lemonade Stand Foundation [GR-000002471], and the National Institutes of Health [T32-AR007442, U01-TR001263, R01-CA237170, K12GM081259].
+
+# FAQ
+---
+
+**Can I normalize array data to match RNA-seq data?**
+
+*We generally do not advise this study design. We expect array data to have less precision at higher expression levels due to saturation, while counts-based RNA-seq data does not have that problem. We recommend reshaping the data expected to have more dynamic range (RNA-seq) to fit the narrower and less precise (array) distribution. See also [TDM FAQs](https://github.com/greenelab/TDM#faq).*
+
