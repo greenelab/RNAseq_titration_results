@@ -430,6 +430,7 @@ for (seed_index in 1:length(norm.train.files)) {
 }
 
 if (length(pathways_list) > 0) {
+  
   # melt pathways list into one data frame
   pathways_df <- reshape2::melt(pathways_list,
                                 id.vars = c("pathway",
@@ -444,9 +445,9 @@ if (length(pathways_list) > 0) {
   readr::write_tsv(pathways_df,
                    pathways_filename
   )
-                   
   
 }
+
 if (length(jaccard_list) > 0) {
   
   # melt jaccard list elements into one data frame
