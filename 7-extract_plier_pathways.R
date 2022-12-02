@@ -66,11 +66,11 @@ norm.train.files <- file.path(
 
 # define output files
 pathways_filename <- file.path(
-  res.dir,
+  plot.data.dir,
   str_c(file_identifier, "_PLIER_pathways",
         ifelse(permute, # distinguish between permuted/not permuted output files
-               ".permuted.rds",
-               ".rds"))
+               ".permuted.tsv",
+               ".tsv"))
 )
 
 plot_data_filename <- file.path(
@@ -249,6 +249,7 @@ return_plier_jaccard_global <- function(test_PLIER, global_pathways) {
 
 #### loop over data for each seed and get PLIER results ------------------------
 
+pathways_list <- list()
 jaccard_list <- list()
 
 for (seed_index in 1:length(norm.train.files)) {
@@ -405,9 +406,20 @@ for (seed_index in 1:length(norm.train.files)) {
                                             check_plier_failure_to_converge
   )
   
-  # Save plier_results_list to file
-  readr::write_rds(x = plier_results_list,
-                   file = pathways_filename)
+  # plier_results_list is structured:
+  # Level 0 (percentage RNA-seq)
+  # Level 1 (normalization method)
+  # Level 2 (PLIER object)
+  pathways_list[[seed_index]] <- purrr::modify_depth(
+    plier_results_list, 2,
+    function(x) x[["summary"]]) %>%
+    reshape2::melt(id.var = c("pathway", "LV index")) %>%
+    tidyr::pivot_wider(names_from = "variable",
+                       values_from = "value") %>%
+    dplyr::rename("LV_index" = "LV index",
+                  "nmeth" = "L2",
+                  "rseq" = "L1",
+                  "pvalue" = "p-value")
   
   # Return pathway comparison for appropriate level of PLIER results list
   jaccard_list[[seed_index]] <- purrr::modify_depth(
@@ -417,6 +429,24 @@ for (seed_index in 1:length(norm.train.files)) {
   
 }
 
+if (length(pathways_list) > 0) {
+  # melt pathways list into one data frame
+  pathways_df <- reshape2::melt(pathways_list,
+                                id.vars = c("pathway",
+                                            "LV_index",
+                                            "nmeth",
+                                            "pseq",
+                                            "AUC",
+                                            "pvalue",
+                                            "FDR")) %>%
+    dplyr::rename("seed_index" = "L1")
+  
+  readr::write_tsv(pathways_df,
+                   pathways_filename
+  )
+                   
+  
+}
 if (length(jaccard_list) > 0) {
   
   # melt jaccard list elements into one data frame
