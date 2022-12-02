@@ -65,6 +65,14 @@ norm.train.files <- file.path(
 )
 
 # define output files
+pathways_filename <- file.path(
+  res.dir,
+  str_c(file_identifier, "_PLIER_pathways",
+        ifelse(permute, # distinguish between permuted/not permuted output files
+               ".permuted.rds",
+               ".rds"))
+)
+
 plot_data_filename <- file.path(
   plot.data.dir,
   str_c(file_identifier, "_PLIER_jaccard",
@@ -396,6 +404,10 @@ for (seed_index in 1:length(norm.train.files)) {
   plier_results_list <- purrr::modify_depth(plier_results_list, 2,
                                             check_plier_failure_to_converge
   )
+  
+  # Save plier_results_list to file
+  readr::write_rds(x = plier_results_list,
+                   file = pathways_filename)
   
   # Return pathway comparison for appropriate level of PLIER results list
   jaccard_list[[seed_index]] <- purrr::modify_depth(
