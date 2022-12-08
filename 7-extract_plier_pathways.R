@@ -418,7 +418,7 @@ for (seed_index in 1:length(norm.train.files)) {
                        values_from = "value") %>%
     dplyr::rename("LV_index" = "LV index",
                   "nmeth" = "L2",
-                  "rseq" = "L1",
+                  "pseq" = "L1",
                   "pvalue" = "p-value")
   
   # Return pathway comparison for appropriate level of PLIER results list
