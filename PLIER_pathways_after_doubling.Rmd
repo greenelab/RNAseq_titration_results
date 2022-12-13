@@ -12,7 +12,7 @@ meaningful_difference <- 0.2
 Here we look for cancer pathways that are found more frequently in the data with the full sample size than in data with half the sample size.
 We ran PLIER 10 times using each combination of data normalization method and sample size (half or full).
 Out of those 10 runs, we found the proportion of times each pathway was significantly associated with a latent variable.
-We set an arbitrary "meaningful difference" threshold of `r meaningful_difference` to detect when that proportion was meaningfully greater using full sample size compared to half sample size.
+We set an arbitrary "meaningful difference" threshold of `r meaningful_difference` to detect when that proportion was meaningfully greater using full sample size compared to half sample size and require array and RNA-seq data to both to satisfy the condition.
 We also arbitrarily limit results to those pathways found in over half of runs using the full size data.
 
 ### Load packages and pathways
@@ -38,16 +38,15 @@ gbm_pathways_df <- read_tsv("plots/data/GBM_subtype_PLIER_pathways.tsv") %>%
 ### Filter data to identify pathways detected more frequently in full data
 ```{r}
 
-bind_rows(brca_pathways_df, gbm_pathways_df) %>%
+bind_rows(brca_pathways_df,
+          gbm_pathways_df) %>%
   filter(FDR < 0.05) %>%
   group_by(nmeth, pseq, pathway, cancer_type) %>%
   summarize(n_seeds = length(unique(seed_index)),
             prop_seeds = n_seeds/10,
             .groups = "drop") %>%
-  mutate(nmeth = str_replace(nmeth, " ", "_")) %>%
-  mutate(nmeth = str_replace(nmeth, "-", "_")) %>%
-  mutate(nmeth = str_remove_all(nmeth, "\\(")) %>%
-  mutate(nmeth = str_remove_all(nmeth, "\\)")) %>%
+  mutate(nmeth = str_remove_all(nmeth, "[\\(\\)]")) %>%
+  mutate(nmeth = str_replace_all(nmeth, c(" " = "_", "-" = "_"))) %>%
   mutate(nmeth_pseq = str_c(nmeth, pseq, sep = "_")) %>%
   select(cancer_type, pathway, prop_seeds, nmeth_pseq) %>%
   pivot_wider(id_cols = c("cancer_type", "pathway"),
@@ -64,6 +63,14 @@ bind_rows(brca_pathways_df, gbm_pathways_df) %>%
   arrange(cancer_type) %>%
   knitr::kable()
 ```
+
+| variable_name | meaning |
+| --- | --- |
+| `array_only_50` | LOG transformed array data (half sample size) |
+| `seq_only_50` | LOG transformed RNA-seq data (half sample size) |
+| `log_0` | LOG transformed array data (full sample size) |
+| `log_100` | LOG transformed RNA-seq data (full sample size) |
+| `npn_50` | NPN transformed data, 50% array and 50% RNA-seq (full sample size) |
 
 ### Citation:
 Mao W, Zaslavsky E, Hartmann BM, Sealfon SC, Chikina M. Pathway-level information extractor (PLIER) for gene expression data. Nat Methods. 2019;16: 607–610.
