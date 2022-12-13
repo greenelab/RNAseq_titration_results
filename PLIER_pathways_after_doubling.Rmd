@@ -1,9 +1,21 @@
 ---
-title: "PLIER pathways found after doubling sample size"
+title: "PLIER pathways analysis"
 output: html_notebook
 ---
 
-Brief explanation
+```{r}
+meaningful_difference <- 0.2
+```
+
+### What additional pathways are identified by PLIER after doubling the sample size?
+
+Here we look for cancer pathways that are found more frequently in the data with the full sample size than in data with half the sample size.
+We ran PLIER 10 times using each combination of data normalization method and sample size (half or full).
+Out of those 10 runs, we found the proportion of times each pathway was significantly associated with a latent variable.
+We set an arbitrary "meaningful difference" threshold of `r meaningful_difference` to detect when that proportion was meaningfully greater using full sample size compared to half sample size.
+We also arbitrarily limit results to those pathways found in over half of runs using the full size data.
+
+### Load packages and pathways
 
 ```{r}
 library(tidyverse)
@@ -15,15 +27,15 @@ data(oncogenicPathways)
 data(svmMarkers)
 ```
 
+### Read in data for each cancer type
 ```{r}
 brca_pathways_df <- read_tsv("plots/data/BRCA_subtype_PLIER_pathways.tsv") %>%
   mutate(cancer_type = "BRCA")
 gbm_pathways_df <- read_tsv("plots/data/GBM_subtype_PLIER_pathways.tsv") %>%
   mutate(cancer_type = "GBM")
-
-meaningful_difference <- 0.2
 ```
 
+### Filter data to identify pathways detected more frequently in full data
 ```{r}
 
 bind_rows(brca_pathways_df, gbm_pathways_df) %>%
@@ -52,3 +64,6 @@ bind_rows(brca_pathways_df, gbm_pathways_df) %>%
   arrange(cancer_type) %>%
   knitr::kable()
 ```
+
+### Citation:
+Mao W, Zaslavsky E, Hartmann BM, Sealfon SC, Chikina M. Pathway-level information extractor (PLIER) for gene expression data. Nat Methods. 2019;16: 607–610.
