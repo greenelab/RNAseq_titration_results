@@ -53,8 +53,8 @@ bind_rows(brca_pathways_df,
               names_from = nmeth_pseq,
               values_from = prop_seeds) %>%
   mutate_if(is.numeric, replace_na, 0) %>%
-  filter(log_0 - array_only_50 >= .2,
-         log_100 - seq_only_50 >= .2,
+  filter(log_0 - array_only_50 >= meaningful_difference,
+         log_100 - seq_only_50 >= meaningful_difference,
          log_0 > 0.5,
          log_100 > 0.5,
          npn_50 > 0.5) %>%
