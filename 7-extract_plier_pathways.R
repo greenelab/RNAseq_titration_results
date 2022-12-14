@@ -65,6 +65,14 @@ norm.train.files <- file.path(
 )
 
 # define output files
+PLIER_objects_filename <- file.path(
+  res.dir,
+  str_c(file_identifier, "_PLIER_objects_list",
+        ifelse(permute, # distinguish between permuted/not permuted output files
+               ".permuted.rds",
+               ".rds"))
+)
+
 pathways_filename <- file.path(
   plot.data.dir,
   str_c(file_identifier, "_PLIER_pathways",
@@ -405,6 +413,10 @@ for (seed_index in 1:length(norm.train.files)) {
   plier_results_list <- purrr::modify_depth(plier_results_list, 2,
                                             check_plier_failure_to_converge
   )
+  
+  # save list of PLIER objects
+  readr::write_rds(plier_results_list,
+                   file = PLIER_objects_filename)
   
   # plier_results_list is structured:
   # Level 0 (percentage RNA-seq)
