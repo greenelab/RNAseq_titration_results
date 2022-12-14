@@ -257,6 +257,7 @@ return_plier_jaccard_global <- function(test_PLIER, global_pathways) {
 
 #### loop over data for each seed and get PLIER results ------------------------
 
+plier_objects_list <- list()
 pathways_list <- list()
 jaccard_list <- list()
 
@@ -414,9 +415,7 @@ for (seed_index in 1:length(norm.train.files)) {
                                             check_plier_failure_to_converge
   )
   
-  # save list of PLIER objects
-  readr::write_rds(plier_results_list,
-                   file = PLIER_objects_filename)
+  plier_objects_list[[seed_index]] <- plier_results_list
   
   # plier_results_list is structured:
   # Level 0 (percentage RNA-seq)
@@ -440,6 +439,10 @@ for (seed_index in 1:length(norm.train.files)) {
   )
   
 }
+
+# save list of PLIER objects
+readr::write_rds(plier_objects_list,
+                 file = PLIER_objects_filename)
 
 if (length(pathways_list) > 0) {
   
