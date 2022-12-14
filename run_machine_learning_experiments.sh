@@ -32,5 +32,4 @@ if [ $predictor == "subtype" ]; then
   Rscript 6-save_recon_error_kappa_data.R --cancer_type $cancer_type --predictor $predictor
   Rscript 7-extract_plier_pathways.R --cancer_type $cancer_type --ncores $ncores
   Rscript 7-extract_plier_pathways.R --cancer_type $cancer_type --ncores $ncores --permute
-  Rscript -e "rmarkdown::render('8-PLIER_pathways_analysis.Rmd', clean = TRUE)"
 fi

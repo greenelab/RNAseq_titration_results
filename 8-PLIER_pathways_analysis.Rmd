@@ -26,12 +26,42 @@ library(tidyverse)
 data("oncogenicPathways", package = "PLIER")
 ```
 
+
+### Set input file names
+```{r}
+plots_data_dir <- here::here("plots", "data")
+brca_filename <- file.path(plots_data_dir, "BRCA_subtype_PLIER_pathways.tsv")
+gbm_filename <- file.path(plots_data_dir, "GBM_subtype_PLIER_pathways.tsv")
+```
+
 ### Read in data for each cancer type
 ```{r}
-brca_pathways_df <- read_tsv("plots/data/BRCA_subtype_PLIER_pathways.tsv") %>%
-  mutate(cancer_type = "BRCA")
-gbm_pathways_df <- read_tsv("plots/data/GBM_subtype_PLIER_pathways.tsv") %>%
-  mutate(cancer_type = "GBM")
+pathways_df <- NULL
+
+if (file.exists(brca_filename)) {
+  brca_pathways_df <- read_tsv(brca_filename) %>%
+    mutate(cancer_type = "BRCA")
+  pathways_df <- bind_rows(pathways_df,
+                           brca_pathways_df)
+} else {
+  message(str_c("BRCA file ", brca_filename, " does not exist."))
+}
+
+if (file.exists(gbm_filename)) {
+  gbm_pathways_df <- read_tsv(gbm_filename) %>%
+    mutate(cancer_type = "GBM")
+  pathways_df <- bind_rows(pathways_df,
+                           gbm_pathways_df)
+} else {
+  message(str_c("GBM file ", gbm_filename, " does not exist."))
+}
+
+if (!file.exists(brca_filename) & !file.exists(gbm_filename)) {
+  stop(str_c("Neither BRCA file ", brca_filename,
+             " nor GBM file ", gbm_filename,
+             " exists."))
+}
+
 ```
 
 ### Filter data to identify oncogenic pathways detected more frequently in full data
