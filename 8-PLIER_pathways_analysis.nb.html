@@ -9,6 +9,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
+<meta name="author" content="Steven Foltz" />
 
 
 <title>PLIER pathways analysis</title>
@@ -1761,6 +1762,8 @@ pre code {
 
 
 <h1 class="title toc-ignore">PLIER pathways analysis</h1>
+<h4 class="author">Steven Foltz</h4>
+<h4 class="date">December 2022</h4>
 
 </div>
 
@@ -1768,25 +1771,29 @@ pre code {
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoibWVhbmluZ2Z1bF9kaWZmZXJlbmNlIDwtIDAuMiJ9 -->
-<pre class="r"><code>meaningful_difference &lt;- 0.2</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjpbIm1lYW5pbmdmdWxfZGlmZmVyZW5jZSA8LSAwLjIiLCJuX3JlcGVhdHMgPC0gMTAiXX0= -->
+<pre class="r"><code>meaningful_difference &lt;- 0.2
+n_repeats &lt;- 10</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <div id="what-additional-pathways-are-identified-by-plier-after-doubling-the-sample-size" class="section level3">
 <h3>What additional pathways are identified by PLIER after doubling the
 sample size?</h3>
-<p>Here we look for cancer pathways that are found more frequently in
-the data with the full sample size than in data with half the sample
-size. We ran PLIER 10 times using each combination of data normalization
-method and sample size (half or full). Out of those 10 runs, we found
-the proportion of times each pathway was significantly associated with a
-latent variable. We set an arbitrary “meaningful difference” threshold
-of 0.2 to detect when that proportion was meaningfully greater using
-full sample size compared to half sample size and require array and
-RNA-seq data to both to satisfy the condition. We also arbitrarily limit
-results to those pathways found in over half of runs using the full size
-data.</p>
+<p>Here we look for oncogenic pathways (defined by <a href="https://www.gsea-msigdb.org/gsea/msigdb/human/genesets.jsp?collection=C6">GSEA
+MSigDB C6</a>) that are found more frequently in the data with the full
+sample size than in data with half the sample size. By focusing on
+pathways that are reliably detected more often in the full sample size
+data, we can identify stable patterns that emerge when more data is
+available. We ran PLIER 10 times using each combination of data
+normalization method and sample size (half or full). Out of those 10
+runs, we found the proportion of times each oncogenic pathway was
+significantly associated with a latent variable. We set an arbitrary
+“meaningful difference” threshold of 0.2 to detect when that proportion
+was meaningfully greater using full sample size compared to half sample
+size and require array and RNA-seq data to both to satisfy the
+condition. We also arbitrarily limit results to those pathways found in
+over half of runs using the full size data.</p>
 </div>
 <div id="load-packages-and-pathways" class="section level3">
 <h3>Load packages and pathways</h3>
@@ -1809,59 +1816,20 @@ data.</p>
 ✖ dplyr::filter() masks stats::filter()
 ✖ dplyr::lag()    masks stats::lag()</code></pre>
 <!-- rnb-message-end -->
-<!-- rnb-source-begin eyJkYXRhIjoibGlicmFyeShQTElFUikifQ== -->
-<pre class="r"><code>library(PLIER)</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiZGF0YShcIm9uY29nZW5pY1BhdGh3YXlzXCIsIHBhY2thZ2UgPSBcIlBMSUVSXCIpIn0= -->
+<pre class="r"><code>data(&quot;oncogenicPathways&quot;, package = &quot;PLIER&quot;)</code></pre>
 <!-- rnb-source-end -->
-<!-- rnb-message-begin eyJkYXRhIjoiTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiBSQ29sb3JCcmV3ZXJcbiJ9 -->
-<pre><code>Loading required package: RColorBrewer</code></pre>
-<!-- rnb-message-end -->
-<!-- rnb-message-begin eyJkYXRhIjoiTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiBncGxvdHNcbiJ9 -->
-<pre><code>Loading required package: gplots</code></pre>
-<!-- rnb-message-end -->
-<!-- rnb-message-begin eyJkYXRhIjoiXG5BdHRhY2hpbmcgcGFja2FnZTogJ2dwbG90cydcbiJ9 -->
-<pre><code>
-Attaching package: &#39;gplots&#39;</code></pre>
-<!-- rnb-message-end -->
-<!-- rnb-message-begin eyJkYXRhIjoiVGhlIGZvbGxvd2luZyBvYmplY3QgaXMgbWFza2VkIGZyb20gJ3BhY2thZ2U6c3RhdHMnOlxuXG4gICAgbG93ZXNzXG4ifQ== -->
-<pre><code>The following object is masked from &#39;package:stats&#39;:
-
-    lowess</code></pre>
-<!-- rnb-message-end -->
-<!-- rnb-message-begin eyJkYXRhIjoiTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiBwaGVhdG1hcFxuIn0= -->
-<pre><code>Loading required package: pheatmap</code></pre>
-<!-- rnb-message-end -->
-<!-- rnb-message-begin eyJkYXRhIjoiTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiBnbG1uZXRcbiJ9 -->
-<pre><code>Loading required package: glmnet</code></pre>
-<!-- rnb-message-end -->
-<!-- rnb-message-begin eyJkYXRhIjoiTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiBNYXRyaXhcbiJ9 -->
-<pre><code>Loading required package: Matrix</code></pre>
-<!-- rnb-message-end -->
-<!-- rnb-message-begin eyJkYXRhIjoiXG5BdHRhY2hpbmcgcGFja2FnZTogJ01hdHJpeCdcbiJ9 -->
-<pre><code>
-Attaching package: &#39;Matrix&#39;</code></pre>
-<!-- rnb-message-end -->
-<!-- rnb-message-begin eyJkYXRhIjoiVGhlIGZvbGxvd2luZyBvYmplY3RzIGFyZSBtYXNrZWQgZnJvbSAncGFja2FnZTp0aWR5cic6XG5cbiAgICBleHBhbmQsIHBhY2ssIHVucGFja1xuIn0= -->
-<pre><code>The following objects are masked from &#39;package:tidyr&#39;:
-
-    expand, pack, unpack</code></pre>
-<!-- rnb-message-end -->
-<!-- rnb-message-begin eyJkYXRhIjoiTG9hZGVkIGdsbW5ldCA0LjEtM1xuIn0= -->
-<pre><code>Loaded glmnet 4.1-3</code></pre>
-<!-- rnb-message-end -->
-<!-- rnb-message-begin eyJkYXRhIjoiTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiBrbml0clxuIn0= -->
-<pre><code>Loading required package: knitr</code></pre>
-<!-- rnb-message-end -->
-<!-- rnb-message-begin eyJkYXRhIjoiTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiByc3ZkXG4ifQ== -->
-<pre><code>Loading required package: rsvd</code></pre>
-<!-- rnb-message-end -->
-<!-- rnb-message-begin eyJkYXRhIjoiTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiBxdmFsdWVcbiJ9 -->
-<pre><code>Loading required package: qvalue</code></pre>
-<!-- rnb-message-end -->
-<!-- rnb-source-begin eyJkYXRhIjpbImRhdGEoYmxvb2RDZWxsTWFya2Vyc0lSSVNETUFQKSIsImRhdGEoY2Fub25pY2FsUGF0aHdheXMpIiwiZGF0YShvbmNvZ2VuaWNQYXRod2F5cykiLCJkYXRhKHN2bU1hcmtlcnMpIl19 -->
-<pre class="r"><code>data(bloodCellMarkersIRISDMAP)
-data(canonicalPathways)
-data(oncogenicPathways)
-data(svmMarkers)</code></pre>
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+</div>
+<div id="set-input-file-names" class="section level3">
+<h3>Set input file names</h3>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjpbInBsb3RzX2RhdGFfZGlyIDwtIGhlcmU6OmhlcmUoXCJwbG90c1wiLCBcImRhdGFcIikiLCJicmNhX2ZpbGVuYW1lIDwtIGZpbGUucGF0aChwbG90c19kYXRhX2RpciwgXCJCUkNBX3N1YnR5cGVfUExJRVJfcGF0aHdheXMudHN2XCIpIiwiZ2JtX2ZpbGVuYW1lIDwtIGZpbGUucGF0aChwbG90c19kYXRhX2RpciwgXCJHQk1fc3VidHlwZV9QTElFUl9wYXRod2F5cy50c3ZcIikiXX0= -->
+<pre class="r"><code>plots_data_dir &lt;- here::here(&quot;plots&quot;, &quot;data&quot;)
+brca_filename &lt;- file.path(plots_data_dir, &quot;BRCA_subtype_PLIER_pathways.tsv&quot;)
+gbm_filename &lt;- file.path(plots_data_dir, &quot;GBM_subtype_PLIER_pathways.tsv&quot;)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
@@ -1870,9 +1838,17 @@ data(svmMarkers)</code></pre>
 <h3>Read in data for each cancer type</h3>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYnJjYV9wYXRod2F5c19kZiA8LSByZWFkX3RzdihcInBsb3RzL2RhdGEvQlJDQV9zdWJ0eXBlX1BMSUVSX3BhdGh3YXlzLnRzdlwiKSAlPiVcbiAgbXV0YXRlKGNhbmNlcl90eXBlID0gXCJCUkNBXCIpIn0= -->
-<pre class="r"><code>brca_pathways_df &lt;- read_tsv(&quot;plots/data/BRCA_subtype_PLIER_pathways.tsv&quot;) %&gt;%
-  mutate(cancer_type = &quot;BRCA&quot;)</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjpbInBhdGh3YXlzX2RmIDwtIE5VTEwiLCIiLCJpZiAoZmlsZS5leGlzdHMoYnJjYV9maWxlbmFtZSkpIHtcbiAgYnJjYV9wYXRod2F5c19kZiA8LSByZWFkX3RzdihicmNhX2ZpbGVuYW1lKSAlPiVcbiAgICBtdXRhdGUoY2FuY2VyX3R5cGUgPSBcIkJSQ0FcIilcbiAgcGF0aHdheXNfZGYgPC0gYmluZF9yb3dzKHBhdGh3YXlzX2RmLFxuICAgICAgICAgICAgICAgICAgICAgICAgICAgYnJjYV9wYXRod2F5c19kZilcbn0gZWxzZSB7XG4gIG1lc3NhZ2Uoc3RyX2MoXCJCUkNBIGZpbGUgXCIsIGJyY2FfZmlsZW5hbWUsIFwiIGRvZXMgbm90IGV4aXN0LlwiKSlcbn0iXX0= -->
+<pre class="r"><code>pathways_df &lt;- NULL
+
+if (file.exists(brca_filename)) {
+  brca_pathways_df &lt;- read_tsv(brca_filename) %&gt;%
+    mutate(cancer_type = &quot;BRCA&quot;)
+  pathways_df &lt;- bind_rows(pathways_df,
+                           brca_pathways_df)
+} else {
+  message(str_c(&quot;BRCA file &quot;, brca_filename, &quot; does not exist.&quot;))
+}</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-message-begin eyJkYXRhIjoiUm93czogNTk3MDIgQ29sdW1uczogOFxu4pSA4pSAIENvbHVtbiBzcGVjaWZpY2F0aW9uIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgFxuRGVsaW1pdGVyOiBcIlxcdFwiXG5jaHIgKDIpOiBwYXRod2F5LCBubWV0aFxuZGJsICg2KTogTFZfaW5kZXgsIHBzZXEsIEFVQywgcHZhbHVlLCBGRFIsIHNlZWRfaW5kZXhcblxu4oS5IFVzZSBgc3BlYygpYCB0byByZXRyaWV2ZSB0aGUgZnVsbCBjb2x1bW4gc3BlY2lmaWNhdGlvbiBmb3IgdGhpcyBkYXRhLlxu4oS5IFNwZWNpZnkgdGhlIGNvbHVtbiB0eXBlcyBvciBzZXQgYHNob3dfY29sX3R5cGVzID0gRkFMU0VgIHRvIHF1aWV0IHRoaXMgbWVzc2FnZS5cbiJ9 -->
 <pre><code>Rows: 59702 Columns: 8
@@ -1884,9 +1860,15 @@ dbl (6): LV_index, pseq, AUC, pvalue, FDR, seed_index
 ℹ Use `spec()` to retrieve the full column specification for this data.
 ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
 <!-- rnb-message-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiZ2JtX3BhdGh3YXlzX2RmIDwtIHJlYWRfdHN2KFwicGxvdHMvZGF0YS9HQk1fc3VidHlwZV9QTElFUl9wYXRod2F5cy50c3ZcIikgJT4lXG4gIG11dGF0ZShjYW5jZXJfdHlwZSA9IFwiR0JNXCIpIn0= -->
-<pre class="r"><code>gbm_pathways_df &lt;- read_tsv(&quot;plots/data/GBM_subtype_PLIER_pathways.tsv&quot;) %&gt;%
-  mutate(cancer_type = &quot;GBM&quot;)</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiaWYgKGZpbGUuZXhpc3RzKGdibV9maWxlbmFtZSkpIHtcbiAgZ2JtX3BhdGh3YXlzX2RmIDwtIHJlYWRfdHN2KGdibV9maWxlbmFtZSkgJT4lXG4gICAgbXV0YXRlKGNhbmNlcl90eXBlID0gXCJHQk1cIilcbiAgcGF0aHdheXNfZGYgPC0gYmluZF9yb3dzKHBhdGh3YXlzX2RmLFxuICAgICAgICAgICAgICAgICAgICAgICAgICAgZ2JtX3BhdGh3YXlzX2RmKVxufSBlbHNlIHtcbiAgbWVzc2FnZShzdHJfYyhcIkdCTSBmaWxlIFwiLCBnYm1fZmlsZW5hbWUsIFwiIGRvZXMgbm90IGV4aXN0LlwiKSlcbn0ifQ== -->
+<pre class="r"><code>if (file.exists(gbm_filename)) {
+  gbm_pathways_df &lt;- read_tsv(gbm_filename) %&gt;%
+    mutate(cancer_type = &quot;GBM&quot;)
+  pathways_df &lt;- bind_rows(pathways_df,
+                           gbm_pathways_df)
+} else {
+  message(str_c(&quot;GBM file &quot;, gbm_filename, &quot; does not exist.&quot;))
+}</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-message-begin eyJkYXRhIjoiUm93czogMjY0MjYgQ29sdW1uczogOFxu4pSA4pSAIENvbHVtbiBzcGVjaWZpY2F0aW9uIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgFxuRGVsaW1pdGVyOiBcIlxcdFwiXG5jaHIgKDIpOiBwYXRod2F5LCBubWV0aFxuZGJsICg2KTogTFZfaW5kZXgsIHBzZXEsIEFVQywgcHZhbHVlLCBGRFIsIHNlZWRfaW5kZXhcblxu4oS5IFVzZSBgc3BlYygpYCB0byByZXRyaWV2ZSB0aGUgZnVsbCBjb2x1bW4gc3BlY2lmaWNhdGlvbiBmb3IgdGhpcyBkYXRhLlxu4oS5IFNwZWNpZnkgdGhlIGNvbHVtbiB0eXBlcyBvciBzZXQgYHNob3dfY29sX3R5cGVzID0gRkFMU0VgIHRvIHF1aWV0IHRoaXMgbWVzc2FnZS5cbiJ9 -->
 <pre><code>Rows: 26426 Columns: 8
@@ -1898,37 +1880,54 @@ dbl (6): LV_index, pseq, AUC, pvalue, FDR, seed_index
 ℹ Use `spec()` to retrieve the full column specification for this data.
 ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
 <!-- rnb-message-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiaWYgKCFmaWxlLmV4aXN0cyhicmNhX2ZpbGVuYW1lKSAmICFmaWxlLmV4aXN0cyhnYm1fZmlsZW5hbWUpKSB7XG4gIHN0b3Aoc3RyX2MoXCJOZWl0aGVyIEJSQ0EgZmlsZSBcIiwgYnJjYV9maWxlbmFtZSxcbiAgICAgICAgICAgICBcIiBub3IgR0JNIGZpbGUgXCIsIGdibV9maWxlbmFtZSxcbiAgICAgICAgICAgICBcIiBleGlzdHMuXCIpKVxufSJ9 -->
+<pre class="r"><code>if (!file.exists(brca_filename) &amp; !file.exists(gbm_filename)) {
+  stop(str_c(&quot;Neither BRCA file &quot;, brca_filename,
+             &quot; nor GBM file &quot;, gbm_filename,
+             &quot; exists.&quot;))
+}</code></pre>
+<!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 </div>
-<div id="filter-data-to-identify-pathways-detected-more-frequently-in-full-data" class="section level3">
-<h3>Filter data to identify pathways detected more frequently in full
-data</h3>
+<div id="filter-data-to-identify-oncogenic-pathways-detected-more-frequently-in-full-data" class="section level3">
+<h3>Filter data to identify oncogenic pathways detected more frequently
+in full data</h3>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYmluZF9yb3dzKGJyY2FfcGF0aHdheXNfZGYsXG4gICAgICAgICAgZ2JtX3BhdGh3YXlzX2RmKSAlPiVcbiAgZmlsdGVyKEZEUiA8IDAuMDUpICU+JVxuICBncm91cF9ieShubWV0aCwgcHNlcSwgcGF0aHdheSwgY2FuY2VyX3R5cGUpICU+JVxuICBzdW1tYXJpemUobl9zZWVkcyA9IGxlbmd0aCh1bmlxdWUoc2VlZF9pbmRleCkpLFxuICAgICAgICAgICAgcHJvcF9zZWVkcyA9IG5fc2VlZHMvMTAsXG4gICAgICAgICAgICAuZ3JvdXBzID0gXCJkcm9wXCIpICU+JVxuICBtdXRhdGUobm1ldGggPSBzdHJfcmVtb3ZlX2FsbChubWV0aCwgXCJbXFxcXChcXFxcKV1cIikpICU+JVxuICBtdXRhdGUobm1ldGggPSBzdHJfcmVwbGFjZV9hbGwobm1ldGgsIGMoXCIgXCIgPSBcIl9cIiwgXCItXCIgPSBcIl9cIikpKSAlPiVcbiAgbXV0YXRlKG5tZXRoX3BzZXEgPSBzdHJfYyhubWV0aCwgcHNlcSwgc2VwID0gXCJfXCIpKSAlPiVcbiAgc2VsZWN0KGNhbmNlcl90eXBlLCBwYXRod2F5LCBwcm9wX3NlZWRzLCBubWV0aF9wc2VxKSAlPiVcbiAgcGl2b3Rfd2lkZXIoaWRfY29scyA9IGMoXCJjYW5jZXJfdHlwZVwiLCBcInBhdGh3YXlcIiksXG4gICAgICAgICAgICAgIG5hbWVzX2Zyb20gPSBubWV0aF9wc2VxLFxuICAgICAgICAgICAgICB2YWx1ZXNfZnJvbSA9IHByb3Bfc2VlZHMpICU+JVxuICBtdXRhdGVfaWYoaXMubnVtZXJpYywgcmVwbGFjZV9uYSwgMCkgJT4lXG4gIGZpbHRlcihsb2dfMCAtIGFycmF5X29ubHlfNTAgPj0gbWVhbmluZ2Z1bF9kaWZmZXJlbmNlLFxuICAgICAgICAgbG9nXzEwMCAtIHNlcV9vbmx5XzUwID49IG1lYW5pbmdmdWxfZGlmZmVyZW5jZSxcbiAgICAgICAgIGxvZ18wID4gMC41LFxuICAgICAgICAgbG9nXzEwMCA+IDAuNSxcbiAgICAgICAgIG5wbl81MCA+IDAuNSkgJT4lXG4gIHNlbGVjdChjYW5jZXJfdHlwZSwgcGF0aHdheSwgYXJyYXlfb25seV81MCwgc2VxX29ubHlfNTAsIGxvZ18wLCBsb2dfMTAwLCBucG5fNTApICU+JVxuICBmaWx0ZXIocGF0aHdheSAlaW4lIGNvbG5hbWVzKG9uY29nZW5pY1BhdGh3YXlzKSkgJT4lXG4gIGFycmFuZ2UoY2FuY2VyX3R5cGUpICU+JVxuICBrbml0cjo6a2FibGUoKSJ9 -->
-<pre class="r"><code>bind_rows(brca_pathways_df,
-          gbm_pathways_df) %&gt;%
-  filter(FDR &lt; 0.05) %&gt;%
+<!-- rnb-source-begin eyJkYXRhIjoicGF0aHdheXNfZGYgJT4lXG4gIGZpbHRlcihGRFIgPCAwLjA1LCAjIHJlcXVpcmUgc2lnbmlmaWNhbnQgYXNzb2NpYXRpb24gd2l0aCBhbiBMVlxuICAgICAgICAgcGF0aHdheSAlaW4lIGNvbG5hbWVzKG9uY29nZW5pY1BhdGh3YXlzKSkgJT4lICMgcmVxdWlyZSBvbmNvZ2VuaWMgcGF0aHdheXNcbiAgIyBmb3IgZWFjaCBjb21iaW5hdGlvbiBvZiBub3JtYWxpemF0aW9uIG1ldGhvZCwgJVJOQS1zZXEsIHBhdGh3YXksIGFuZCBjYW5jZXIgdHlwZVxuICBncm91cF9ieShubWV0aCwgcHNlcSwgcGF0aHdheSwgY2FuY2VyX3R5cGUpICU+JVxuICAjIHN1bW1hcml6ZSBieSBmaW5kaW5nIHRoZSBjb3VudCBhbmQgcHJvcG9ydGlvbiBvZiByZXBlYXRzIGluIHdoaWNoIHRoYXRcbiAgIyBwYXRod2F5IHdhcyBzaWduaWZpY2FudGx5IGFzc29jaWF0ZWQgd2l0aCBhdCBsZWFzdCBvbmUgbGF0ZW50IHZhcmlhYmxlXG4gIHN1bW1hcml6ZShuX3NlZWRzID0gbGVuZ3RoKHVuaXF1ZShzZWVkX2luZGV4KSksXG4gICAgICAgICAgICBwcm9wX3NlZWRzID0gbl9zZWVkcy9uX3JlcGVhdHMsXG4gICAgICAgICAgICAuZ3JvdXBzID0gXCJkcm9wXCIpICU+JVxuICAjIGNsZWFuIHVwIG5vcm1hbGl6YXRpb24gbWV0aG9kIHN0cmluZ3MgKHJlbW92ZSBwYXJlbnRoZXNlcywgc3BhY2VzLCBhbmQgaHlwaGVucylcbiAgbXV0YXRlKG5tZXRoID0gc3RyX3JlbW92ZV9hbGwobm1ldGgsIFwiW1xcXFwoXFxcXCldXCIpKSAlPiVcbiAgbXV0YXRlKG5tZXRoID0gc3RyX3JlcGxhY2VfYWxsKG5tZXRoLCBjKFwiIFwiID0gXCJfXCIsIFwiLVwiID0gXCJfXCIpKSkgJT4lXG4gICMgY3JlYXRlIG5ldyB2YXJpYWJsZSBjb21iaW5pbmcgbm9ybWFsaXphdGlvbiBtZXRob2QgYW5kICVSTkEtc2VxXG4gIG11dGF0ZShubWV0aF9wc2VxID0gc3RyX2Mobm1ldGgsIHBzZXEsIHNlcCA9IFwiX1wiKSkgJT4lXG4gIHNlbGVjdChjYW5jZXJfdHlwZSwgcGF0aHdheSwgcHJvcF9zZWVkcywgbm1ldGhfcHNlcSkgJT4lXG4gICMgY3JlYXRlIG5ldyBjb2x1bW5zIGZvciBlYWNoIGNvbWJpbmF0aW9uIG9mIG5vcm0gbWV0aG9kIGFuZCAlUk5BLXNlcVxuICAjIGVhY2ggcm93IGNvcnJlc3BvbmRzIHRvIGEgc2luZ2xlIHBhdGh3YXkgZnJvbSBhIGNhbmNlciB0eXBlXG4gIHBpdm90X3dpZGVyKGlkX2NvbHMgPSBjKFwiY2FuY2VyX3R5cGVcIiwgXCJwYXRod2F5XCIpLFxuICAgICAgICAgICAgICBuYW1lc19mcm9tID0gbm1ldGhfcHNlcSxcbiAgICAgICAgICAgICAgdmFsdWVzX2Zyb20gPSBwcm9wX3NlZWRzKSAlPiVcbiAgbXV0YXRlX2lmKGlzLm51bWVyaWMsIHJlcGxhY2VfbmEsIDApICU+JSAjIHJlcGxhY2UgTkFzIHdpdGggMHNcbiAgIyByZWR1Y2UgdG8gXCJtZWFuaW5nZnVsXCIgcmVzdWx0c1xuICAjIDEuIGRpZmZlcmVuY2UgaW4gYXJyYXkgb25seSBkYXRhIG11c3QgYmUgbWVhbmluZ2Z1bFxuICAjIDIuIGRpZmZlcmVuY2UgaW4gc2VxIG9ubHkgZGF0YSBtdXN0IGJlIG1lYW5pbmdmdWxcbiAgIyAzLiBwYXRod2F5IG11c3QgYmUgZGV0ZWN0ZWQgaW4gb3ZlciBoYWxmIG9mIGZ1bGwgZGF0YSBzZXRzIChhcnJheSBvbmx5LCBSTkEtc2VxIG9ubHksIGFuZCBOUE4gNTAlLzUwJSlcbiAgZmlsdGVyKGxvZ18wIC0gYXJyYXlfb25seV81MCA+PSBtZWFuaW5nZnVsX2RpZmZlcmVuY2UsXG4gICAgICAgICBsb2dfMTAwIC0gc2VxX29ubHlfNTAgPj0gbWVhbmluZ2Z1bF9kaWZmZXJlbmNlLFxuICAgICAgICAgbG9nXzAgPiAwLjUsXG4gICAgICAgICBsb2dfMTAwID4gMC41LFxuICAgICAgICAgbnBuXzUwID4gMC41KSAlPiVcbiAgc2VsZWN0KGNhbmNlcl90eXBlLCBwYXRod2F5LCBhcnJheV9vbmx5XzUwLCBzZXFfb25seV81MCwgbG9nXzAsIGxvZ18xMDAsIG5wbl81MCkgJT4lXG4gIGFycmFuZ2UoY2FuY2VyX3R5cGUpICU+JVxuICBrbml0cjo6a2FibGUoKSJ9 -->
+<pre class="r"><code>pathways_df %&gt;%
+  filter(FDR &lt; 0.05, # require significant association with an LV
+         pathway %in% colnames(oncogenicPathways)) %&gt;% # require oncogenic pathways
+  # for each combination of normalization method, %RNA-seq, pathway, and cancer type
   group_by(nmeth, pseq, pathway, cancer_type) %&gt;%
+  # summarize by finding the count and proportion of repeats in which that
+  # pathway was significantly associated with at least one latent variable
   summarize(n_seeds = length(unique(seed_index)),
-            prop_seeds = n_seeds/10,
+            prop_seeds = n_seeds/n_repeats,
             .groups = &quot;drop&quot;) %&gt;%
+  # clean up normalization method strings (remove parentheses, spaces, and hyphens)
   mutate(nmeth = str_remove_all(nmeth, &quot;[\\(\\)]&quot;)) %&gt;%
   mutate(nmeth = str_replace_all(nmeth, c(&quot; &quot; = &quot;_&quot;, &quot;-&quot; = &quot;_&quot;))) %&gt;%
+  # create new variable combining normalization method and %RNA-seq
   mutate(nmeth_pseq = str_c(nmeth, pseq, sep = &quot;_&quot;)) %&gt;%
   select(cancer_type, pathway, prop_seeds, nmeth_pseq) %&gt;%
+  # create new columns for each combination of norm method and %RNA-seq
+  # each row corresponds to a single pathway from a cancer type
   pivot_wider(id_cols = c(&quot;cancer_type&quot;, &quot;pathway&quot;),
               names_from = nmeth_pseq,
               values_from = prop_seeds) %&gt;%
-  mutate_if(is.numeric, replace_na, 0) %&gt;%
+  mutate_if(is.numeric, replace_na, 0) %&gt;% # replace NAs with 0s
+  # reduce to &quot;meaningful&quot; results
+  # 1. difference in array only data must be meaningful
+  # 2. difference in seq only data must be meaningful
+  # 3. pathway must be detected in over half of full data sets (array only, RNA-seq only, and NPN 50%/50%)
   filter(log_0 - array_only_50 &gt;= meaningful_difference,
          log_100 - seq_only_50 &gt;= meaningful_difference,
          log_0 &gt; 0.5,
          log_100 &gt; 0.5,
          npn_50 &gt; 0.5) %&gt;%
   select(cancer_type, pathway, array_only_50, seq_only_50, log_0, log_100, npn_50) %&gt;%
-  filter(pathway %in% colnames(oncogenicPathways)) %&gt;%
   arrange(cancer_type) %&gt;%
   knitr::kable()</code></pre>
 <!-- rnb-source-end -->
@@ -2056,7 +2055,7 @@ information extractor (PLIER) for gene expression data. Nat Methods.
 <!-- rnb-text-end -->
 </div>
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAiUExJRVIgcGF0aHdheXMgYW5hbHlzaXMiCm91dHB1dDogaHRtbF9ub3RlYm9vawotLS0KCmBgYHtyfQptZWFuaW5nZnVsX2RpZmZlcmVuY2UgPC0gMC4yCmBgYAoKIyMjIFdoYXQgYWRkaXRpb25hbCBwYXRod2F5cyBhcmUgaWRlbnRpZmllZCBieSBQTElFUiBhZnRlciBkb3VibGluZyB0aGUgc2FtcGxlIHNpemU/CgpIZXJlIHdlIGxvb2sgZm9yIGNhbmNlciBwYXRod2F5cyB0aGF0IGFyZSBmb3VuZCBtb3JlIGZyZXF1ZW50bHkgaW4gdGhlIGRhdGEgd2l0aCB0aGUgZnVsbCBzYW1wbGUgc2l6ZSB0aGFuIGluIGRhdGEgd2l0aCBoYWxmIHRoZSBzYW1wbGUgc2l6ZS4KV2UgcmFuIFBMSUVSIDEwIHRpbWVzIHVzaW5nIGVhY2ggY29tYmluYXRpb24gb2YgZGF0YSBub3JtYWxpemF0aW9uIG1ldGhvZCBhbmQgc2FtcGxlIHNpemUgKGhhbGYgb3IgZnVsbCkuCk91dCBvZiB0aG9zZSAxMCBydW5zLCB3ZSBmb3VuZCB0aGUgcHJvcG9ydGlvbiBvZiB0aW1lcyBlYWNoIHBhdGh3YXkgd2FzIHNpZ25pZmljYW50bHkgYXNzb2NpYXRlZCB3aXRoIGEgbGF0ZW50IHZhcmlhYmxlLgpXZSBzZXQgYW4gYXJiaXRyYXJ5ICJtZWFuaW5nZnVsIGRpZmZlcmVuY2UiIHRocmVzaG9sZCBvZiBgciBtZWFuaW5nZnVsX2RpZmZlcmVuY2VgIHRvIGRldGVjdCB3aGVuIHRoYXQgcHJvcG9ydGlvbiB3YXMgbWVhbmluZ2Z1bGx5IGdyZWF0ZXIgdXNpbmcgZnVsbCBzYW1wbGUgc2l6ZSBjb21wYXJlZCB0byBoYWxmIHNhbXBsZSBzaXplIGFuZCByZXF1aXJlIGFycmF5IGFuZCBSTkEtc2VxIGRhdGEgdG8gYm90aCB0byBzYXRpc2Z5IHRoZSBjb25kaXRpb24uCldlIGFsc28gYXJiaXRyYXJpbHkgbGltaXQgcmVzdWx0cyB0byB0aG9zZSBwYXRod2F5cyBmb3VuZCBpbiBvdmVyIGhhbGYgb2YgcnVucyB1c2luZyB0aGUgZnVsbCBzaXplIGRhdGEuCgojIyMgTG9hZCBwYWNrYWdlcyBhbmQgcGF0aHdheXMKCmBgYHtyfQpsaWJyYXJ5KHRpZHl2ZXJzZSkKbGlicmFyeShQTElFUikKCmRhdGEoYmxvb2RDZWxsTWFya2Vyc0lSSVNETUFQKQpkYXRhKGNhbm9uaWNhbFBhdGh3YXlzKQpkYXRhKG9uY29nZW5pY1BhdGh3YXlzKQpkYXRhKHN2bU1hcmtlcnMpCmBgYAoKIyMjIFJlYWQgaW4gZGF0YSBmb3IgZWFjaCBjYW5jZXIgdHlwZQpgYGB7cn0KYnJjYV9wYXRod2F5c19kZiA8LSByZWFkX3RzdigicGxvdHMvZGF0YS9CUkNBX3N1YnR5cGVfUExJRVJfcGF0aHdheXMudHN2IikgJT4lCiAgbXV0YXRlKGNhbmNlcl90eXBlID0gIkJSQ0EiKQpnYm1fcGF0aHdheXNfZGYgPC0gcmVhZF90c3YoInBsb3RzL2RhdGEvR0JNX3N1YnR5cGVfUExJRVJfcGF0aHdheXMudHN2IikgJT4lCiAgbXV0YXRlKGNhbmNlcl90eXBlID0gIkdCTSIpCmBgYAoKIyMjIEZpbHRlciBkYXRhIHRvIGlkZW50aWZ5IHBhdGh3YXlzIGRldGVjdGVkIG1vcmUgZnJlcXVlbnRseSBpbiBmdWxsIGRhdGEKYGBge3J9CgpiaW5kX3Jvd3MoYnJjYV9wYXRod2F5c19kZiwKICAgICAgICAgIGdibV9wYXRod2F5c19kZikgJT4lCiAgZmlsdGVyKEZEUiA8IDAuMDUpICU+JQogIGdyb3VwX2J5KG5tZXRoLCBwc2VxLCBwYXRod2F5LCBjYW5jZXJfdHlwZSkgJT4lCiAgc3VtbWFyaXplKG5fc2VlZHMgPSBsZW5ndGgodW5pcXVlKHNlZWRfaW5kZXgpKSwKICAgICAgICAgICAgcHJvcF9zZWVkcyA9IG5fc2VlZHMvMTAsCiAgICAgICAgICAgIC5ncm91cHMgPSAiZHJvcCIpICU+JQogIG11dGF0ZShubWV0aCA9IHN0cl9yZW1vdmVfYWxsKG5tZXRoLCAiW1xcKFxcKV0iKSkgJT4lCiAgbXV0YXRlKG5tZXRoID0gc3RyX3JlcGxhY2VfYWxsKG5tZXRoLCBjKCIgIiA9ICJfIiwgIi0iID0gIl8iKSkpICU+JQogIG11dGF0ZShubWV0aF9wc2VxID0gc3RyX2Mobm1ldGgsIHBzZXEsIHNlcCA9ICJfIikpICU+JQogIHNlbGVjdChjYW5jZXJfdHlwZSwgcGF0aHdheSwgcHJvcF9zZWVkcywgbm1ldGhfcHNlcSkgJT4lCiAgcGl2b3Rfd2lkZXIoaWRfY29scyA9IGMoImNhbmNlcl90eXBlIiwgInBhdGh3YXkiKSwKICAgICAgICAgICAgICBuYW1lc19mcm9tID0gbm1ldGhfcHNlcSwKICAgICAgICAgICAgICB2YWx1ZXNfZnJvbSA9IHByb3Bfc2VlZHMpICU+JQogIG11dGF0ZV9pZihpcy5udW1lcmljLCByZXBsYWNlX25hLCAwKSAlPiUKICBmaWx0ZXIobG9nXzAgLSBhcnJheV9vbmx5XzUwID49IG1lYW5pbmdmdWxfZGlmZmVyZW5jZSwKICAgICAgICAgbG9nXzEwMCAtIHNlcV9vbmx5XzUwID49IG1lYW5pbmdmdWxfZGlmZmVyZW5jZSwKICAgICAgICAgbG9nXzAgPiAwLjUsCiAgICAgICAgIGxvZ18xMDAgPiAwLjUsCiAgICAgICAgIG5wbl81MCA+IDAuNSkgJT4lCiAgc2VsZWN0KGNhbmNlcl90eXBlLCBwYXRod2F5LCBhcnJheV9vbmx5XzUwLCBzZXFfb25seV81MCwgbG9nXzAsIGxvZ18xMDAsIG5wbl81MCkgJT4lCiAgZmlsdGVyKHBhdGh3YXkgJWluJSBjb2xuYW1lcyhvbmNvZ2VuaWNQYXRod2F5cykpICU+JQogIGFycmFuZ2UoY2FuY2VyX3R5cGUpICU+JQogIGtuaXRyOjprYWJsZSgpCmBgYAoKfCB2YXJpYWJsZV9uYW1lIHwgbWVhbmluZyB8CnwgLS0tIHwgLS0tIHwKfCBgYXJyYXlfb25seV81MGAgfCBMT0cgdHJhbnNmb3JtZWQgYXJyYXkgZGF0YSAoaGFsZiBzYW1wbGUgc2l6ZSkgfAp8IGBzZXFfb25seV81MGAgfCBMT0cgdHJhbnNmb3JtZWQgUk5BLXNlcSBkYXRhIChoYWxmIHNhbXBsZSBzaXplKSB8CnwgYGxvZ18wYCB8IExPRyB0cmFuc2Zvcm1lZCBhcnJheSBkYXRhIChmdWxsIHNhbXBsZSBzaXplKSB8CnwgYGxvZ18xMDBgIHwgTE9HIHRyYW5zZm9ybWVkIFJOQS1zZXEgZGF0YSAoZnVsbCBzYW1wbGUgc2l6ZSkgfAp8IGBucG5fNTBgIHwgTlBOIHRyYW5zZm9ybWVkIGRhdGEsIDUwJSBhcnJheSBhbmQgNTAlIFJOQS1zZXEgKGZ1bGwgc2FtcGxlIHNpemUpIHwKCiMjIyBDaXRhdGlvbjoKTWFvIFcsIFphc2xhdnNreSBFLCBIYXJ0bWFubiBCTSwgU2VhbGZvbiBTQywgQ2hpa2luYSBNLiBQYXRod2F5LWxldmVsIGluZm9ybWF0aW9uIGV4dHJhY3RvciAoUExJRVIpIGZvciBnZW5lIGV4cHJlc3Npb24gZGF0YS4gTmF0IE1ldGhvZHMuIDIwMTk7MTY6IDYwN+KAkzYxMC4=</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiUExJRVIgcGF0aHdheXMgYW5hbHlzaXMiCm91dHB1dDogaHRtbF9ub3RlYm9vawphdXRob3I6ICJTdGV2ZW4gRm9sdHoiCmRhdGU6ICJEZWNlbWJlciAyMDIyIgotLS0KCmBgYHtyfQptZWFuaW5nZnVsX2RpZmZlcmVuY2UgPC0gMC4yCm5fcmVwZWF0cyA8LSAxMApgYGAKCiMjIyBXaGF0IGFkZGl0aW9uYWwgcGF0aHdheXMgYXJlIGlkZW50aWZpZWQgYnkgUExJRVIgYWZ0ZXIgZG91YmxpbmcgdGhlIHNhbXBsZSBzaXplPwoKSGVyZSB3ZSBsb29rIGZvciBvbmNvZ2VuaWMgcGF0aHdheXMgKGRlZmluZWQgYnkgW0dTRUEgTVNpZ0RCIEM2XShodHRwczovL3d3dy5nc2VhLW1zaWdkYi5vcmcvZ3NlYS9tc2lnZGIvaHVtYW4vZ2VuZXNldHMuanNwP2NvbGxlY3Rpb249QzYpKSB0aGF0IGFyZSBmb3VuZCBtb3JlIGZyZXF1ZW50bHkgaW4gdGhlIGRhdGEgd2l0aCB0aGUgZnVsbCBzYW1wbGUgc2l6ZSB0aGFuIGluIGRhdGEgd2l0aCBoYWxmIHRoZSBzYW1wbGUgc2l6ZS4KQnkgZm9jdXNpbmcgb24gcGF0aHdheXMgdGhhdCBhcmUgcmVsaWFibHkgZGV0ZWN0ZWQgbW9yZSBvZnRlbiBpbiB0aGUgZnVsbCBzYW1wbGUgc2l6ZSBkYXRhLCB3ZSBjYW4gaWRlbnRpZnkgc3RhYmxlIHBhdHRlcm5zIHRoYXQgZW1lcmdlIHdoZW4gbW9yZSBkYXRhIGlzIGF2YWlsYWJsZS4KV2UgcmFuIFBMSUVSIGByIG5fcmVwZWF0c2AgdGltZXMgdXNpbmcgZWFjaCBjb21iaW5hdGlvbiBvZiBkYXRhIG5vcm1hbGl6YXRpb24gbWV0aG9kIGFuZCBzYW1wbGUgc2l6ZSAoaGFsZiBvciBmdWxsKS4KT3V0IG9mIHRob3NlIGByIG5fcmVwZWF0c2AgcnVucywgd2UgZm91bmQgdGhlIHByb3BvcnRpb24gb2YgdGltZXMgZWFjaCBvbmNvZ2VuaWMgcGF0aHdheSB3YXMgc2lnbmlmaWNhbnRseSBhc3NvY2lhdGVkIHdpdGggYSBsYXRlbnQgdmFyaWFibGUuCldlIHNldCBhbiBhcmJpdHJhcnkgIm1lYW5pbmdmdWwgZGlmZmVyZW5jZSIgdGhyZXNob2xkIG9mIGByIG1lYW5pbmdmdWxfZGlmZmVyZW5jZWAgdG8gZGV0ZWN0IHdoZW4gdGhhdCBwcm9wb3J0aW9uIHdhcyBtZWFuaW5nZnVsbHkgZ3JlYXRlciB1c2luZyBmdWxsIHNhbXBsZSBzaXplIGNvbXBhcmVkIHRvIGhhbGYgc2FtcGxlIHNpemUgYW5kIHJlcXVpcmUgYXJyYXkgYW5kIFJOQS1zZXEgZGF0YSB0byBib3RoIHRvIHNhdGlzZnkgdGhlIGNvbmRpdGlvbi4KV2UgYWxzbyBhcmJpdHJhcmlseSBsaW1pdCByZXN1bHRzIHRvIHRob3NlIHBhdGh3YXlzIGZvdW5kIGluIG92ZXIgaGFsZiBvZiBydW5zIHVzaW5nIHRoZSBmdWxsIHNpemUgZGF0YS4KCiMjIyBMb2FkIHBhY2thZ2VzIGFuZCBwYXRod2F5cwoKYGBge3J9CmxpYnJhcnkodGlkeXZlcnNlKQpkYXRhKCJvbmNvZ2VuaWNQYXRod2F5cyIsIHBhY2thZ2UgPSAiUExJRVIiKQpgYGAKCgojIyMgU2V0IGlucHV0IGZpbGUgbmFtZXMKYGBge3J9CnBsb3RzX2RhdGFfZGlyIDwtIGhlcmU6OmhlcmUoInBsb3RzIiwgImRhdGEiKQpicmNhX2ZpbGVuYW1lIDwtIGZpbGUucGF0aChwbG90c19kYXRhX2RpciwgIkJSQ0Ffc3VidHlwZV9QTElFUl9wYXRod2F5cy50c3YiKQpnYm1fZmlsZW5hbWUgPC0gZmlsZS5wYXRoKHBsb3RzX2RhdGFfZGlyLCAiR0JNX3N1YnR5cGVfUExJRVJfcGF0aHdheXMudHN2IikKYGBgCgojIyMgUmVhZCBpbiBkYXRhIGZvciBlYWNoIGNhbmNlciB0eXBlCmBgYHtyfQpwYXRod2F5c19kZiA8LSBOVUxMCgppZiAoZmlsZS5leGlzdHMoYnJjYV9maWxlbmFtZSkpIHsKICBicmNhX3BhdGh3YXlzX2RmIDwtIHJlYWRfdHN2KGJyY2FfZmlsZW5hbWUpICU+JQogICAgbXV0YXRlKGNhbmNlcl90eXBlID0gIkJSQ0EiKQogIHBhdGh3YXlzX2RmIDwtIGJpbmRfcm93cyhwYXRod2F5c19kZiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgYnJjYV9wYXRod2F5c19kZikKfSBlbHNlIHsKICBtZXNzYWdlKHN0cl9jKCJCUkNBIGZpbGUgIiwgYnJjYV9maWxlbmFtZSwgIiBkb2VzIG5vdCBleGlzdC4iKSkKfQoKaWYgKGZpbGUuZXhpc3RzKGdibV9maWxlbmFtZSkpIHsKICBnYm1fcGF0aHdheXNfZGYgPC0gcmVhZF90c3YoZ2JtX2ZpbGVuYW1lKSAlPiUKICAgIG11dGF0ZShjYW5jZXJfdHlwZSA9ICJHQk0iKQogIHBhdGh3YXlzX2RmIDwtIGJpbmRfcm93cyhwYXRod2F5c19kZiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgZ2JtX3BhdGh3YXlzX2RmKQp9IGVsc2UgewogIG1lc3NhZ2Uoc3RyX2MoIkdCTSBmaWxlICIsIGdibV9maWxlbmFtZSwgIiBkb2VzIG5vdCBleGlzdC4iKSkKfQoKaWYgKCFmaWxlLmV4aXN0cyhicmNhX2ZpbGVuYW1lKSAmICFmaWxlLmV4aXN0cyhnYm1fZmlsZW5hbWUpKSB7CiAgc3RvcChzdHJfYygiTmVpdGhlciBCUkNBIGZpbGUgIiwgYnJjYV9maWxlbmFtZSwKICAgICAgICAgICAgICIgbm9yIEdCTSBmaWxlICIsIGdibV9maWxlbmFtZSwKICAgICAgICAgICAgICIgZXhpc3RzLiIpKQp9CgpgYGAKCiMjIyBGaWx0ZXIgZGF0YSB0byBpZGVudGlmeSBvbmNvZ2VuaWMgcGF0aHdheXMgZGV0ZWN0ZWQgbW9yZSBmcmVxdWVudGx5IGluIGZ1bGwgZGF0YQpgYGB7cn0KCnBhdGh3YXlzX2RmICU+JQogIGZpbHRlcihGRFIgPCAwLjA1LCAjIHJlcXVpcmUgc2lnbmlmaWNhbnQgYXNzb2NpYXRpb24gd2l0aCBhbiBMVgogICAgICAgICBwYXRod2F5ICVpbiUgY29sbmFtZXMob25jb2dlbmljUGF0aHdheXMpKSAlPiUgIyByZXF1aXJlIG9uY29nZW5pYyBwYXRod2F5cwogICMgZm9yIGVhY2ggY29tYmluYXRpb24gb2Ygbm9ybWFsaXphdGlvbiBtZXRob2QsICVSTkEtc2VxLCBwYXRod2F5LCBhbmQgY2FuY2VyIHR5cGUKICBncm91cF9ieShubWV0aCwgcHNlcSwgcGF0aHdheSwgY2FuY2VyX3R5cGUpICU+JQogICMgc3VtbWFyaXplIGJ5IGZpbmRpbmcgdGhlIGNvdW50IGFuZCBwcm9wb3J0aW9uIG9mIHJlcGVhdHMgaW4gd2hpY2ggdGhhdAogICMgcGF0aHdheSB3YXMgc2lnbmlmaWNhbnRseSBhc3NvY2lhdGVkIHdpdGggYXQgbGVhc3Qgb25lIGxhdGVudCB2YXJpYWJsZQogIHN1bW1hcml6ZShuX3NlZWRzID0gbGVuZ3RoKHVuaXF1ZShzZWVkX2luZGV4KSksCiAgICAgICAgICAgIHByb3Bfc2VlZHMgPSBuX3NlZWRzL25fcmVwZWF0cywKICAgICAgICAgICAgLmdyb3VwcyA9ICJkcm9wIikgJT4lCiAgIyBjbGVhbiB1cCBub3JtYWxpemF0aW9uIG1ldGhvZCBzdHJpbmdzIChyZW1vdmUgcGFyZW50aGVzZXMsIHNwYWNlcywgYW5kIGh5cGhlbnMpCiAgbXV0YXRlKG5tZXRoID0gc3RyX3JlbW92ZV9hbGwobm1ldGgsICJbXFwoXFwpXSIpKSAlPiUKICBtdXRhdGUobm1ldGggPSBzdHJfcmVwbGFjZV9hbGwobm1ldGgsIGMoIiAiID0gIl8iLCAiLSIgPSAiXyIpKSkgJT4lCiAgIyBjcmVhdGUgbmV3IHZhcmlhYmxlIGNvbWJpbmluZyBub3JtYWxpemF0aW9uIG1ldGhvZCBhbmQgJVJOQS1zZXEKICBtdXRhdGUobm1ldGhfcHNlcSA9IHN0cl9jKG5tZXRoLCBwc2VxLCBzZXAgPSAiXyIpKSAlPiUKICBzZWxlY3QoY2FuY2VyX3R5cGUsIHBhdGh3YXksIHByb3Bfc2VlZHMsIG5tZXRoX3BzZXEpICU+JQogICMgY3JlYXRlIG5ldyBjb2x1bW5zIGZvciBlYWNoIGNvbWJpbmF0aW9uIG9mIG5vcm0gbWV0aG9kIGFuZCAlUk5BLXNlcQogICMgZWFjaCByb3cgY29ycmVzcG9uZHMgdG8gYSBzaW5nbGUgcGF0aHdheSBmcm9tIGEgY2FuY2VyIHR5cGUKICBwaXZvdF93aWRlcihpZF9jb2xzID0gYygiY2FuY2VyX3R5cGUiLCAicGF0aHdheSIpLAogICAgICAgICAgICAgIG5hbWVzX2Zyb20gPSBubWV0aF9wc2VxLAogICAgICAgICAgICAgIHZhbHVlc19mcm9tID0gcHJvcF9zZWVkcykgJT4lCiAgbXV0YXRlX2lmKGlzLm51bWVyaWMsIHJlcGxhY2VfbmEsIDApICU+JSAjIHJlcGxhY2UgTkFzIHdpdGggMHMKICAjIHJlZHVjZSB0byAibWVhbmluZ2Z1bCIgcmVzdWx0cwogICMgMS4gZGlmZmVyZW5jZSBpbiBhcnJheSBvbmx5IGRhdGEgbXVzdCBiZSBtZWFuaW5nZnVsCiAgIyAyLiBkaWZmZXJlbmNlIGluIHNlcSBvbmx5IGRhdGEgbXVzdCBiZSBtZWFuaW5nZnVsCiAgIyAzLiBwYXRod2F5IG11c3QgYmUgZGV0ZWN0ZWQgaW4gb3ZlciBoYWxmIG9mIGZ1bGwgZGF0YSBzZXRzIChhcnJheSBvbmx5LCBSTkEtc2VxIG9ubHksIGFuZCBOUE4gNTAlLzUwJSkKICBmaWx0ZXIobG9nXzAgLSBhcnJheV9vbmx5XzUwID49IG1lYW5pbmdmdWxfZGlmZmVyZW5jZSwKICAgICAgICAgbG9nXzEwMCAtIHNlcV9vbmx5XzUwID49IG1lYW5pbmdmdWxfZGlmZmVyZW5jZSwKICAgICAgICAgbG9nXzAgPiAwLjUsCiAgICAgICAgIGxvZ18xMDAgPiAwLjUsCiAgICAgICAgIG5wbl81MCA+IDAuNSkgJT4lCiAgc2VsZWN0KGNhbmNlcl90eXBlLCBwYXRod2F5LCBhcnJheV9vbmx5XzUwLCBzZXFfb25seV81MCwgbG9nXzAsIGxvZ18xMDAsIG5wbl81MCkgJT4lCiAgYXJyYW5nZShjYW5jZXJfdHlwZSkgJT4lCiAga25pdHI6OmthYmxlKCkKYGBgCgp8IHZhcmlhYmxlX25hbWUgfCBtZWFuaW5nIHwKfCAtLS0gfCAtLS0gfAp8IGBhcnJheV9vbmx5XzUwYCB8IExPRyB0cmFuc2Zvcm1lZCBhcnJheSBkYXRhIChoYWxmIHNhbXBsZSBzaXplKSB8CnwgYHNlcV9vbmx5XzUwYCB8IExPRyB0cmFuc2Zvcm1lZCBSTkEtc2VxIGRhdGEgKGhhbGYgc2FtcGxlIHNpemUpIHwKfCBgbG9nXzBgIHwgTE9HIHRyYW5zZm9ybWVkIGFycmF5IGRhdGEgKGZ1bGwgc2FtcGxlIHNpemUpIHwKfCBgbG9nXzEwMGAgfCBMT0cgdHJhbnNmb3JtZWQgUk5BLXNlcSBkYXRhIChmdWxsIHNhbXBsZSBzaXplKSB8CnwgYG5wbl81MGAgfCBOUE4gdHJhbnNmb3JtZWQgZGF0YSwgNTAlIGFycmF5IGFuZCA1MCUgUk5BLXNlcSAoZnVsbCBzYW1wbGUgc2l6ZSkgfAoKIyMjIENpdGF0aW9uOgpNYW8gVywgWmFzbGF2c2t5IEUsIEhhcnRtYW5uIEJNLCBTZWFsZm9uIFNDLCBDaGlraW5hIE0uIFBhdGh3YXktbGV2ZWwgaW5mb3JtYXRpb24gZXh0cmFjdG9yIChQTElFUikgZm9yIGdlbmUgZXhwcmVzc2lvbiBkYXRhLiBOYXQgTWV0aG9kcy4gMjAxOTsxNjogNjA34oCTNjEwLg==</div>
 
 
 
@@ -2103,7 +2102,7 @@ $(document).ready(function () {
 <!-- code folding -->
 <script>
 $(document).ready(function () {
-  window.initializeSourceEmbed("PLIER_pathways_analysis.Rmd");
+  window.initializeSourceEmbed("8-PLIER_pathways_analysis.Rmd");
   window.initializeCodeFolding("show" === "show");
 });
 </script>
