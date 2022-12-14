@@ -1,17 +1,21 @@
 ---
 title: "PLIER pathways analysis"
 output: html_notebook
+author: "Steven Foltz"
+date: "December 2022"
 ---
 
 ```{r}
 meaningful_difference <- 0.2
+n_repeats <- 10
 ```
 
 ### What additional pathways are identified by PLIER after doubling the sample size?
 
-Here we look for cancer pathways that are found more frequently in the data with the full sample size than in data with half the sample size.
-We ran PLIER 10 times using each combination of data normalization method and sample size (half or full).
-Out of those 10 runs, we found the proportion of times each pathway was significantly associated with a latent variable.
+Here we look for oncogenic pathways (defined by [GSEA MSigDB C6](https://www.gsea-msigdb.org/gsea/msigdb/human/genesets.jsp?collection=C6)) that are found more frequently in the data with the full sample size than in data with half the sample size.
+By focusing on pathways that are reliably detected more often in the full sample size data, we can identify stable patterns that emerge when more data is available.
+We ran PLIER `r n_repeats` times using each combination of data normalization method and sample size (half or full).
+Out of those `r n_repeats` runs, we found the proportion of times each oncogenic pathway was significantly associated with a latent variable.
 We set an arbitrary "meaningful difference" threshold of `r meaningful_difference` to detect when that proportion was meaningfully greater using full sample size compared to half sample size and require array and RNA-seq data to both to satisfy the condition.
 We also arbitrarily limit results to those pathways found in over half of runs using the full size data.
 
@@ -19,12 +23,7 @@ We also arbitrarily limit results to those pathways found in over half of runs u
 
 ```{r}
 library(tidyverse)
-library(PLIER)
-
-data(bloodCellMarkersIRISDMAP)
-data(canonicalPathways)
-data(oncogenicPathways)
-data(svmMarkers)
+data("oncogenicPathways", package = "PLIER")
 ```
 
 ### Read in data for each cancer type
@@ -35,31 +34,42 @@ gbm_pathways_df <- read_tsv("plots/data/GBM_subtype_PLIER_pathways.tsv") %>%
   mutate(cancer_type = "GBM")
 ```
 
-### Filter data to identify pathways detected more frequently in full data
+### Filter data to identify oncogenic pathways detected more frequently in full data
 ```{r}
 
-bind_rows(brca_pathways_df,
+bind_rows(brca_pathways_df, # pipe BRCA and GBM data as single tibble
           gbm_pathways_df) %>%
-  filter(FDR < 0.05) %>%
+  filter(FDR < 0.05, # require significant association with an LV
+         pathway %in% colnames(oncogenicPathways)) %>% # require oncogenic pathways
+  # for each combination of normalization method, %RNA-seq, pathway, and cancer type
   group_by(nmeth, pseq, pathway, cancer_type) %>%
+  # summarize by finding the count and proportion of repeats in which that
+  # pathway was significantly associated with at least one latent variable
   summarize(n_seeds = length(unique(seed_index)),
-            prop_seeds = n_seeds/10,
+            prop_seeds = n_seeds/n_repeats,
             .groups = "drop") %>%
+  # clean up normalization method strings (remove parentheses, spaces, and hyphens)
   mutate(nmeth = str_remove_all(nmeth, "[\\(\\)]")) %>%
   mutate(nmeth = str_replace_all(nmeth, c(" " = "_", "-" = "_"))) %>%
+  # create new variable combining normalization method and %RNA-seq
   mutate(nmeth_pseq = str_c(nmeth, pseq, sep = "_")) %>%
   select(cancer_type, pathway, prop_seeds, nmeth_pseq) %>%
+  # create new columns for each combination of norm method and %RNA-seq
+  # each row corresponds to a single pathway from a cancer type
   pivot_wider(id_cols = c("cancer_type", "pathway"),
               names_from = nmeth_pseq,
               values_from = prop_seeds) %>%
-  mutate_if(is.numeric, replace_na, 0) %>%
+  mutate_if(is.numeric, replace_na, 0) %>% # replace NAs with 0s
+  # reduce to "meaningful" results
+  # 1. difference in array only data must be meaningful
+  # 2. difference in seq only data must be meaningful
+  # 3. pathway must be detected in over half of full data sets (array only, RNA-seq only, and NPN 50%/50%)
   filter(log_0 - array_only_50 >= meaningful_difference,
          log_100 - seq_only_50 >= meaningful_difference,
          log_0 > 0.5,
          log_100 > 0.5,
          npn_50 > 0.5) %>%
   select(cancer_type, pathway, array_only_50, seq_only_50, log_0, log_100, npn_50) %>%
-  filter(pathway %in% colnames(oncogenicPathways)) %>%
   arrange(cancer_type) %>%
   knitr::kable()
 ```
