@@ -67,8 +67,7 @@ if (!file.exists(brca_filename) & !file.exists(gbm_filename)) {
 ### Filter data to identify oncogenic pathways detected more frequently in full data
 ```{r}
 
-bind_rows(brca_pathways_df, # pipe BRCA and GBM data as single tibble
-          gbm_pathways_df) %>%
+pathways_df %>%
   filter(FDR < 0.05, # require significant association with an LV
          pathway %in% colnames(oncogenicPathways)) %>% # require oncogenic pathways
   # for each combination of normalization method, %RNA-seq, pathway, and cancer type
