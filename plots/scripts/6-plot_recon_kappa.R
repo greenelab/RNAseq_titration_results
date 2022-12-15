@@ -51,8 +51,8 @@ plot_df <- readr::read_tsv(input_filename,
   summarize(n_obs = n(),
             med = median(Kappa),
             IQR = quantile(Kappa, 0.75) - quantile(Kappa, 0.25),
-            median_ci_upper = median(Kappa) + 1.58*IQR/sqrt(n_obs),
-            median_ci_lower = median(Kappa) - 1.58*IQR/sqrt(n_obs),
+            median_ci_upper = med + 1.58*IQR/sqrt(n_obs),
+            median_ci_lower = med - 1.58*IQR/sqrt(n_obs),
             .groups = "drop")
 
 # for each normalization method, plot kappa stats
