@@ -46,29 +46,36 @@ output_filename <- file.path(output_directory,
 plot_df <- readr::read_tsv(input_filename,
                            col_types = "dcccdcc") %>%
   mutate(Perc.seq = factor(Perc.seq,
-                           levels = seq(0, 100, 10)))
+                           levels = seq(0, 100, 10))) %>%
+  group_by(Perc.seq, Platform, Classifier, Normalization) %>%
+  summarize(n_obs = n(),
+            med = median(Kappa),
+            IQR = quantile(Kappa, 0.75) - quantile(Kappa, 0.25),
+            median_ci_upper = median(Kappa) + 1.58*IQR/sqrt(n_obs),
+            median_ci_lower = median(Kappa) - 1.58*IQR/sqrt(n_obs),
+            .groups = "drop")
 
 # for each normalization method, plot kappa stats
 plot_obj <- ggplot(plot_df,
                    aes(x = Perc.seq,
-                       y = Kappa,
+                       y = med, # median
                        color = Platform,
                        fill = Platform)) +
   facet_grid(rows = vars(Classifier),
              cols = vars(Normalization)) +
-  geom_violin(position = position_dodge(0.7),
-              alpha = 0.25,
-              show.legend = FALSE) +
-  stat_summary(fun = median,
-               geom = "line",
-               aes(group = Platform),
-               position = position_dodge(0.7)) +
-  stat_summary(fun = median,
-               geom = "point",
-               aes(group = Platform),
-               position = position_dodge(0.7),
-               size = 1,
-               shape = 16) +
+  geom_errorbar(aes(x = Perc.seq,
+                    ymin = median_ci_lower,
+                    ymax = median_ci_upper),
+                size = 0.25,
+                width = 0.5,
+                position = position_dodge(0.7)) +
+  geom_line(aes(group = Platform),
+            size = 0.5,
+            position = position_dodge(0.7)) + 
+  geom_point(shape = 16,
+             size = 0.5,
+             show.legend = FALSE,
+             position = position_dodge(0.7)) +
   expand_limits(y = 1) +
   scale_x_discrete(labels = c("0", "", "", "", "",
                               "50", "", "", "", "",
