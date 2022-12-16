@@ -88,7 +88,9 @@ plot_obj <- ggplot(plot_df,
                      cancer_type, predictor, sep = " ")) +
   theme_bw() +
   scale_colour_manual(values = cbPalette[2:3]) +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom",
+        panel.grid.major = element_line(size = 0.25),
+        panel.grid.minor = element_line(size = 0.25))
 
 ggsave(output_filename,
        plot = plot_obj,
