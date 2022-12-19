@@ -65,6 +65,22 @@ norm.train.files <- file.path(
 )
 
 # define output files
+PLIER_objects_filename <- file.path(
+  res.dir,
+  str_c(file_identifier, "_PLIER_objects_list",
+        ifelse(permute, # distinguish between permuted/not permuted output files
+               ".permuted.rds",
+               ".rds"))
+)
+
+pathways_filename <- file.path(
+  plot.data.dir,
+  str_c(file_identifier, "_PLIER_pathways",
+        ifelse(permute, # distinguish between permuted/not permuted output files
+               ".permuted.tsv",
+               ".tsv"))
+)
+
 plot_data_filename <- file.path(
   plot.data.dir,
   str_c(file_identifier, "_PLIER_jaccard",
@@ -241,6 +257,8 @@ return_plier_jaccard_global <- function(test_PLIER, global_pathways) {
 
 #### loop over data for each seed and get PLIER results ------------------------
 
+plier_objects_list <- list()
+pathways_list <- list()
 jaccard_list <- list()
 
 for (seed_index in 1:length(norm.train.files)) {
@@ -397,10 +415,50 @@ for (seed_index in 1:length(norm.train.files)) {
                                             check_plier_failure_to_converge
   )
   
+  plier_objects_list[[seed_index]] <- plier_results_list
+  
+  # plier_results_list is structured:
+  # Level 0 (percentage RNA-seq)
+  # Level 1 (normalization method)
+  # Level 2 (PLIER object)
+  pathways_list[[seed_index]] <- purrr::modify_depth(
+    plier_results_list, 2,
+    function(x) x[["summary"]]) %>%
+    reshape2::melt(id.var = c("pathway", "LV index")) %>%
+    tidyr::pivot_wider(names_from = "variable",
+                       values_from = "value") %>%
+    dplyr::rename("LV_index" = "LV index",
+                  "nmeth" = "L2",
+                  "pseq" = "L1",
+                  "pvalue" = "p-value")
+  
   # Return pathway comparison for appropriate level of PLIER results list
   jaccard_list[[seed_index]] <- purrr::modify_depth(
     plier_results_list, 2,
     function(x) return_plier_jaccard_global(x, PLIER_pathways)
+  )
+  
+}
+
+# save list of PLIER objects
+readr::write_rds(plier_objects_list,
+                 file = PLIER_objects_filename)
+
+if (length(pathways_list) > 0) {
+  
+  # melt pathways list into one data frame
+  pathways_df <- reshape2::melt(pathways_list,
+                                id.vars = c("pathway",
+                                            "LV_index",
+                                            "nmeth",
+                                            "pseq",
+                                            "AUC",
+                                            "pvalue",
+                                            "FDR")) %>%
+    dplyr::rename("seed_index" = "L1")
+  
+  readr::write_tsv(pathways_df,
+                   pathways_filename
   )
   
 }
