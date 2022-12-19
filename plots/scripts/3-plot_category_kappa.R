@@ -62,7 +62,14 @@ output_filename <- file.path(output_directory,
 plot_df <- read_tsv(input_filename,
                     col_types = "dddddccc") %>%
   mutate(Perc.Seq = factor(Perc.Seq,
-                           levels = seq(0, 100, 10)))
+                           levels = seq(0, 100, 10))) %>%
+  group_by(Perc.Seq, Platform, Classifier, Normalization) %>%
+  summarize(n_obs = n(),
+            med = median(Kappa),
+            IQR = quantile(Kappa, 0.75) - quantile(Kappa, 0.25),
+            median_ci_upper = med + 1.58*IQR/sqrt(n_obs),
+            median_ci_lower = med - 1.58*IQR/sqrt(n_obs),
+            .groups = "drop")
 
 # default behavior: exclude (!include) seurat results
 if (!include_seurat) {
@@ -75,24 +82,24 @@ if (!include_seurat) {
 
 plot_obj <- ggplot(plot_df,
                    aes(x = Perc.Seq,
-                       y = Kappa,
+                       y = med, # median
                        color = Platform,
                        fill = Platform)) +
   facet_grid(rows = vars(Classifier),
              cols = vars(Normalization)) +
-  geom_violin(position = position_dodge(0.7),
-              alpha = 0.25,
-              show.legend = FALSE) +
-  stat_summary(fun = median,
-               geom = "line",
-               aes(group = Platform),
-               position = position_dodge(0.7)) +
-  stat_summary(fun = median,
-               geom = "point",
-               aes(group = Platform),
-               position = position_dodge(0.7),
-               size = 1,
-               shape = 16) +
+  geom_errorbar(aes(x = Perc.Seq,
+                    ymin = median_ci_lower,
+                    ymax = median_ci_upper),
+                size = 0.25,
+                width = 0.5,
+                position = position_dodge(0.7)) +
+  geom_line(aes(group = Platform),
+            size = 0.5,
+            position = position_dodge(0.7)) + 
+  geom_point(shape = 16,
+             size = 0.5,
+             show.legend = FALSE,
+             position = position_dodge(0.7)) +
   expand_limits(y = 1) +
   scale_x_discrete(labels = c("0", "", "", "", "",
                               "50", "", "", "", "",
@@ -105,8 +112,11 @@ plot_obj <- ggplot(plot_df,
                   "Kappa"),
        title = str_c(cancer_type, predictor, sep = " ")) +
   theme_bw() +
+  scale_fill_manual(values = cbPalette[2:3]) +
   scale_colour_manual(values = cbPalette[2:3]) +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom",
+        panel.grid.major = element_line(size = 0.25),
+        panel.grid.minor = element_line(size = 0.25))
 
 ggsave(output_filename,
        plot = plot_obj,
