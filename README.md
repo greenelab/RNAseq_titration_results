@@ -44,7 +44,7 @@ Due to low sample numbers at the edges of our titration protocol, many experimen
 We recommend using the docker image `envest/rnaseq_titration_results:R-4.1.2` to handle package and dependency installation.
 See `docker/R-4.1.2/Dockerfile` for more information.
 
-Our analysis ([v2.1](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.1)) was run using 7 cores on an AWS instance with 16 cores, 128 GB memory, and an allocated 1 TB of space.
+Our analysis ([v2.2](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.2)) was run using 7 cores on an AWS instance with 16 cores, 128 GB memory, and an allocated 1 TB of space.
 
 ### Obtaining and running the Docker container
 
