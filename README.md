@@ -81,10 +81,13 @@ bash download_TCGA_data.sh
 After data has been downloaded, running
 
 ```
-bash run_all_analyses_and_plots.sh
+bash run_all_analyses_and_plots.sh [cancer type]
 ```
+where 
 
-with [v2.1](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.1) of this repository will reproduce the results presented in our manuscript.
+- `[cancer type]` is `both`, `BRCA` or `GBM`
+
+with [v2.2](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.2) of this repository will reproduce the results presented in our manuscript.
 We recommend running all analyses within the project Docker container.
 
 ## Methods
@@ -135,10 +138,17 @@ python3 search_geo_arrayexpress.py
 ```
 and check the output in `results/array_rnaseq_ratio`.
 
+To compare PLIER pathways that are more frequently identified using the full sample size data compared to half sample size data, run
+```
+Rscript -e "rmarkdown::render('8-PLIER_pathways_analysis.Rmd', clean = TRUE)"
+```
+and examine the results in `8-PLIER_pathways_analysis.nb.html`.
+
 ## Manuscript versions
 
 | Version | Relevant links |
 | :------ | :------------- |
+| [v2.2](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.2) | [Figshare+ data](https://doi.org/10.25452/figshare.plus.19629864.v3), [Data for plots](https://doi.org/10.6084/m9.figshare.19686453.v3) |
 | [v2.1](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.1) | [Figshare+ data](https://doi.org/10.25452/figshare.plus.19629864.v2), [Data for plots](https://doi.org/10.6084/m9.figshare.19686453.v2) |
 | [v2.0](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.0) | [Figshare+ data](https://doi.org/10.25452/figshare.plus.19629864.v1), [Data for plots](https://doi.org/10.6084/m9.figshare.19686453.v1) |
 | [v1.1](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v1.1) |  [Figshare full results](https://doi.org/10.6084/m9.figshare.5035997.v2) |
@@ -149,9 +159,7 @@ and check the output in `results/array_rnaseq_ratio`.
 This work was supported by the Gordon and Betty Moore Foundation [GBMF 4552], Alex's Lemonade Stand Foundation [GR-000002471], and the National Institutes of Health [T32-AR007442, U01-TR001263, R01-CA237170, K12GM081259].
 
 # FAQ
----
 
 **Can I normalize array data to match RNA-seq data?**
 
 *We generally do not advise this study design. We expect array data to have less precision at higher expression levels due to saturation, while counts-based RNA-seq data does not have that problem. We recommend reshaping the data expected to have more dynamic range (RNA-seq) to fit the narrower and less precise (array) distribution. See also [TDM FAQs](https://github.com/greenelab/TDM#faq).*
-
