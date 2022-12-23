@@ -57,7 +57,7 @@ median_df <- readr::read_tsv(input_filename,
 
 kappa_df <- read_tsv(input_filename,
                      col_types = "dcccdcc") %>%
-  mutate(Perc.Seq = factor(Perc.Seq,
+  mutate(Perc.Seq = factor(Perc.seq,
                            levels = seq(0, 100, 10)))
 
 # default behavior: exclude (!include) seurat results
