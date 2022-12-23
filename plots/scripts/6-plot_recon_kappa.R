@@ -60,16 +60,6 @@ kappa_df <- read_tsv(input_filename,
   mutate(Perc.Seq = factor(Perc.seq,
                            levels = seq(0, 100, 10)))
 
-# default behavior: exclude (!include) seurat results
-if (!include_seurat) {
-  median_df <- median_df %>%
-    filter(Normalization != "SEURAT") %>%
-    droplevels()
-  kappa_df <- kappa_df %>%
-    filter(Normalization != "SEURAT") %>%
-    droplevels()
-}
-
 # for each normalization method, plot kappa stats
 plot_obj <- ggplot(plot_df,
                    aes(x = Perc.seq,
