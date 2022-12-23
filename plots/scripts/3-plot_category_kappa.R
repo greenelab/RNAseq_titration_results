@@ -134,7 +134,8 @@ plot_obj <- ggplot(median_df,
   scale_colour_manual(values = cbPalette[2:3]) +
   theme(legend.position = "bottom",
         panel.grid.major = element_line(size = 0.25),
-        panel.grid.minor = element_line(size = 0.25))
+        panel.grid.minor = element_line(size = 0.25),
+        strip.text.y = element_text(size = 7))
 
 ggsave(output_filename,
        plot = plot_obj,
