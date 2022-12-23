@@ -61,7 +61,7 @@ kappa_df <- read_tsv(input_filename,
                            levels = seq(0, 100, 10)))
 
 # for each normalization method, plot kappa stats
-plot_obj <- ggplot(plot_df,
+plot_obj <- ggplot(median_df,
                    aes(x = Perc.seq,
                        y = med, # median
                        color = Platform,
