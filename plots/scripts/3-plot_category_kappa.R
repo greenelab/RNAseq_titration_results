@@ -59,8 +59,8 @@ output_filename <- file.path(output_directory,
                                            "_train_3_models_kappa.pdf")))
 
 # read in data
-plot_df <- read_tsv(input_filename,
-                    col_types = "dddddccc") %>%
+median_df <- read_tsv(input_filename,
+                      col_types = "dddddccc") %>%
   mutate(Perc.Seq = factor(Perc.Seq,
                            levels = seq(0, 100, 10))) %>%
   group_by(Perc.Seq, Platform, Classifier, Normalization) %>%
@@ -71,16 +71,24 @@ plot_df <- read_tsv(input_filename,
             median_ci_lower = med - 1.58*IQR/sqrt(n_obs),
             .groups = "drop")
 
+kappa_df <- read_tsv(input_filename,
+                     col_types = "dddddccc") %>%
+  mutate(Perc.Seq = factor(Perc.Seq,
+                           levels = seq(0, 100, 10)))
+
 # default behavior: exclude (!include) seurat results
 if (!include_seurat) {
-  plot_df <- plot_df %>%
+  median_df <- median_df %>%
+    filter(Normalization != "SEURAT") %>%
+    droplevels()
+  kappa_df <- kappa_df %>%
     filter(Normalization != "SEURAT") %>%
     droplevels()
 }
 
 # plot
 
-plot_obj <- ggplot(plot_df,
+plot_obj <- ggplot(median_df,
                    aes(x = Perc.Seq,
                        y = med, # median
                        color = Platform,
@@ -100,6 +108,16 @@ plot_obj <- ggplot(plot_df,
              size = 0.5,
              show.legend = FALSE,
              position = position_dodge(0.7)) +
+  geom_point(data = kappa_df,
+             aes(x = Perc.Seq,
+                 y = Kappa,
+                 color = Platform,
+                 fill = Platform),
+             alpha = 0.5,
+             size = 0.25,
+             shape = 16,
+             position = position_dodge(0.7),
+             show.legend = FALSE) +
   expand_limits(y = 1) +
   scale_x_discrete(labels = c("0", "", "", "", "",
                               "50", "", "", "", "",
