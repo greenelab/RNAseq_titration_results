@@ -43,8 +43,8 @@ output_filename <- file.path(output_directory,
 
 # read in data
 
-plot_df <- readr::read_tsv(input_filename,
-                           col_types = "dcccdcc") %>%
+median_df <- readr::read_tsv(input_filename,
+                             col_types = "dcccdcc") %>%
   mutate(Perc.seq = factor(Perc.seq,
                            levels = seq(0, 100, 10))) %>%
   group_by(Perc.seq, Platform, Classifier, Normalization) %>%
@@ -55,8 +55,13 @@ plot_df <- readr::read_tsv(input_filename,
             median_ci_lower = med - 1.58*IQR/sqrt(n_obs),
             .groups = "drop")
 
+kappa_df <- read_tsv(input_filename,
+                     col_types = "dcccdcc") %>%
+  mutate(Perc.seq = factor(Perc.seq,
+                           levels = seq(0, 100, 10)))
+
 # for each normalization method, plot kappa stats
-plot_obj <- ggplot(plot_df,
+plot_obj <- ggplot(median_df,
                    aes(x = Perc.seq,
                        y = med, # median
                        color = Platform,
@@ -76,6 +81,16 @@ plot_obj <- ggplot(plot_df,
              size = 0.5,
              show.legend = FALSE,
              position = position_dodge(0.7)) +
+  geom_point(data = kappa_df,
+             aes(x = Perc.seq,
+                 y = Kappa,
+                 color = Platform,
+                 fill = Platform),
+             alpha = 0.5,
+             size = 0.25,
+             shape = 16,
+             position = position_dodge(0.7),
+             show.legend = FALSE) +
   expand_limits(y = 1) +
   scale_x_discrete(labels = c("0", "", "", "", "",
                               "50", "", "", "", "",
@@ -90,7 +105,8 @@ plot_obj <- ggplot(plot_df,
   scale_colour_manual(values = cbPalette[2:3]) +
   theme(legend.position = "bottom",
         panel.grid.major = element_line(size = 0.25),
-        panel.grid.minor = element_line(size = 0.25))
+        panel.grid.minor = element_line(size = 0.25),
+        strip.text.y = element_text(size = 7))
 
 ggsave(output_filename,
        plot = plot_obj,
