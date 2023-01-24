@@ -55,9 +55,9 @@ combined_df <- clinical_df %>%
   left_join(mutation_df,
             by = c("Sample" = "tcga_id")) %>%
   mutate(PIK3CA = case_when(PIK3CA == 0 ~ "No_PIK3CA_mutation",
-                            TRUE ~ "PIK3CA_mutation"),
+                            PIK3CA == 1 ~ "PIK3CA_mutation"),
          TP53 = case_when(TP53 == 0 ~ "No_TP53_mutation",
-                          TRUE ~ "TP53_mutation"))
+                          TP53 == 1 ~ "TP53_mutation"))
 
 ################################################################################
 # Save output file
