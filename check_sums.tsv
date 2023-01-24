@@ -9,8 +9,8 @@ ce911443e071c4251fb3f196780e76de  data/GBMClin.tsv
 e5df57691b44c47b8c916116b5ac7acf  data/PanCan-General_Open_GDC-Manifest_2.txt
 a4591b2dcee39591f59e5e25a6ce75fa  data/TCGA-CDR-SupplementalTableS1.xlsx
 7fafc537807d5b3ddf0bb89665279a9d  data/broad.mit.edu_PANCAN_Genome_Wide_SNP_6_whitelisted.seg
-4c02689f22d8392bcc5f7cb4e4b4ad6b  data/combined_clinical_data.BRCA.tsv
-2d4b798f74077c40b564b5ec087f9ff9  data/combined_clinical_data.GBM.tsv
+7c5f8a12d6ca986e5ebba93281360517  data/combined_clinical_data.BRCA.tsv
+94621b5396bd5d69eb36b6c5503dec97  data/combined_clinical_data.GBM.tsv
 1d8834a51282396e07e3ce9a5417d024  data/gbm_clinical_table_S7.xlsx
 639ad8f8386e98dacc22e439188aa8fa  data/mc3.v0.2.8.PUBLIC.maf.gz
 7583a5fb4d23d50b79813b26469f6385  data/mutations.BRCA.tsv
