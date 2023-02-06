@@ -44,8 +44,8 @@ rcn.res.dir <- here::here("results", "reconstructed_data")
 # pattern = "kappa_[0-9]+.tsv" captures the intended filenames including seeds between 1:10000
 kappa.df.files <- list.files(rcn.res.dir,
                              pattern = paste0(file_identifier,
-                                              "_prediction_reconstructed_data_kappa_[0-9]+.tsv",
-                                              full.names = TRUE))
+                                              "_prediction_reconstructed_data_kappa_[0-9]+.tsv"),
+                                              full.names = TRUE)
 error.files <- list.files(rcn.res.dir,
                           pattern = paste0(file_identifier,
                                            "_reconstruction_error"),
