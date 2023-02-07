@@ -44,7 +44,7 @@ Due to low sample numbers at the edges of our titration protocol, many experimen
 We recommend using the docker image `envest/rnaseq_titration_results:R-4.1.2` to handle package and dependency installation.
 See `docker/R-4.1.2/Dockerfile` for more information.
 
-Our analysis ([v2.2](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.2)) was run using 7 cores on an AWS instance with 16 cores, 128 GB memory, and an allocated 1 TB of space.
+Our analysis ([v2.3](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.3)) was run using 7 cores on an AWS instance with 16 cores, 128 GB memory, and an allocated 1 TB of space.
 
 ### Obtaining and running the Docker container
 
@@ -87,7 +87,7 @@ where
 
 - `[cancer type]` is `both`, `BRCA` or `GBM`
 
-with [v2.2](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.2) of this repository will reproduce the results presented in our manuscript.
+with [v2.3](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.3) of this repository will reproduce the results presented in our manuscript.
 We recommend running all analyses within the project Docker container.
 
 ## Methods
@@ -148,6 +148,7 @@ and examine the results in `8-PLIER_pathways_analysis.nb.html`.
 
 | Version | Relevant links |
 | :------ | :------------- |
+| [v2.3](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.3) | [Figshare+ data](https://doi.org/10.25452/figshare.plus.19629864.v5), [Data for plots](https://doi.org/10.6084/m9.figshare.19686453.v5) |
 | [v2.2](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.2) | [Figshare+ data](https://doi.org/10.25452/figshare.plus.19629864.v3), [Data for plots](https://doi.org/10.6084/m9.figshare.19686453.v3) |
 | [v2.1](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.1) | [Figshare+ data](https://doi.org/10.25452/figshare.plus.19629864.v2), [Data for plots](https://doi.org/10.6084/m9.figshare.19686453.v2) |
 | [v2.0](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.0) | [Figshare+ data](https://doi.org/10.25452/figshare.plus.19629864.v1), [Data for plots](https://doi.org/10.6084/m9.figshare.19686453.v1) |
