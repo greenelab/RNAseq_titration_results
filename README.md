@@ -1,5 +1,7 @@
 # Cross-platform normalization enables machine learning model training on microarray and RNA-seq data simultaneously
 
+**Published article:** Foltz, S. M., Greene, C. S. & Taroni, J. N. Cross-platform normalization enables machine learning model training on microarray and RNA-seq data simultaneously. *Commun Biol* 6, 222 (2023). https://doi.org/10.1038/s42003-023-04588-6
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
@@ -148,7 +150,7 @@ and examine the results in `8-PLIER_pathways_analysis.nb.html`.
 
 | Version | Relevant links |
 | :------ | :------------- |
-| [v2.3](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.3) | [Figshare+ data](https://doi.org/10.25452/figshare.plus.19629864.v5), [Data for plots](https://doi.org/10.6084/m9.figshare.19686453.v5) |
+| [v2.3](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.3) | [Published article](https://doi.org/10.1038/s42003-023-04588-6), [Figshare+ data](https://doi.org/10.25452/figshare.plus.19629864.v5), [Data for plots](https://doi.org/10.6084/m9.figshare.19686453.v5) |
 | [v2.2](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.2) | [Figshare+ data](https://doi.org/10.25452/figshare.plus.19629864.v3), [Data for plots](https://doi.org/10.6084/m9.figshare.19686453.v3) |
 | [v2.1](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.1) | [Figshare+ data](https://doi.org/10.25452/figshare.plus.19629864.v2), [Data for plots](https://doi.org/10.6084/m9.figshare.19686453.v2) |
 | [v2.0](https://github.com/greenelab/RNAseq_titration_results/releases/tag/v2.0) | [Figshare+ data](https://doi.org/10.25452/figshare.plus.19629864.v1), [Data for plots](https://doi.org/10.6084/m9.figshare.19686453.v1) |
